@@ -1,7 +1,9 @@
 import { firestorePaths } from "../paths.js";
+import { simulate } from "../simulate/simulate.js";
 import type {
   ActionCard,
   Analysis,
+  Change,
   DocumentRecord,
   Goal,
   Holding,
@@ -10,17 +12,20 @@ import type {
   MonthRecord,
   Profile,
   RunStatus,
+  SimulationResult,
   Snapshot,
   Transaction,
 } from "../types.js";
-import { withoutPlanLoanTimeline, withPlanLoanTimeline } from "./timelines.js";
+import { demoRules } from "./rules.js";
 
 // One demo user with an active house goal and its September 2026 analysis, so UI work can
-// start before the pipeline exists (specs/01-contracts.md, task 4). Every number is sample
-// data chosen to be internally consistent: the snapshot, the metrics and both simulation
-// results agree with each other (see demo.test.ts). The demo story from docs/product.md:
-// the PayLater pushes DTI over the cap, the plan clears it and brings approval from
-// month 26 to month 14.
+// start before the pipeline exists (specs/01-contracts.md, task 4). The snapshot, profile,
+// goal, metrics and action cards are sample data chosen to be internally consistent; both
+// simulation results are real simulate() output over that data (see index.test.ts). The demo
+// story from docs/product.md: the PayLater pushes DTI over the cap, the plan clears it and
+// brings approval from month 26 to month 14.
+
+export { DEMO_RULE_PLACEHOLDERS, demoRuleDefaults, demoRules } from "./rules.js";
 
 export const DEMO_UID = "demo-user";
 export const DEMO_EMAIL = "demo@adidi.app";
@@ -467,71 +472,37 @@ export const demoActions: ActionCard[] = [
   },
 ];
 
-const rejectedOptions = [
-  {
-    option: "flpp",
-    rule: "flpp_income_ceiling",
-    reason: "Net income is above the ceiling for subsidised KPR.",
-  },
-  {
-    option: "tenor_25y",
-    rule: "loan_end_age",
-    reason: "A 25-year loan would end at age 56, past the bank's limit of 55.",
-  },
-];
+// Both simulation results come from simulate() over the data above with the demo rules, so
+// the UI built on the demo sees exactly what the pipeline will produce: full timelines (every
+// month to 360) for the cash and loan paths, blockedBy, rulesChecked and rejectedOptions. The
+// action cards' monthsSaved and the summary are checked against these results in index.test.ts.
+const demoChanges: Change[] = demoActions.map((a) => a.change);
+
+export const demoWithoutPlan: SimulationResult = simulate({
+  snapshot: demoSnapshot,
+  profile: demoProfile,
+  goal: demoGoal,
+  rules: demoRules,
+  changes: [],
+});
+
+export const demoWithPlan: SimulationResult = simulate({
+  snapshot: demoSnapshot,
+  profile: demoProfile,
+  goal: demoGoal,
+  rules: demoRules,
+  changes: demoChanges,
+});
 
 export const demoAnalysis: Analysis = {
   goalId: DEMO_GOAL_ID,
   month: DEMO_MONTH,
   metrics: demoMetrics,
-  withoutPlan: {
-    cash: { monthsToReady: 215, timeline: [] },
-    loan: {
-      monthsToReady: 26,
-      approvableToday: false,
-      blockedBy: [
-        { rule: "dti_cap", value: 0.363, limit: 0.35 },
-        { rule: "min_dp_first_home_new", value: 41_200_000, limit: 270_000_000 },
-      ],
-      installmentAtApproval: 9_135_733,
-      tenorYears: 20,
-      timeline: withoutPlanLoanTimeline,
-    },
-    rulesChecked: [
-      { rule: "dti_cap", valueUsed: 0.35, you: 0.363, effect: "blocks" },
-      { rule: "min_dp_first_home_new", valueUsed: 0.2, you: 0.153, effect: "blocks" },
-      { rule: "emergency_months_required", valueUsed: 3, you: 4.6, effect: "passes" },
-      { rule: "loan_end_age", valueUsed: 55, you: 31, effect: "limits" },
-      { rule: "kpr_rate_fixed", valueUsed: 0.065, you: "20-year KPR", effect: "sets_target" },
-      { rule: "growth_property", valueUsed: 0.06, you: "Rp 1.35 bn today", effect: "sets_target" },
-      { rule: "flpp_income_ceiling", valueUsed: 0, you: 28_000_000, effect: "rejects_option" },
-    ],
-    rejectedOptions,
-  },
-  withPlan: {
-    cash: { monthsToReady: 161, timeline: [] },
-    loan: {
-      monthsToReady: 14,
-      approvableToday: false,
-      blockedBy: [{ rule: "min_dp_first_home_new", value: 146_200_000, limit: 270_000_000 }],
-      installmentAtApproval: 8_618_616,
-      tenorYears: 20,
-      timeline: withPlanLoanTimeline,
-    },
-    rulesChecked: [
-      { rule: "dti_cap", valueUsed: 0.35, you: 0.327, effect: "passes" },
-      { rule: "min_dp_first_home_new", valueUsed: 0.2, you: 0.541, effect: "blocks" },
-      { rule: "emergency_months_required", valueUsed: 3, you: 16.2, effect: "passes" },
-      { rule: "loan_end_age", valueUsed: 55, you: 31, effect: "limits" },
-      { rule: "kpr_rate_fixed", valueUsed: 0.065, you: "20-year KPR", effect: "sets_target" },
-      { rule: "growth_property", valueUsed: 0.06, you: "Rp 1.35 bn today", effect: "sets_target" },
-      { rule: "flpp_income_ceiling", valueUsed: 0, you: 28_000_000, effect: "rejects_option" },
-    ],
-    rejectedOptions,
-  },
+  withoutPlan: demoWithoutPlan,
+  withPlan: demoWithPlan,
   actions: demoActions,
   choices: { a1: "undecided", a2: "undecided", a3: "undecided" },
-  rejectedOptions,
+  rejectedOptions: demoWithoutPlan.rejectedOptions,
   summary:
     "You're 14 months from a KPR if you clear the Kredivo balance and move your crypto to safer savings; 26 months if nothing changes.",
 };
@@ -551,21 +522,30 @@ export interface SeedDocument {
   data: Record<string, unknown>;
 }
 
-/** Every Firestore document of the demo user, keyed by its path from the layout. */
+/**
+ * Every Firestore document of the demo user, keyed by its path from the layout. Each document
+ * is a plain JSON copy: Firestore rejects `undefined` values, and simulate() leaves
+ * `installment` and `dti` undefined in the months where no tenor is allowed any more.
+ */
 export function demoSeedDocuments(uid: string = DEMO_UID): SeedDocument[] {
   const docs: SeedDocument[] = [
-    { path: firestorePaths.user(uid), data: { ...demoProfile } },
-    { path: firestorePaths.month(uid, DEMO_MONTH), data: { ...demoMonth } },
-    { path: firestorePaths.goal(uid, demoGoal.id), data: { ...demoGoal } },
-    { path: firestorePaths.analysis(uid, demoGoal.id, DEMO_MONTH), data: { ...demoAnalysis } },
-    { path: firestorePaths.run(uid, demoRun.id), data: { ...demoRun } },
+    { path: firestorePaths.user(uid), data: plain(demoProfile) },
+    { path: firestorePaths.month(uid, DEMO_MONTH), data: plain(demoMonth) },
+    { path: firestorePaths.goal(uid, demoGoal.id), data: plain(demoGoal) },
+    { path: firestorePaths.analysis(uid, demoGoal.id, DEMO_MONTH), data: plain(demoAnalysis) },
+    { path: firestorePaths.run(uid, demoRun.id), data: plain(demoRun) },
   ];
   for (const t of demoTransactions)
-    docs.push({ path: firestorePaths.transaction(uid, t.id), data: { ...t } });
-  for (const l of demoLoans) docs.push({ path: firestorePaths.loan(uid, l.id), data: { ...l } });
+    docs.push({ path: firestorePaths.transaction(uid, t.id), data: plain(t) });
+  for (const l of demoLoans) docs.push({ path: firestorePaths.loan(uid, l.id), data: plain(l) });
   for (const h of demoHoldings)
-    docs.push({ path: firestorePaths.holding(uid, h.id), data: { ...h } });
+    docs.push({ path: firestorePaths.holding(uid, h.id), data: plain(h) });
   for (const d of demoDocuments)
-    docs.push({ path: firestorePaths.document(uid, d.id), data: { ...d } });
+    docs.push({ path: firestorePaths.document(uid, d.id), data: plain(d) });
   return docs;
+}
+
+/** A deep copy with every `undefined` property dropped, as Firestore stores it. */
+function plain(value: object): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
 }

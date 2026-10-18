@@ -93,6 +93,7 @@ export function simulate(input: SimulateInput): SimulationResult {
   let loanReadyMonth: number | null = null;
   let loanCheckAtReady: LoanMonthCheck | undefined;
   let loanCheckAtStart: LoanMonthCheck | undefined;
+  let liquidAtStart = snapshot.liquidAssets;
 
   for (let m = 0; m <= maxMonths; m++) {
     applyChanges(state, changes, m);
@@ -136,7 +137,10 @@ export function simulate(input: SimulateInput): SimulationResult {
         debtPayments,
         age: profile.age + Math.floor(m / 12),
       });
-      if (m === 0) loanCheckAtStart = check;
+      if (m === 0) {
+        loanCheckAtStart = check;
+        liquidAtStart = state.liquid; // after the changes with fromMonth 0
+      }
       if (check.failing.length === 0 && loanReadyMonth === null) {
         loanReadyMonth = m;
         loanCheckAtReady = check;
@@ -194,7 +198,7 @@ export function simulate(input: SimulateInput): SimulationResult {
       } else if (rule === loanPlan.dpRuleId) {
         blockedBy.push({
           rule,
-          value: Math.max(0, Math.round(snapshot.liquidAssets - reserve)),
+          value: Math.max(0, Math.round(liquidAtStart - reserve)),
           limit: Math.round(start.dpNeeded),
         });
       }
