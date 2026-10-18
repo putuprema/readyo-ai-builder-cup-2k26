@@ -7,10 +7,10 @@ import { connectFirestoreEmulator, type Firestore, getFirestore } from "firebase
 // Firebase for the progress and result pages. Kept inside components/result/ so it does not
 // collide with the shell's sign-in work (specs/10-ui-goal-creation.md); once that lands the
 // pages can switch to the shared client. Config comes from NEXT_PUBLIC_FIREBASE_* (see
-// web/.env.example); with NEXT_PUBLIC_FIREBASE_EMULATORS=1 the Auth and Firestore emulators of
+// web/.env.example); with NEXT_PUBLIC_USE_EMULATORS=1 the Auth and Firestore emulators of
 // scripts/with-emulators.sh (project demo-adidi) are used instead.
 
-export const usingEmulators = process.env.NEXT_PUBLIC_FIREBASE_EMULATORS === "1";
+export const usingEmulators = process.env.NEXT_PUBLIC_USE_EMULATORS === "1";
 export const EMULATOR_PROJECT_ID = "demo-adidi";
 
 const projectId = usingEmulators

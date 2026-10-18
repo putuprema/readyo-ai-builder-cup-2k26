@@ -8,7 +8,7 @@
 //   node web/components/result/dev/fake-run.mts failed     # ends in the failed state
 //
 // Then open http://localhost:3000/goals/house-tangsel/progress/?run=fake-run with
-// NEXT_PUBLIC_FIREBASE_EMULATORS=1 in web/.env.local.
+// NEXT_PUBLIC_USE_EMULATORS=1 in web/.env.local.
 import { DEMO_EMAIL, DEMO_GOAL_ID, DEMO_MONTH, firestorePaths } from "@adidi/shared";
 import { initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, signInWithEmailAndPassword } from "firebase/auth";

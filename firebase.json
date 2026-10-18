@@ -5,11 +5,11 @@
     "trailingSlash": true,
     "rewrites": [
       {
-        "regex": "^/goals/[^/]+/progress/?$",
+        "source": "/goals/*/progress{,/**}",
         "destination": "/goals/_/progress/index.html"
       },
       {
-        "regex": "^/goals/[^/]+/result/?$",
+        "source": "/goals/*/result{,/**}",
         "destination": "/goals/_/result/index.html"
       }
     ],
