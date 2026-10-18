@@ -16,6 +16,16 @@ describe("ruleGroups", () => {
     expect(ids.sort()).toEqual(demoRuleDefaults.map((r) => r.id).sort());
   });
 
+  it("orders rows by the page, whatever order the collection returns", () => {
+    const shuffled = [...demoRuleDefaults].sort((a, b) => b.id.localeCompare(a.id));
+    const [lending] = ruleGroups(shuffled);
+    expect(lending?.rows.slice(0, 3).map((r) => r.id)).toEqual([
+      "dti_cap",
+      "min_dp_first_home_new",
+      "min_dp_other_home",
+    ]);
+  });
+
   it("puts the lending rules in the table and the rates in prices", () => {
     expect(groups[0]?.rows.map((r) => r.id)).toContain("dti_cap");
     expect(groups[1]?.rows.map((r) => r.id)).toContain("kpr_rate_fixed");

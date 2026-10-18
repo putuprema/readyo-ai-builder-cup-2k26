@@ -30,7 +30,7 @@ export const GROUPS: { id: GroupId; title: string; subtitle: string }[] = [
   },
 ];
 
-/** Where each rule is listed. A rule not named here goes to the readiness group. */
+/** Where each rule is listed, in page order. A rule not named here goes to the readiness group. */
 const GROUP_OF: Record<string, GroupId> = {
   dti_cap: "lending",
   min_dp_first_home_new: "lending",
@@ -51,7 +51,21 @@ const GROUP_OF: Record<string, GroupId> = {
   growth_wedding: "prices",
   return_money_market: "savings",
   horizon_volatile_share_max: "savings",
+  expensive_debt_rate: "readiness",
+  savings_rate_good: "readiness",
+  savings_rate_min: "readiness",
 };
+
+/** Page order: the order of GROUP_OF, then any rule it does not name, by id. */
+const ORDER = Object.keys(GROUP_OF);
+function byPageOrder(a: RuleValue, b: RuleValue): number {
+  const ia = ORDER.indexOf(a.id);
+  const ib = ORDER.indexOf(b.id);
+  if (ia === -1 && ib === -1) return a.id.localeCompare(b.id);
+  if (ia === -1) return 1;
+  if (ib === -1) return -1;
+  return ia - ib;
+}
 
 export interface RuleRow {
   id: string;
@@ -73,7 +87,7 @@ export interface RuleGroup {
   rows: RuleRow[];
 }
 
-/** The groups in page order, each with its rules in the order of the collection; empty groups dropped. */
+/** The groups in page order, each with its rules in page order; empty groups dropped. */
 export function ruleGroups(
   rules: readonly RuleValue[],
   overrides: readonly Override[] = [],
@@ -81,7 +95,8 @@ export function ruleGroups(
   const byRule = new Map(overrides.map((o) => [o.ruleId, o.value]));
   return GROUPS.map((group) => ({
     ...group,
-    rows: rules
+    rows: [...rules]
+      .sort(byPageOrder)
       .filter((r) => (GROUP_OF[r.id] ?? "readiness") === group.id)
       .map((r) => ruleRow(r, byRule.get(r.id))),
   })).filter((g) => g.rows.length > 0);
