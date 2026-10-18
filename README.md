@@ -1,4 +1,4 @@
-# [APP NAME]
+# Readyo
 
 A financial readiness planner for Indonesians, built by team ADiDi for AI Builder Cup 2026 (BFSI theme). Pick a goal (house, car or wedding), upload one month of statements, and see how many months until a bank would approve you, what blocks you today, and a verified plan to get there sooner.
 

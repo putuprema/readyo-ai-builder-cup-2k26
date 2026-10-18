@@ -2,7 +2,7 @@
 
 ## What this project is
 
-[APP NAME] is a financial readiness planner for Indonesians, built by team ADiDi for AI Builder Cup 2026 (BFSI theme). A user picks a long-term goal (house, car or wedding), uploads one month of bank, e-wallet, PayLater/pinjol and investment statements, and gets:
+Readyo is a financial readiness planner for Indonesians, built by team ADiDi for AI Builder Cup 2026 (BFSI theme). A user picks a long-term goal (house, car or wedding), uploads one month of bank, e-wallet, PayLater/pinjol and investment statements, and gets:
 
 - how many months until they are ready, on the cash path and the loan path side by side,
 - which lending rules block them today (e.g. debt-to-income above the bank's cap),

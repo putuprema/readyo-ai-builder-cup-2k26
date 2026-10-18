@@ -4,7 +4,7 @@ Each section matches an artboard in `design/`. Numbers in the mockups are sample
 
 ## Global
 
-- **Header**: logo + [APP NAME], nav tabs Goals · Documents · Assumptions, user avatar.
+- **Header**: logo + Readyo, nav tabs Goals · Documents · Assumptions, user avatar.
 - **Tab highlight**: a tab looks selected only on the list page it stands for (Goals list, Monthly check-in, Assumptions). In the goal-creation flow and on the result page, no tab is highlighted; the step chips are the "you are here" indicator.
 - **Step chips** in goal creation: 1 Goal · 2 Documents · 3 Readiness, done steps shown with a check.
 

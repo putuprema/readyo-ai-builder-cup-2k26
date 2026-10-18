@@ -39,7 +39,7 @@ export function SiteHeader({ active }: { active?: NavTab }) {
               <path d="M4 18 10 12l4 4 6-8" />
             </svg>
           </span>
-          [APP NAME]
+          Readyo
         </Link>
 
         {state.status === "signed_in" && (

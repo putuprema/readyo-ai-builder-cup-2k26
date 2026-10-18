@@ -104,8 +104,8 @@ function Assumptions() {
 
       {state.status === "ready" && lending && (
         <p className="m-0 border-line border-t pt-5 text-[13px] text-muted">
-          Defaults are reviewed by the [APP NAME] team. Changing a value for your own account is
-          coming soon.
+          Defaults are reviewed by the Readyo team. Changing a value for your own account is coming
+          soon.
         </p>
       )}
     </main>

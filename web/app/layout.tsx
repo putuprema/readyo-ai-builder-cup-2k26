@@ -10,7 +10,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "[APP NAME]",
+  title: "Readyo",
   description:
     "Find out how far you are from the house, the car, or the wedding, and what to change to get there sooner.",
 };

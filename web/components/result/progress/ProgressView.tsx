@@ -46,7 +46,7 @@ export function ProgressView({
               <path d="M4 18 10 12l4 4 6-8" />
             </svg>
           </span>
-          [APP NAME]
+          Readyo
         </span>
         {goalLabel && <span className="text-[#B7C7BE] text-[13px]">{goalLabel}</span>}
       </header>

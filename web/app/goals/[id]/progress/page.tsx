@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ProgressScreen } from "@/components/result/progress/ProgressScreen";
 
-export const metadata: Metadata = { title: "Analysing your statements · [APP NAME]" };
+export const metadata: Metadata = { title: "Analysing your statements · Readyo" };
 
 // Static export: one placeholder path ("_", see components/result/goal-id.ts); Firebase
 // Hosting rewrites /goals/*/progress to it and the screen reads the real goal id from the URL.

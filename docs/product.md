@@ -4,7 +4,7 @@
 
 Indonesians pay across many banks, e-wallets and PayLater/pinjol apps. No tool answers the question they care about: "When can I afford the house, the car or the wedding, and what is stopping me?" Expense trackers record the past; goal-based investing apps only see the investment side. Neither reads pinjol and PayLater debt, which is often the biggest reason a bank would refuse a loan.
 
-## What the app does
+## What Readyo does
 
 1. The user creates a goal and describes it in a few fields.
 2. Gemini estimates the goal's price from that description, with sources. The user can edit the number.
