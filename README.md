@@ -22,6 +22,16 @@ Everything is TypeScript in one pnpm workspace. One lockfile at the root.
 - Node 22 (`.nvmrc`) and pnpm 10 (`corepack enable` gives you the pinned version).
 - For deploys only: `gcloud` and `firebase` CLIs (see "Deploy"). Docker is not needed; images are built by Cloud Build.
 
+### With Nix
+
+If you use Nix, skip the installs above. `shell.nix` pins nixpkgs and provides Node 22, pnpm, firebase-tools and gcloud:
+
+```bash
+nix-shell
+```
+
+Run every command in this README inside that shell, including the deploy scripts. `firebase login` and `gcloud auth login` store their state in your home directory, so you log in once.
+
 ## Run locally
 
 ```bash
@@ -64,7 +74,7 @@ Secrets never live in the repo. Locally, put them in a `.env` file (ignored by g
    ```bash
    gcloud artifacts repositories create adidi --repository-format=docker --location=asia-southeast2
    ```
-4. Install and log in to the CLIs:
+4. Install and log in to the CLIs (inside `nix-shell`, only the two login commands are needed):
    ```bash
    brew install --cask google-cloud-sdk
    npm install -g firebase-tools
