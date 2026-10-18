@@ -8,6 +8,7 @@ import {
   type ToolModel,
 } from "../gemini/client.js";
 import { type AgentContext, simulateWith } from "./context.js";
+import limits from "./limits.json" with { type: "json" };
 import { AGENT_SYSTEM_INSTRUCTION, agentPrompt } from "./prompt.js";
 import {
   agentFunctionDeclarations,
@@ -23,14 +24,18 @@ import { type Verification, verifyCandidate } from "./verify.js";
 
 // The propose → verify loop (specs/06-agent.md, "Loop"). The model proposes one candidate per
 // simulate call; code runs it, decides whether it is kept and tells the model. The loop stops
-// after three kept actions, after the tool-call budget, or when the model answers in words.
+// after three kept actions, after the tool-call budget, when the model answers in words, or
+// when one model turn runs past the turn timeout (agent/limits.json).
 
 export const MAX_TOOL_CALLS = 8;
 export const MAX_ACTIONS = 3;
+export const TURN_TIMEOUT_MS: number = limits.turnTimeoutMs;
 
 export interface LoopOptions {
   maxToolCalls?: number;
   maxActions?: number;
+  /** How long one model turn may take; past it the loop stops with the actions kept so far. */
+  turnTimeoutMs?: number;
   tier?: ModelTier;
   /** Receives one short line per event, never statement content. */
   log?: (message: string) => void;
@@ -52,7 +57,7 @@ export interface ToolTrace {
   error?: string;
 }
 
-export type StopReason = "actions" | "budget" | "model_done" | "model_error";
+export type StopReason = "actions" | "budget" | "model_done" | "model_timeout" | "model_error";
 
 export interface LoopResult {
   kept: KeptAction[];
@@ -74,6 +79,7 @@ export async function runProposeVerifyLoop(
 ): Promise<LoopResult> {
   const maxToolCalls = options.maxToolCalls ?? MAX_TOOL_CALLS;
   const maxActions = options.maxActions ?? MAX_ACTIONS;
+  const turnTimeoutMs = options.turnTimeoutMs ?? TURN_TIMEOUT_MS;
   const log = options.log ?? (() => {});
   const tools = agentFunctionDeclarations(ctx);
   const history: Content[] = [{ role: "user", parts: [{ text: agentPrompt(ctx) }] }];
@@ -87,20 +93,31 @@ export async function runProposeVerifyLoop(
   let error: string | undefined;
 
   while (stoppedBecause === undefined) {
-    let step: Awaited<ReturnType<ToolModel["step"]>>;
+    let step: Awaited<ReturnType<ToolModel["step"]>> | typeof TIMED_OUT;
     const startedAt = Date.now();
     try {
-      step = await model.step({
-        tier: options.tier ?? "pro",
-        systemInstruction: AGENT_SYSTEM_INSTRUCTION,
-        history: [...history],
-        tools,
-        thinking: "low",
-      });
+      step = await withTimeout(turnTimeoutMs, (signal) =>
+        model.step({
+          tier: options.tier ?? "pro",
+          systemInstruction: AGENT_SYSTEM_INSTRUCTION,
+          history: [...history],
+          tools,
+          thinking: "low",
+          signal,
+        }),
+      );
     } catch (e) {
       error = e instanceof ModelError ? e.message : "The model call failed";
       log(`agent: model error (${error}); keeping ${kept.length} action(s) found so far`);
       stoppedBecause = "model_error";
+      break;
+    }
+    if (step === TIMED_OUT) {
+      // Like model_done: the verified actions stand and the writer still runs.
+      log(
+        `agent: model turn timed out after ${turnTimeoutMs} ms; keeping ${kept.length} action(s) found so far`,
+      );
+      stoppedBecause = "model_timeout";
       break;
     }
     history.push(step.content);
@@ -192,6 +209,30 @@ export async function runProposeVerifyLoop(
     ...(modelText ? { modelText } : {}),
     ...(error ? { error } : {}),
   };
+}
+
+const TIMED_OUT = Symbol("timed out");
+
+/** Runs one model turn; past `ms` it aborts the request and answers TIMED_OUT. A late
+ *  rejection of the aborted request is handled by the race and ignored. */
+async function withTimeout<T>(
+  ms: number,
+  run: (signal: AbortSignal) => Promise<T>,
+): Promise<T | typeof TIMED_OUT> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<typeof TIMED_OUT>((resolve) => {
+    timer = setTimeout(() => {
+      // Settle first, so an abort that rejects the request at once cannot win the race.
+      resolve(TIMED_OUT);
+      controller.abort();
+    }, ms);
+  });
+  try {
+    return await Promise.race([run(controller.signal), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function keptChanges(kept: KeptAction[]): Change[] {

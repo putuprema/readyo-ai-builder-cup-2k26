@@ -2,7 +2,7 @@ import { simulate } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
 import { buildActionFacts } from "./cards.js";
 import { createAgentContext } from "./context.js";
-import { call, FakeJsonModel, FakeToolModel } from "./fakes.js";
+import { call, FakeJsonModel, FakeToolModel, hang } from "./fakes.js";
 import { runAgent } from "./index.js";
 import type { KeptAction } from "./loop.js";
 import { checkNumbers } from "./numbers.js";
@@ -230,6 +230,31 @@ describe("runAgent", () => {
       expect(a.title.length).toBeGreaterThan(0);
     }
     expect(logs.some((l) => l.includes("3 action(s) kept after 3 tool call(s)"))).toBe(true);
+  });
+
+  it("a timed-out model turn still ends with the kept actions and written cards", async () => {
+    const toolModel = new FakeToolModel([[call("simulate", payOffArgs)], hang]);
+    const jsonModel = new FakeJsonModel([{ cards: [], summary: "" }]); // forces the templates
+    const model = {
+      step: toolModel.step.bind(toolModel),
+      generateJson: jsonModel.generateJson.bind(jsonModel),
+    };
+    const result = await runAgent(
+      { snapshot: houseA.snapshot, profile: houseA.profile, goal: houseA.goal, rules },
+      model,
+      { turnTimeoutMs: 20 },
+    );
+    expect(result.stoppedBecause).toBe("model_timeout");
+    expect(result.actions.map((a) => a.change.type)).toEqual(["pay_off_loan"]);
+    expect(result.choices).toEqual({ a1: "undecided" });
+    expect(result.withPlan.loan?.monthsToReady).toBe(17);
+    // The writer ran after the timeout.
+    expect(jsonModel.requests.length).toBeGreaterThan(0);
+    expect(result.actions[0]?.title.length).toBeGreaterThan(0);
+    expect(result.summary.length).toBeGreaterThan(0);
+    expect(result.warnings).toContain(
+      "Agent loop ended early: a model turn took longer than 20 ms",
+    );
   });
 
   it("wedding end to end: no loan field, savings actions only", async () => {

@@ -2,8 +2,14 @@ import { simulate } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
 import { ModelError } from "../gemini/client.js";
 import { createAgentContext } from "./context.js";
-import { call, FakeToolModel } from "./fakes.js";
-import { type KeptAction, MAX_TOOL_CALLS, monthsSaved, runProposeVerifyLoop } from "./loop.js";
+import { call, FakeToolModel, hang } from "./fakes.js";
+import {
+  type KeptAction,
+  MAX_TOOL_CALLS,
+  monthsSaved,
+  runProposeVerifyLoop,
+  TURN_TIMEOUT_MS,
+} from "./loop.js";
 import { loadProfile, loadTestRules } from "./profiles.test-helper.js";
 import { LIST_CATEGORIES_TOOL, LIST_LOANS_TOOL, SIMULATE_TOOL } from "./tools.js";
 import { compare, fewerMonths } from "./verify.js";
@@ -280,6 +286,39 @@ describe("runProposeVerifyLoop", () => {
     expect(result.error).toBe("Gemini API error 503");
     expect(result.kept.map((k) => k.change.type)).toEqual(["pay_off_loan"]);
     expect(result.withPlan.loan?.monthsToReady).toBe(17);
+  });
+
+  it("a model turn past the timeout ends the loop like model_done and keeps what was verified", async () => {
+    const ctx = context();
+    const model = new FakeToolModel([[payOff], hang]);
+    const logs: string[] = [];
+    const result = await runProposeVerifyLoop(ctx, model, {
+      turnTimeoutMs: 20,
+      log: (m) => logs.push(m),
+    });
+    expect(result.stoppedBecause).toBe("model_timeout");
+    expect(result.error).toBeUndefined();
+    expect(result.kept.map((k) => k.change.type)).toEqual(["pay_off_loan"]);
+    expect(result.withPlan.loan?.monthsToReady).toBe(17);
+    expect(result.toolCalls).toBe(1);
+    // The hung request was aborted, and the model got no further turn.
+    expect(model.requests).toHaveLength(2);
+    expect(model.requests[1]?.signal?.aborted).toBe(true);
+    expect(logs.some((l) => l.includes("model turn timed out after 20 ms"))).toBe(true);
+  });
+
+  it("a turn that answers within the timeout is not cut", async () => {
+    const ctx = context();
+    const slow = () => new Promise<string>((resolve) => setTimeout(() => resolve("Done."), 10));
+    const model = new FakeToolModel([[payOff], slow]);
+    const result = await runProposeVerifyLoop(ctx, model, { turnTimeoutMs: 1_000 });
+    expect(result.stoppedBecause).toBe("model_done");
+    expect(result.modelText).toBe("Done.");
+    expect(model.requests[1]?.signal?.aborted).toBe(false);
+  });
+
+  it("the default turn timeout comes from agent/limits.json", () => {
+    expect(TURN_TIMEOUT_MS).toBe(60_000);
   });
 
   it("sends the prompt, the three tools and the growing history to the model", async () => {

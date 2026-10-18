@@ -33,16 +33,47 @@ export function firebaseApp(): App {
   return app;
 }
 
+// Downloads skip `file.download()`: its stream path stacks three pipelines (node-fetch,
+// teeny-request, the Storage client) on one response body, and every download logged
+// MaxListenersExceededWarning (11 error and close listeners on a PassThrough). One media GET
+// read into a buffer replaces exists() + getMetadata() + download(): three round trips become
+// one, a 404 means the object is missing, and the Content-Type header is the object's.
+const DOWNLOAD_ATTEMPTS = 3;
+const DOWNLOAD_TIMEOUT_MS = 60_000;
+
 export function cloudStorage(bucketName = process.env.STORAGE_BUCKET): StoragePort {
   const bucket = getStorage(firebaseApp()).bucket(bucketName);
+  const client = bucket.storage;
+  // The emulator (STORAGE_EMULATOR_HOST) takes unauthenticated requests, as the client does.
+  const authenticate = !client.customEndpoint || client.useAuthWithCustomEndpoint === true;
   return {
     async download(path) {
-      const file = bucket.file(path);
-      const [exists] = await file.exists();
-      if (!exists) return null;
-      const [metadata] = await file.getMetadata();
-      const [bytes] = await file.download();
-      return { bytes: new Uint8Array(bytes), contentType: metadata.contentType };
+      const url = `${client.baseUrl}/b/${encodeURIComponent(bucket.name)}/o/${encodeURIComponent(path)}?alt=media`;
+      for (let attempt = 1; ; attempt++) {
+        let response: Response;
+        try {
+          const headers = authenticate ? await client.authClient.getRequestHeaders(url) : {};
+          response = await fetch(url, {
+            headers,
+            signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+          });
+        } catch (error) {
+          if (attempt < DOWNLOAD_ATTEMPTS) continue;
+          throw new Error("Storage download failed", { cause: error });
+        }
+        if (response.status === 404) return null;
+        if (response.ok) {
+          const bytes = new Uint8Array(await response.arrayBuffer());
+          const contentType = response.headers.get("content-type") ?? undefined;
+          return { bytes, ...(contentType ? { contentType } : {}) };
+        }
+        await response.body?.cancel();
+        const retriable = response.status === 429 || response.status >= 500;
+        if (!retriable || attempt >= DOWNLOAD_ATTEMPTS) {
+          throw new Error(`Storage download failed with HTTP ${response.status}`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+      }
     },
     async delete(path) {
       await bucket.file(path).delete({ ignoreNotFound: true });

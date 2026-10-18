@@ -22,7 +22,7 @@ Find up to three actions that make the goal ready sooner, prove each one with `s
 1. The model proposes one candidate change at a time, using the change types in spec 02 (refinance or pay off a loan, cap a spending category, move volatile assets to liquid).
 2. It calls `simulate` with the candidate added to the changes kept so far.
 3. Code keeps the candidate only if it reduces `monthsToReady` on the leading path or removes a rule from month-0 `failing`. Otherwise it is dropped.
-4. Stop after three kept actions, or after 8 tool calls.
+4. Stop after three kept actions, after 8 tool calls, or when one model turn runs past the turn timeout (60 s).
 5. Order kept actions by `fromMonth`, then by months saved.
 
 **Cards**: for each kept action, code builds `chips` and `monthsSaved` from the simulation results (e.g. "DTI 42% → 35%"), and Gemini writes `title`, `impactLine` and `description` given those numbers. The model never states a number that is not in the data passed to it; a check rejects any card whose text contains a number not present in its inputs.
@@ -41,6 +41,7 @@ Find up to three actions that make the goal ready sooner, prove each one with `s
 - **Plan diversity**: a plan holds at most one `cap_spending`, one `move_assets` and one action per loan; the `simulate` tool refuses a candidate that would break this with a message naming what to test instead. Without it the first live run produced three spending caps and never touched the PayLater. The prompt gives the order to test: expensive debt first (when the goal has a loan path), then the volatile assets when the goal is under 36 months away, then one cap.
 - **Thinking**: the agent's turns and the writer call run with `thinkingLevel` LOW (`thinking: "low"` on the client requests); with the model's default a single turn took up to 103 s on `gemini-3.1-pro-preview`, which `gemini-pro-latest` resolves to today.
 - **Budget**: every tool call counts toward the 8, the two list tools included; the prompt already carries the loans and the categories, so a run rarely needs them. The loop also stops when the model answers in words.
+- **Turn timeout** (2026-10-18, after the first deployed run): each model turn of the loop has a timeout, `turnTimeoutMs` in `worker/src/agent/limits.json` (60 000 ms; `turnTimeoutMs` on `runAgent`/`runProposeVerifyLoop` options overrides it). Past it the loop aborts the request (the SDK's `abortSignal`, client-side only) and stops with `stoppedBecause: "model_timeout"`, like `model_done`: the actions verified so far stand, no `error` is set, the writer still runs, and `runAgent` adds the warning "Agent loop ended early: a model turn took longer than 60000 ms". On that run one turn took 304 s and returned no calls (the others 3–5 s), which held a 2-minute run for 7 minutes. A model error still stops with `model_error`.
 - **Wedding**: the `simulate` tool refuses `refinance_loan` and `pay_off_loan` with a message to the model; the model is told to propose savings actions only.
 - **Dismissed actions** are `DismissedAction { type, loanId?, category? }` (shared types), matched by type plus the loan or category (`move_assets` by type alone). The tool refuses them before simulating; the prompt lists them. The choices endpoint stores them at `users/{uid}` under `preferences.dismissedActions` with `dismissedActionsFrom()` and `mergeDismissedActions()` from `shared/src/plan/choices.ts`.
 - **Text**: one structured-output call (Pro tier) writes `title`, `impactLine` and `description` for every card and the summary sentence. The number check parses every digit run in the text and the facts to a value ("12.4", "1350000"); a converted or rounded number is rejected. A rejected card or summary gets one retry naming the offending numbers, then a template made of the facts, so a run never fails for prose. Chips are always code-built.
@@ -54,6 +55,7 @@ Find up to three actions that make the goal ready sooner, prove each one with `s
 - A previously dismissed action type for the same loan or category is never proposed again.
 - No card text contains a number missing from its inputs (automated check).
 - At most 8 tool calls per run (logged).
+- A model turn that hangs past the turn timeout ends the loop with the actions kept so far and `stoppedBecause: "model_timeout"`; the cards and summary are still written (offline test with a hanging scripted turn).
 - Wedding goal → no refinance suggested for a loan path that doesn't exist; actions target savings only.
 
 ## Tasks

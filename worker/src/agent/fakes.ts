@@ -10,10 +10,10 @@ import type {
 
 // Scripted models for the agent tests: one scripted turn per model step, each either a list of
 // tool calls or a closing sentence. A turn may be a function of the step request so a test can
-// react to the previous tool response.
+// react to the previous tool response, or wait (`hang`, a turn that never answers).
 
 export type ScriptedTurn = ToolCall[] | string | Error;
-export type ScriptedTurnFn = (request: ToolStepRequest) => ScriptedTurn;
+export type ScriptedTurnFn = (request: ToolStepRequest) => ScriptedTurn | Promise<ScriptedTurn>;
 
 export class FakeToolModel implements ToolModel {
   readonly requests: ToolStepRequest[] = [];
@@ -26,7 +26,7 @@ export class FakeToolModel implements ToolModel {
   async step(request: ToolStepRequest): Promise<ToolStepResponse> {
     this.requests.push(request);
     const next = this.turns.shift();
-    const turn = typeof next === "function" ? next(request) : next;
+    const turn = typeof next === "function" ? await next(request) : next;
     if (turn === undefined) return done("I have nothing more to test.");
     if (turn instanceof Error) throw turn;
     if (typeof turn === "string") return done(turn);
@@ -77,6 +77,14 @@ export class FakeJsonModel implements JsonModel {
     return structuredClone(next);
   }
 }
+
+/** A turn that never answers; it rejects when the loop aborts the request, as the SDK does. */
+export const hang: ScriptedTurnFn = (request) =>
+  new Promise((_, reject) => {
+    request.signal?.addEventListener("abort", () =>
+      reject(new Error("This operation was aborted")),
+    );
+  });
 
 export const call = (name: string, args: Record<string, unknown> = {}): ToolCall => ({
   name,

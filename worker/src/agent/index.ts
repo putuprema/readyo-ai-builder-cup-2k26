@@ -2,7 +2,7 @@ import type { ActionCard, ActionChoice, Analysis, SimulationResult } from "@adid
 import type { JsonModel, ModelTier, ToolModel } from "../gemini/client.js";
 import { type ActionFacts, buildActionFacts } from "./cards.js";
 import { type AgentInput, createAgentContext } from "./context.js";
-import { runProposeVerifyLoop, type StopReason, type ToolTrace } from "./loop.js";
+import { runProposeVerifyLoop, type StopReason, type ToolTrace, TURN_TIMEOUT_MS } from "./loop.js";
 import { buildSummaryFacts } from "./summary.js";
 import { writeCards } from "./writer.js";
 
@@ -19,7 +19,7 @@ export type {
 } from "./context.js";
 export { createAgentContext, leadingPathOf } from "./context.js";
 export type { KeptAction, LoopResult, ToolTrace } from "./loop.js";
-export { MAX_ACTIONS, MAX_TOOL_CALLS, runProposeVerifyLoop } from "./loop.js";
+export { MAX_ACTIONS, MAX_TOOL_CALLS, runProposeVerifyLoop, TURN_TIMEOUT_MS } from "./loop.js";
 export { checkNumbers, numbersIn } from "./numbers.js";
 export { buildSummaryFacts } from "./summary.js";
 export { writeCards } from "./writer.js";
@@ -27,6 +27,8 @@ export { writeCards } from "./writer.js";
 export interface AgentOptions {
   maxToolCalls?: number;
   maxActions?: number;
+  /** Per model turn of the loop (default agent/limits.json). */
+  turnTimeoutMs?: number;
   /** Model tier for the loop and the writer (default pro, as the spec says). */
   tier?: ModelTier;
   log?: (message: string) => void;
@@ -58,6 +60,7 @@ export async function runAgent(
   const loopOptions = {
     ...(options.maxToolCalls === undefined ? {} : { maxToolCalls: options.maxToolCalls }),
     ...(options.maxActions === undefined ? {} : { maxActions: options.maxActions }),
+    ...(options.turnTimeoutMs === undefined ? {} : { turnTimeoutMs: options.turnTimeoutMs }),
     ...(options.tier === undefined ? {} : { tier: options.tier }),
     ...(options.log === undefined ? {} : { log: options.log }),
   };
@@ -68,6 +71,10 @@ export async function runAgent(
 
   const warnings = [...written.warnings];
   if (loop.error) warnings.push(`Agent loop ended early: ${loop.error}`);
+  if (loop.stoppedBecause === "model_timeout") {
+    const ms = options.turnTimeoutMs ?? TURN_TIMEOUT_MS;
+    warnings.push(`Agent loop ended early: a model turn took longer than ${ms} ms`);
+  }
 
   return {
     withoutPlan: ctx.withoutPlan,
