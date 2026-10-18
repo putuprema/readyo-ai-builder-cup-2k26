@@ -3,10 +3,18 @@
 //
 //   pnpm seed:demo                       against the real project (needs ADC and DEMO_PASSWORD)
 //   pnpm seed:demo:emulator              against the Firestore + Auth emulators
+//   ... seed:demo --goals-list           emulators only: adds the goals-list demo (spec 12),
+//                                        one analysing, two draft and a second active goal
 //
 // Re-running replaces the demo user's Firestore tree and keeps the Auth user. The rules the
 // analysis was simulated with are seeded separately (pnpm seed:rules).
-import { DEMO_DISPLAY_NAME, DEMO_EMAIL, DEMO_UID, demoSeedDocuments } from "@adidi/shared";
+import {
+  DEMO_DISPLAY_NAME,
+  DEMO_EMAIL,
+  DEMO_UID,
+  demoSeedDocuments,
+  goalsListSeedDocuments,
+} from "@adidi/shared";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { adminApp, onEmulator, resolveProjectId } from "./admin.js";
@@ -22,6 +30,10 @@ const password = process.env.DEMO_PASSWORD ?? (onEmulator ? "demo-pass-2026" : u
 if (!password) {
   fail("Set DEMO_PASSWORD for the demo account (at least 6 characters).");
 }
+
+// The goals-list extras include a run that never finishes, so they stay off the real project.
+const goalsList = process.argv.includes("--goals-list");
+if (goalsList && !onEmulator) fail("--goals-list is for the emulators only.");
 
 const app = adminApp(projectId);
 const auth = getAuth(app);
@@ -48,6 +60,7 @@ async function upsertAuthUser(): Promise<void> {
 async function replaceFirestoreTree(): Promise<number> {
   await db.recursiveDelete(db.doc(`users/${DEMO_UID}`));
   const docs = demoSeedDocuments(DEMO_UID);
+  if (goalsList) docs.push(...goalsListSeedDocuments(DEMO_UID));
   // Firestore batches take at most 500 writes.
   for (let i = 0; i < docs.length; i += 400) {
     const batch = db.batch();

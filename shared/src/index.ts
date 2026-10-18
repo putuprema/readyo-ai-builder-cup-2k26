@@ -1,3 +1,4 @@
+export * from "./demo/goals-list.js";
 export * from "./demo/index.js";
 export {
   type BuildEstimateInput,
