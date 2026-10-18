@@ -11,22 +11,33 @@ Turn a month of normalized transactions, loans and holdings into one `Snapshot`,
 ## Inputs and outputs
 
 ```ts
-buildSnapshot(month, transactions, loans, holdings, profile, carriedFrom?: Snapshot): Snapshot
+buildSnapshot(input: {
+  month: string;                 // "YYYY-MM"; records from other months are ignored
+  transactions: Transaction[];   // normalized (stage 3)
+  loans: Loan[];
+  holdings: Holding[];
+  profile: Profile;
+  bankBalances?: number[];       // closing balances of the bank and e-wallet statements, when shown
+  incomeHistory?: number[];      // computed net income of earlier months (freelancer variability)
+  sources?: SourceKind[];        // source kinds read this month (carry-forward)
+  carriedFrom?: { snapshot: Snapshot; sources: SourceKind[] };   // last month, for a check-in
+}): Snapshot
 computeMetrics(snapshot, profile, goal, rules, simulation: SimulationResult): Metric[]
 ```
 
-Both pure functions in `shared/`.
+Both pure functions in `shared/` (`shared/src/snapshot/`), taking one options object like `simulate()`.
 
 ## Behavior
 
 **Snapshot**
 
-- `netIncome`: sum of `income` transactions, excluding `own_transfer`. If the user confirmed a different income in their profile, use the profile value and keep the computed one for display.
-- `essentialSpending`, `discretionarySpending`: sums by class; `discretionaryByCategory` from `category`.
+- `netIncome`: sum of `income` transactions with direction `in`, excluding `own_transfer`. The profile's confirmed income (`profile.netMonthlyIncome`, when above 0) is used as `netIncome`; the computed figure is kept as `computedNetIncome` for display.
+- `essentialSpending`, `discretionarySpending`: sums by class, debits minus credits (a refund reduces spending); `discretionaryByCategory` from `category` (`other` when missing). `debt_payment` rows are not summed (see `debtPayments`); `investment` rows are the user's own money moving, not spending.
 - `cashWithdrawals`: ATM withdrawals (class `cash`), treated as one spending bucket.
-- `debtPayments`: sum of installments of active loans (from the loan statements, not from transactions, to avoid double counting).
-- `liquidAssets`: holdings with `liquidityClass` cash or liquid and `volatile = false`, plus bank balances if extracted.
+- `debtPayments`: sum of installments of active loans (outstanding above 0), from the loan statements, not from transactions, to avoid double counting. `loans` holds the active loans.
+- `liquidAssets`: holdings with `liquidityClass` cash or liquid and `volatile = false`, plus the bank balances if extracted (the balances are also stored as `bankBalances`). Locked, non-volatile holdings (time deposits) count toward neither figure.
 - `volatileAssets`: holdings with `volatile = true`.
+- `incomeVariability` (freelancers only): population standard deviation over the mean of `incomeHistory` plus this month's computed income, set only when two or more months are available.
 - Missing source this month (monthly check-in): copy that source's values from `carriedFrom` and list it in `estimatedSources`.
 
 **Metrics** (ids, in display order)

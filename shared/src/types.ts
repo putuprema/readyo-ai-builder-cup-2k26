@@ -137,17 +137,19 @@ export interface Holding {
 
 export interface Snapshot {
   month: string;
-  netIncome: number;
+  netIncome: number; // the profile's confirmed income, or the computed one when none is confirmed
+  computedNetIncome?: number; // income transactions this month, own transfers excluded (for display)
   essentialSpending: number;
   discretionarySpending: number;
   discretionaryByCategory: Record<string, number>;
   cashWithdrawals: number;
   debtPayments: number;
   loans: Loan[];
-  liquidAssets: number; // cash + liquid, non-volatile
+  liquidAssets: number; // cash + liquid, non-volatile, including bank balances
+  bankBalances?: number; // the part of liquidAssets that is bank and e-wallet balances
   volatileAssets: number;
-  incomeVariability?: number; // freelancers
-  estimatedSources: string[]; // sources carried from last month
+  incomeVariability?: number; // freelancers: std dev / mean of net income over the months available
+  estimatedSources: string[]; // source kinds carried from last month (SourceKind values)
 }
 
 export type RuleUnit = "ratio" | "years" | "months" | "rupiah" | "rate";

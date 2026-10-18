@@ -63,17 +63,19 @@ interface Holding { id: string; month: string; instrument: string; provider: str
 
 interface Snapshot {
   month: string;
-  netIncome: number;
+  netIncome: number;                   // the profile's confirmed income, or the computed one
+  computedNetIncome?: number;          // income seen in the statements, own transfers excluded
   essentialSpending: number;
   discretionarySpending: number;
   discretionaryByCategory: Record<string, number>;
   cashWithdrawals: number;
   debtPayments: number;
   loans: Loan[];
-  liquidAssets: number;                // cash + liquid, non-volatile
+  liquidAssets: number;                // cash + liquid, non-volatile, including bank balances
+  bankBalances?: number;               // the part of liquidAssets that is bank and e-wallet balances
   volatileAssets: number;
-  incomeVariability?: number;          // freelancers
-  estimatedSources: string[];          // sources carried from last month
+  incomeVariability?: number;          // freelancers: std dev / mean over the months available
+  estimatedSources: string[];          // source kinds carried from last month
 }
 
 interface RuleValue { id: string; label: string; value: number; unit: "ratio" | "years" | "months" | "rupiah" | "rate"; usedFor: string[]; source: { title: string; url: string }; checkedAt: string; }

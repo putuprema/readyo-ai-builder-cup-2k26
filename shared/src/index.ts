@@ -12,4 +12,11 @@ export { effectiveAnnualRate, type FeeKind, type FeeStructure, type LoanFigures 
 export { mergeRules, RULE_IDS, type RuleId, type Rules, requireRule } from "./rules.js";
 export { amortizeOneMonth, annuity, grow, monthsBetween } from "./simulate/money.js";
 export { DEFAULT_MAX_MONTHS, type SimulateInput, simulate } from "./simulate/simulate.js";
+export {
+  type BuildSnapshotInput,
+  buildSnapshot,
+  coefficientOfVariation,
+  isActiveLoan,
+  isLiquidHolding,
+} from "./snapshot/build.js";
 export type * from "./types.js";
