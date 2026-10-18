@@ -194,7 +194,12 @@ export function schemaFor(kind: SourceKind) {
  * safe-integer bounds zod adds for `.int()` are dropped as noise.
  */
 export function responseJsonSchemaFor(kind: SourceKind): Record<string, unknown> {
-  const { $schema: _ignored, ...rest } = z.toJSONSchema(schemaFor(kind), {
+  return geminiJsonSchema(schemaFor(kind));
+}
+
+/** A zod schema as the JSON Schema subset Gemini accepts for responses and tool parameters. */
+export function geminiJsonSchema(schema: z.ZodType): Record<string, unknown> {
+  const { $schema: _ignored, ...rest } = z.toJSONSchema(schema, {
     target: "draft-2020-12",
     io: "output",
   });
