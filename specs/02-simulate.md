@@ -106,7 +106,7 @@ Each month `m` from 0 to `maxMonths`:
    - `dti = (debtPayments + installment) / netIncome`, with `spouseMonthlyIncome` added only for a joint application.
    - Passes when: `dti ≤ dti_cap`, `liquid − emergencyRequired × essential ≥ dpNeeded`, `emergencyMonths ≥ emergencyRequired`.
    - Record failing rule ids in `failing` (`dti_cap`, `emergency_months_required`, and the DP rule id that applied). The first passing month is `monthsToReady`.
-8. **Options** recorded in `rejectedOptions` with the rule that rejects them: joint application when single, preferred tenor longer than allowed by `loan_end_age`, FLPP when income is above `flpp_income_ceiling` or the home is not a first home.
+8. **Options** recorded in `rejectedOptions` with the rule that rejects them: joint application when single, preferred tenor longer than allowed by `loan_end_age`, FLPP when income is above `flpp_income_ceiling` or the home is not a first home. Option names: `joint_application`, `tenor_<n>y`, `flpp`. Two rejections have no numeric rule in the table and use the ids `marital_status` (joint application without a spouse) and `flpp_first_home_only` (FLPP for a non-first home). A car tenor above `kkb_max_tenor_years` is rejected the same way. When an option is rejected, the simulation uses the allowed alternative (single applicant, the longest allowed tenor) and the rule's `rulesChecked` effect is `rejects_option`.
 
 Annuity: `installment = P × r / (1 − (1 + r)^−n)`, `r` = annual rate / 12, `n` = months.
 

@@ -211,7 +211,7 @@ describe("the loan path", () => {
     expect(byRule.growth_property).toMatchObject({ valueUsed: 0.06, effect: "sets_target" });
   });
 
-  it("loan_end_age limits the tenor for an older applicant", () => {
+  it("loan_end_age cuts the default 20-year tenor for an older applicant", () => {
     const f = loadProfile("house-a");
     const r = simulate({
       snapshot: f.snapshot,
@@ -222,7 +222,8 @@ describe("the loan path", () => {
     });
     expect(r.rulesChecked.find((c) => c.rule === "loan_end_age")).toMatchObject({
       you: 10,
-      effect: "limits",
+      effect: "rejects_option",
     });
+    expect(r.loan?.tenorYears === undefined || r.loan.tenorYears <= 10).toBe(true);
   });
 });
