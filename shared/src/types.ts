@@ -30,6 +30,7 @@ export interface HouseInputs {
   targetYear: number;
   plannedDp?: number;
   joint?: "not_married" | "joint" | "single_applicant";
+  preferredTenorYears?: number; // default 20 (specs/02-simulate.md)
 }
 
 export interface CarInputs {
@@ -40,6 +41,7 @@ export interface CarInputs {
   targetYear: number;
   plannedDp?: number;
   tradeInValue?: number;
+  preferredTenorYears?: number; // default kkb_max_tenor_years (specs/02-simulate.md)
 }
 
 export interface WeddingInputs {

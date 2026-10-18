@@ -46,6 +46,7 @@ export const houseInputs = z
     targetYear: year,
     plannedDp: rupiah.optional(),
     joint: z.enum(["not_married", "joint", "single_applicant"]).optional(),
+    preferredTenorYears: z.number().int().positive().optional(),
   })
   .strict() satisfies z.ZodType<HouseInputs>;
 
@@ -58,6 +59,7 @@ export const carInputs = z
     targetYear: year,
     plannedDp: rupiah.optional(),
     tradeInValue: rupiah.optional(),
+    preferredTenorYears: z.number().int().positive().optional(),
   })
   .strict() satisfies z.ZodType<CarInputs>;
 

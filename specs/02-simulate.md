@@ -31,7 +31,13 @@ Defaults live in `rules/` (Firestore) and in `shared/rules/defaults.json` for te
 | `growth_wedding` | Wedding cost growth per year | [__] |
 | `return_money_market` | Return on liquid savings per year | 0.045 |
 
-`[__]` values must be filled from a checked source before the demo. Until then, tests use the values in `fixtures/profiles/rules-test.json` (the defaults above with plausible placeholders, clearly marked as test-only).
+`[__]` values must be filled from a checked source before the demo. Until then, tests use the values in `fixtures/profiles/rules-test.json` (the defaults above with plausible placeholders, clearly marked as test-only). `shared/rules/defaults.json` leaves the `[__]` rules out: `simulate()` throws a clear error when a rule it needs is missing, so an unchecked value can never be guessed silently.
+
+Data notes:
+
+- `emergency_months_required` is stored as two records, `emergency_months_required` (3) and `emergency_months_required_freelance` (6); code picks one by `profile.employment` and reports the rule as `emergency_months_required`.
+- The preferred loan tenor is `inputs.preferredTenorYears` on house and car goals (optional; default 20 years for a house, `kkb_max_tenor_years` for a car).
+- `mergeRules(defaults, overrides)` in `shared/src/rules.ts` builds the flat map `simulate()` takes; overrides never change the defaults.
 
 ## Signature
 
@@ -100,13 +106,15 @@ Each month `m` from 0 to `maxMonths`:
    - `dti = (debtPayments + installment) / netIncome`, with `spouseMonthlyIncome` added only for a joint application.
    - Passes when: `dti ≤ dti_cap`, `liquid − emergencyRequired × essential ≥ dpNeeded`, `emergencyMonths ≥ emergencyRequired`.
    - Record failing rule ids in `failing` (`dti_cap`, `emergency_months_required`, and the DP rule id that applied). The first passing month is `monthsToReady`.
-8. **Options** recorded in `rejectedOptions` with the rule that rejects them: joint application when single, preferred tenor longer than allowed by `loan_end_age`, FLPP when income is above `flpp_income_ceiling` or the home is not a first home.
+8. **Options** recorded in `rejectedOptions` with the rule that rejects them: joint application when single, preferred tenor longer than allowed by `loan_end_age`, FLPP when income is above `flpp_income_ceiling` or the home is not a first home. Option names: `joint_application`, `tenor_<n>y`, `flpp`. Two rejections have no numeric rule in the table and use the ids `marital_status` (joint application without a spouse) and `flpp_first_home_only` (FLPP for a non-first home). A car tenor above `kkb_max_tenor_years` is rejected the same way. When an option is rejected, the simulation uses the allowed alternative (single applicant, the longest allowed tenor) and the rule's `rulesChecked` effect is `rejects_option`.
 
 Annuity: `installment = P × r / (1 − (1 + r)^−n)`, `r` = annual rate / 12, `n` = months.
 
 `simulate()` does no I/O, no clock reads, no randomness. Same input, same output.
 
 ## Fixtures
+
+All fixtures are `{ name, description, snapshot, profile, goal }` JSON files loaded by the tests. Note: with the default rules House-A never reaches KPR approval. Liquid savings cover the DP from about month 50, but the loan must end by 55, so the tenor shrinks every year and the DTI is back above the cap from month 40. Tests that need a finite approval month use House-A with Rp 60,000,000 liquid (approval in month 34). Besides House-A: `car-b.json` (new car on a KKB, married, single applicant), `wedding-c.json` (cash wedding with partner and family shares, no loan path), `freelancer-d.json` (freelance income, secondary-market apartment, joint KPR, six-month emergency rule).
 
 `fixtures/profiles/house-a.json`: net income Rp 18,000,000; essential Rp 8,000,000; discretionary Rp 5,000,000 (food delivery Rp 1,400,000); cash withdrawals Rp 500,000; one PayLater loan, outstanding Rp 12,400,000, installment Rp 2,100,000, 31% per year, 8 months left; liquid Rp 4,000,000; volatile Rp 15,000,000; age 35, permanent, single. Goal: first home, new build, target Rp 800,000,000 today, growth 6%, KPR preference. Monthly surplus before changes: Rp 2,400,000.
 

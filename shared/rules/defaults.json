@@ -1,0 +1,92 @@
+[
+  {
+    "id": "dti_cap",
+    "label": "Debt-to-income cap",
+    "value": 0.35,
+    "unit": "ratio",
+    "usedFor": ["kpr", "kkb"],
+    "source": { "title": "[bank criteria, to be checked]", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "min_dp_first_home_new",
+    "label": "Minimum down payment, first home, new build",
+    "value": 0.2,
+    "unit": "ratio",
+    "usedFor": ["kpr"],
+    "source": { "title": "[bank criteria, to be checked]", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "loan_end_age",
+    "label": "Loan must end by this age",
+    "value": 55,
+    "unit": "years",
+    "usedFor": ["kpr", "kkb"],
+    "source": { "title": "[bank criteria, to be checked]", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "emergency_months_required",
+    "label": "Emergency fund required before applying",
+    "value": 3,
+    "unit": "months",
+    "usedFor": ["kpr", "kkb", "cash"],
+    "source": { "title": "Our rule", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "emergency_months_required_freelance",
+    "label": "Emergency fund required before applying (freelance income)",
+    "value": 6,
+    "unit": "months",
+    "usedFor": ["kpr", "kkb", "cash"],
+    "source": { "title": "Our rule", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "kpr_rate_fixed",
+    "label": "KPR rate during the fixed period (used to qualify)",
+    "value": 0.065,
+    "unit": "rate",
+    "usedFor": ["kpr"],
+    "source": { "title": "[published KPR rates, to be checked]", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "kpr_rate_floating",
+    "label": "KPR rate after the fixed period",
+    "value": 0.11,
+    "unit": "rate",
+    "usedFor": ["kpr"],
+    "source": { "title": "[published KPR rates, to be checked]", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "kpr_fixed_years",
+    "label": "Length of the KPR fixed-rate period",
+    "value": 3,
+    "unit": "years",
+    "usedFor": ["kpr"],
+    "source": { "title": "[published KPR rates, to be checked]", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "growth_property",
+    "label": "Property price growth per year",
+    "value": 0.06,
+    "unit": "rate",
+    "usedFor": ["house"],
+    "source": { "title": "[BI residential property price index, to be checked]", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "return_money_market",
+    "label": "Return on liquid savings per year",
+    "value": 0.045,
+    "unit": "rate",
+    "usedFor": ["house", "car", "wedding"],
+    "source": { "title": "[money-market fund returns, to be checked]", "url": "" },
+    "checkedAt": "2026-10-18"
+  }
+]

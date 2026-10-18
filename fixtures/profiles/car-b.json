@@ -1,0 +1,54 @@
+{
+  "name": "Car-B",
+  "description": "Contract employee, married, no debt, wants a new car on a KKB. Spouse income is present but the application is single. Monthly surplus: Rp 3,500,000. Approvable once the DP is saved; DTI stays under the cap.",
+  "snapshot": {
+    "month": "2026-09",
+    "netIncome": 12000000,
+    "essentialSpending": 6000000,
+    "discretionarySpending": 2500000,
+    "discretionaryByCategory": {
+      "food_delivery": 900000,
+      "shopping": 1000000,
+      "entertainment": 600000
+    },
+    "cashWithdrawals": 0,
+    "debtPayments": 0,
+    "loans": [],
+    "liquidAssets": 30000000,
+    "volatileAssets": 0,
+    "estimatedSources": []
+  },
+  "profile": {
+    "age": 29,
+    "employment": "contract",
+    "netMonthlyIncome": 12000000,
+    "maritalStatus": "married",
+    "dependents": 0,
+    "spouseMonthlyIncome": 9000000,
+    "city": "Bandung"
+  },
+  "goal": {
+    "id": "car-b",
+    "type": "car",
+    "status": "active",
+    "payPreference": "loan",
+    "inputs": {
+      "condition": "new",
+      "modelOrSegment": "compact MPV",
+      "city": "Bandung",
+      "targetYear": 2028
+    },
+    "estimate": {
+      "targetToday": 220000000,
+      "rangeLow": 200000000,
+      "rangeHigh": 240000000,
+      "growthRatePerYear": 0.03,
+      "targetAtGoalDate": 233000000,
+      "sources": [],
+      "inputsUsed": {},
+      "calculatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    "createdAt": "2026-10-01T00:00:00.000Z",
+    "updatedAt": "2026-10-01T00:00:00.000Z"
+  }
+}

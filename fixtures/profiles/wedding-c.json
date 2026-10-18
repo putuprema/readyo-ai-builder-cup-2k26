@@ -1,0 +1,69 @@
+{
+  "name": "Wedding-C",
+  "description": "Permanent employee, single, one small KTA, saving for a standard wedding in 2028 paid in cash with the partner and family covering part of the cost. No loan path. Monthly surplus: Rp 3,300,000.",
+  "snapshot": {
+    "month": "2026-09",
+    "netIncome": 11000000,
+    "essentialSpending": 5000000,
+    "discretionarySpending": 2000000,
+    "discretionaryByCategory": {
+      "food_delivery": 800000,
+      "entertainment": 700000,
+      "shopping": 500000
+    },
+    "cashWithdrawals": 0,
+    "debtPayments": 700000,
+    "loans": [
+      {
+        "id": "kta-1",
+        "month": "2026-09",
+        "lender": "Bank",
+        "type": "kta",
+        "outstandingPrincipal": 7500000,
+        "monthlyInstallment": 700000,
+        "effectiveAnnualRate": 0.14,
+        "remainingTenorMonths": 12,
+        "sourceFileId": "doc-bank"
+      }
+    ],
+    "liquidAssets": 25000000,
+    "volatileAssets": 10000000,
+    "estimatedSources": []
+  },
+  "profile": {
+    "age": 27,
+    "employment": "permanent",
+    "netMonthlyIncome": 11000000,
+    "maritalStatus": "single",
+    "dependents": 0,
+    "city": "Yogyakarta"
+  },
+  "goal": {
+    "id": "wedding-c",
+    "type": "wedding",
+    "status": "active",
+    "payPreference": "none",
+    "inputs": {
+      "targetMonth": "2028-06",
+      "city": "Yogyakarta",
+      "guests": 300,
+      "scale": "standard",
+      "partnerShare": 60000000,
+      "familyContribution": 40000000,
+      "honeymoon": "domestic",
+      "honeymoonBudget": 15000000
+    },
+    "estimate": {
+      "targetToday": 200000000,
+      "rangeLow": 170000000,
+      "rangeHigh": 240000000,
+      "growthRatePerYear": 0.05,
+      "targetAtGoalDate": 218000000,
+      "sources": [],
+      "inputsUsed": {},
+      "calculatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    "createdAt": "2026-10-01T00:00:00.000Z",
+    "updatedAt": "2026-10-01T00:00:00.000Z"
+  }
+}
