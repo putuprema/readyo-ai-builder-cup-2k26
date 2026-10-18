@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { firestore } from "@/lib/firebase";
 
 // Live users/{uid}/goals. Also used by the Documents tab (spec 13) to choose between the
-// monthly check-in and the "Start with a goal" state (DocumentsNoGoals).
+// monthly check-in and the "Start with a goal" state (NoGoals in CheckInPage).
 
 export type GoalsState =
   | { status: "loading" }

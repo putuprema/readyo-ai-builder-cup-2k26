@@ -76,63 +76,6 @@ export function GoalsEmpty() {
   );
 }
 
-const STEPS = [
-  {
-    tag: "1 · Now",
-    title: "Create a goal",
-    text: "A house for now; car and wedding soon",
-    now: true,
-  },
-  {
-    tag: "2 · Same flow",
-    title: "Add one month of statements",
-    text: "Bank, PayLater, investments",
-  },
-  { tag: "3 · Every month", title: "Check in here", text: "One upload updates every goal" },
-];
-
-/**
- * The Documents tab for a user with no goals (5a). Rendered by the Documents page (spec 13)
- * instead of the monthly check-in when `useGoals` returns no goals; includes the page title.
- */
-export function DocumentsNoGoals() {
-  return (
-    <main className="mx-auto box-border flex w-full max-w-[1120px] flex-col gap-7 px-4 pt-10 pb-16 sm:px-8">
-      <h1 className="m-0 font-extrabold text-[34px] leading-[1.15] tracking-[-0.02em]">
-        Documents
-      </h1>
-      <EmptyCard
-        icon={
-          <>
-            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-            <path d="M14 3v5h5" />
-            <path d="M9 13h6M9 17h4" />
-          </>
-        }
-        title="Start with a goal"
-        text="Your statements are read against a goal, so you add them while creating one. After that, you'll come back here once a month to add new statements and update all your goals at once."
-      >
-        <ol className="m-0 grid w-full max-w-[760px] list-none grid-cols-1 gap-4 p-0 text-left sm:grid-cols-3">
-          {STEPS.map((step) => (
-            <li key={step.tag} className="flex flex-col gap-1.5 rounded-[14px] bg-page p-[18px]">
-              <span
-                className={`font-bold text-[12px] uppercase tracking-[0.06em] ${
-                  step.now ? "text-accent-strong" : "text-muted"
-                }`}
-              >
-                {step.tag}
-              </span>
-              <span className="font-bold">{step.title}</span>
-              <span className="text-[13px] text-muted">{step.text}</span>
-            </li>
-          ))}
-        </ol>
-        <FirstGoalButton />
-      </EmptyCard>
-    </main>
-  );
-}
-
 function EmptyCard({
   icon,
   title,
