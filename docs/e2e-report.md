@@ -52,19 +52,33 @@ Date: 2026-10-18. Tested commit: `ac2c1f3` (plus the README commit that followed
 
 ## Open issues
 
-None of these blocks the demo; nothing was fixed apart from one README line.
+None of these blocks the demo. A fix pass on `e2e-fixes` (one commit per issue) fixed 1, 3 to 10 and 12; 2, 11, 13 and 14 were left open. Each item notes its fix.
 
 1. Known, reproduced: the KPR path card shows "Rp 9.3 m / mo" while the DTI sentence reads "KPR installment of Rp 9.6 m" (demo user), and "Rp 9.7 m" against "Rp 10.6 m" on the live run. Same as the Next item in `docs/progress.md`.
+   **Fixed** in `84b02f5`: the card row is now "Monthly installment today" and reads month 0 of the no-change path, the same `installment` the DTI sentence and the rules table use (the old row showed the with-plan installment at approval). Demo: both read Rp 9.6 m on the emulators.
 2. Carried-forward sources are not shown on the result page. After the monthly run with two sources missing, the snapshot has `estimatedSources: ["paylater"]` but nothing on the result page says so (the web code does not read the field), while `docs/screens.md` says the result is marked as estimates. Also, the missing second bank file (SakuPay) was neither carried nor listed, because the worker carries by kind (the known spec 13 follow-up 1). Repro: finish a first run, open `/documents/?month=2026-10`, add only the bank and investment files, submit, open the result.
+   Not addressed in the fix pass (left open on purpose).
 3. The delta summary reads awkwardly: "with 0 of your 0 committed actions showing in your statements" and "down payment progress at 26% to 26%" listed as a moved check (known spec 13 follow-up 2; the unchanged check is new to this list).
+   **Fixed** in `b40b449`: with no committed actions the summary facts carry no action counts (and the prompt says to leave actions out); a value move that reads the same once formatted is not a move, in the worker and when the result page shows an older stored delta.
 4. The Assumptions page shows raw placeholders as sources: "[bank criteria, to be checked]", "[published KPR rates, to be checked]", "[BI residential property price index, to be checked]", "[money-market fund returns, to be checked]". The values behind them are unverified; fill them in before showing the page to judges.
+   **Fixed** in `71f35de`: a bracketed placeholder source shows as "Source to be confirmed" (`sourceTitle()` in `web/components/assumptions/model.ts`). `defaults.json` has no real source for these seven rules yet, so the values themselves are still unverified.
 5. Copy says users can change assumptions while the page is read-only: the new-goal info box ("You can change any of them"), the result page link ("Assumptions you can change", "Edit assumptions and see sources").
+   **Fixed** in `71f35de`: the info box ends at "listed with their sources under Assumptions."; the result card is "Assumptions we used" with "See every assumption and its source"; the welcome page's trust point no longer says "you can change them" either.
 6. A draft that already has an estimate and was saved from step 1 reads "Next: calculate the target" (its `draftStep` is `estimate`), and "Saved 0 s ago" appears right after saving. Wording only; "Next: review the target" would fit. The decision about the Documents tab for a user with only drafts (spec 12 follow-up) still stands: today it shows the no-goals state.
+   **Fixed** in `84f9600`: "Next: review the target" when the draft has an estimate; under 10 s reads "Saved just now". The Documents tab decision for drafts-only users is unchanged.
 7. The documents step and the estimate card disagree on timing: the form header says "about 30 seconds", the footer "about 20 seconds", `docs/screens.md` "about 10 seconds"; the real call took 20 to 35 s.
+   **Fixed** in `c20b9c0`: "about 30 seconds" in the form header, the footer note, the loading card, `docs/screens.md` and spec 10.
 8. The profile modal keeps its inline errors after the field is filled, until the next submit.
+   **Fixed** in `42761b6`: editing a field clears its inline error.
 9. The progress page keeps "Usually a few minutes. No need to wait here" at 100%.
+   **Fixed** in `4890fbf`: the sentence shows only while the run is running.
 10. A statement file attached to the e-wallet slot defaults its kind dropdown to Bank, so an e-wallet history is labelled Bank unless the user changes it; I did not check what the extraction does with the wrong label.
+   **Fixed** in `c19ca5f`: the file name sets the starting kind (`initialKind()` in `web/lib/documents.ts`): an e-wallet name (GoPay, OVO, DANA, ShopeePay, LinkAja, SakuPay, "ewallet") in the bank card starts as E-wallet, a known pinjol in the loans card as Pinjol; GoPayLater stays PayLater. The dropdown still changes it.
 11. The seeded Bandung draft (`house-bandung`) opens with the city dropdown empty because Bandung is not one of the five cities. Only seed data can hold this, but a draft saved before the dropdown would behave the same.
+   Not addressed in the fix pass (left open on purpose).
 12. With no earlier month at all (the demo user with its September document removed, not a state a real user can reach), the check-in says "compare September with Last month" and "Last month's numbers" with a capital L. The "Upload October" button on the result page leads to a page that says the next upload opens on 1 November.
+   **Fixed** in `52b165b` (the copy): "last month" is lower-case mid-sentence and capitalised only in the table header. The "Upload October" button leading to the up-to-date page is left as it is.
 13. README said the demo password is `demo-pass-2026`; the seed script reads `DEMO_PASSWORD` from `api/.env`, which was `adidi_cup` here, so the README password failed. README line corrected in `f290ce2`.
+   Not addressed in the fix pass beyond `f290ce2`.
 14. Known and still open, not re-tested: the `@google/genai` "non-text parts functionCall" log line on every agent turn (it appeared again in the e2e run).
+   Not addressed in the fix pass (left open on purpose).
