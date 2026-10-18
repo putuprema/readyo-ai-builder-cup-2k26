@@ -63,7 +63,11 @@ pnpm check:secrets   # fails if a credential is tracked by git
 
 ### Firestore rules tests
 
-`firestore.rules` is tested with `@firebase/rules-unit-testing` against the Firestore emulator (`firestore-tests/`). The emulator is a jar, so it needs a Java runtime: `scripts/test-rules.sh` uses `java` from the PATH, or the Homebrew OpenJDK (`brew install openjdk`), or macOS's `java_home`. The firebase CLI comes from the root dev dependencies; the first run downloads the emulator into `~/.cache/firebase/emulators`.
+`firestore.rules` is tested with `@firebase/rules-unit-testing` against the Firestore emulator (`firestore-tests/`). The emulator is a jar, so it needs a Java runtime: `scripts/with-emulators.sh` uses `java` from the PATH, or the Homebrew OpenJDK (`brew install openjdk`), or macOS's `java_home`. The firebase CLI comes from the root dev dependencies; the first run downloads the emulator into `~/.cache/firebase/emulators`.
+
+### Demo data
+
+`pnpm seed:demo` creates the demo account (`demo@adidi.app`, uid `demo-user`) with an active house goal, one month of extracted data and its analysis, so the UI can be built before the pipeline exists. The data lives in `shared/src/demo/` and is tested for internal consistency; `api/scripts/seed-demo.ts` only writes it. Against the real project it needs Application Default Credentials (`gcloud auth application-default login`), `FIREBASE_PROJECT_ID` and `DEMO_PASSWORD`. Against the emulators, `pnpm seed:demo:emulator` needs nothing else. Re-running replaces the demo user's Firestore tree.
 
 ## Secrets
 

@@ -12,7 +12,9 @@
     "typecheck": "pnpm -r run typecheck",
     "lint": "biome check .",
     "format": "biome format --write .",
-    "check:secrets": "bash scripts/check-secrets.sh"
+    "check:secrets": "bash scripts/check-secrets.sh",
+    "seed:demo": "pnpm --filter api seed:demo",
+    "seed:demo:emulator": "bash scripts/with-emulators.sh firestore,auth pnpm --filter api seed:demo"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
