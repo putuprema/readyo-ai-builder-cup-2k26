@@ -34,6 +34,18 @@ export function ProfileModal({
   const [city, setCity] = useState(defaultCity ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  /** A field's inline error clears as soon as the user edits that field. */
+  function edit(field: string, set: (value: string) => void) {
+    return (value: string) => {
+      set(value);
+      setErrors((current) => {
+        if (!(field in current)) return current;
+        const { [field]: _, ...rest } = current;
+        return rest;
+      });
+    };
+  }
+
   useEffect(() => {
     const el = dialog.current;
     if (!el) return;
@@ -94,7 +106,7 @@ export function ProfileModal({
               id="profile-age"
               inputMode="numeric"
               value={age}
-              onChange={setAge}
+              onChange={edit("age", setAge)}
               placeholder="e.g. 29"
               error={errors.age}
             />
@@ -103,7 +115,7 @@ export function ProfileModal({
             <TextInput
               id="profile-city"
               value={city}
-              onChange={setCity}
+              onChange={edit("city", setCity)}
               placeholder="e.g. Tangerang Selatan"
               error={errors.city}
             />
@@ -131,7 +143,7 @@ export function ProfileModal({
           <RupiahInput
             id="profile-income"
             value={income}
-            onChange={setIncome}
+            onChange={edit("income", setIncome)}
             placeholder="15.000.000"
             error={errors.income}
           />
@@ -153,7 +165,7 @@ export function ProfileModal({
               id="profile-dependents"
               inputMode="numeric"
               value={dependents}
-              onChange={setDependents}
+              onChange={edit("dependents", setDependents)}
               error={errors.dependents}
             />
           </Field>
@@ -168,7 +180,7 @@ export function ProfileModal({
             <RupiahInput
               id="profile-spouse"
               value={spouseIncome}
-              onChange={setSpouseIncome}
+              onChange={edit("spouseIncome", setSpouseIncome)}
               placeholder="0"
               error={errors.spouseIncome}
             />
