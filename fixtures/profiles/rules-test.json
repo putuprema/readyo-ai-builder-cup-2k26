@@ -1,0 +1,31 @@
+{
+  "note": "TEST-ONLY rule values for simulate() tests. The ids listed in `placeholders` are the [__] values from specs/02-simulate.md: plausible numbers that have NOT been checked against BI, OJK or bank criteria. They must never be seeded into the rules collection or shown to a user.",
+  "placeholders": [
+    "min_dp_other_home",
+    "flpp_income_ceiling",
+    "min_dp_kkb",
+    "kkb_max_tenor_years",
+    "kkb_rate",
+    "growth_car",
+    "growth_wedding"
+  ],
+  "rules": {
+    "dti_cap": 0.35,
+    "min_dp_first_home_new": 0.2,
+    "min_dp_other_home": 0.3,
+    "loan_end_age": 55,
+    "flpp_income_ceiling": 8000000,
+    "min_dp_kkb": 0.25,
+    "kkb_max_tenor_years": 5,
+    "emergency_months_required": 3,
+    "emergency_months_required_freelance": 6,
+    "kpr_rate_fixed": 0.065,
+    "kpr_rate_floating": 0.11,
+    "kpr_fixed_years": 3,
+    "kkb_rate": 0.09,
+    "growth_property": 0.06,
+    "growth_car": 0.03,
+    "growth_wedding": 0.05,
+    "return_money_market": 0.045
+  }
+}

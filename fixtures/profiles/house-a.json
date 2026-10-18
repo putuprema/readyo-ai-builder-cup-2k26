@@ -1,0 +1,68 @@
+{
+  "name": "House-A",
+  "description": "The spec's reference profile: permanent employee, single, one PayLater that pushes DTI over the cap, thin emergency fund, first home (new build) on the loan path. Monthly surplus before changes: Rp 2,400,000.",
+  "snapshot": {
+    "month": "2026-09",
+    "netIncome": 18000000,
+    "essentialSpending": 8000000,
+    "discretionarySpending": 5000000,
+    "discretionaryByCategory": {
+      "food_delivery": 1400000,
+      "shopping": 1600000,
+      "entertainment": 1000000,
+      "transport": 1000000
+    },
+    "cashWithdrawals": 500000,
+    "debtPayments": 2100000,
+    "loans": [
+      {
+        "id": "paylater-1",
+        "month": "2026-09",
+        "lender": "PayLater",
+        "type": "paylater",
+        "outstandingPrincipal": 12400000,
+        "monthlyInstallment": 2100000,
+        "effectiveAnnualRate": 0.31,
+        "remainingTenorMonths": 8,
+        "sourceFileId": "doc-paylater"
+      }
+    ],
+    "liquidAssets": 4000000,
+    "volatileAssets": 15000000,
+    "estimatedSources": []
+  },
+  "profile": {
+    "age": 35,
+    "employment": "permanent",
+    "netMonthlyIncome": 18000000,
+    "maritalStatus": "single",
+    "dependents": 0,
+    "city": "Tangerang Selatan"
+  },
+  "goal": {
+    "id": "house-a",
+    "type": "house",
+    "status": "active",
+    "payPreference": "loan",
+    "inputs": {
+      "area": "Tangerang Selatan",
+      "propertyType": "landed",
+      "market": "new",
+      "firstHome": true,
+      "targetYear": 2030,
+      "joint": "not_married"
+    },
+    "estimate": {
+      "targetToday": 800000000,
+      "rangeLow": 700000000,
+      "rangeHigh": 900000000,
+      "growthRatePerYear": 0.06,
+      "targetAtGoalDate": 1010000000,
+      "sources": [],
+      "inputsUsed": {},
+      "calculatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    "createdAt": "2026-10-01T00:00:00.000Z",
+    "updatedAt": "2026-10-01T00:00:00.000Z"
+  }
+}

@@ -31,7 +31,13 @@ Defaults live in `rules/` (Firestore) and in `shared/rules/defaults.json` for te
 | `growth_wedding` | Wedding cost growth per year | [__] |
 | `return_money_market` | Return on liquid savings per year | 0.045 |
 
-`[__]` values must be filled from a checked source before the demo. Until then, tests use the values in `fixtures/profiles/rules-test.json` (the defaults above with plausible placeholders, clearly marked as test-only).
+`[__]` values must be filled from a checked source before the demo. Until then, tests use the values in `fixtures/profiles/rules-test.json` (the defaults above with plausible placeholders, clearly marked as test-only). `shared/rules/defaults.json` leaves the `[__]` rules out: `simulate()` throws a clear error when a rule it needs is missing, so an unchecked value can never be guessed silently.
+
+Data notes:
+
+- `emergency_months_required` is stored as two records, `emergency_months_required` (3) and `emergency_months_required_freelance` (6); code picks one by `profile.employment` and reports the rule as `emergency_months_required`.
+- The preferred loan tenor is `inputs.preferredTenorYears` on house and car goals (optional; default 20 years for a house, `kkb_max_tenor_years` for a car).
+- `mergeRules(defaults, overrides)` in `shared/src/rules.ts` builds the flat map `simulate()` takes; overrides never change the defaults.
 
 ## Signature
 
@@ -107,6 +113,8 @@ Annuity: `installment = P × r / (1 − (1 + r)^−n)`, `r` = annual rate / 12, 
 `simulate()` does no I/O, no clock reads, no randomness. Same input, same output.
 
 ## Fixtures
+
+All fixtures are `{ name, description, snapshot, profile, goal }` JSON files loaded by the tests. Besides House-A: `car-b.json` (new car on a KKB, married, single applicant), `wedding-c.json` (cash wedding with partner and family shares, no loan path), `freelancer-d.json` (freelance income, secondary-market apartment, joint KPR, six-month emergency rule).
 
 `fixtures/profiles/house-a.json`: net income Rp 18,000,000; essential Rp 8,000,000; discretionary Rp 5,000,000 (food delivery Rp 1,400,000); cash withdrawals Rp 500,000; one PayLater loan, outstanding Rp 12,400,000, installment Rp 2,100,000, 31% per year, 8 months left; liquid Rp 4,000,000; volatile Rp 15,000,000; age 35, permanent, single. Goal: first home, new build, target Rp 800,000,000 today, growth 6%, KPR preference. Monthly surplus before changes: Rp 2,400,000.
 

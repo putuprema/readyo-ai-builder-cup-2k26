@@ -28,8 +28,8 @@ interface Profile {
   city: string;
 }
 
-interface HouseInputs { area: string; propertyType: "landed" | "apartment"; landM2?: number; buildingM2?: number; budgetRange?: [number, number]; market: "new" | "secondary"; firstHome: boolean; targetYear: number; plannedDp?: number; joint?: "not_married" | "joint" | "single_applicant"; }
-interface CarInputs { condition: "new" | "used"; modelOrSegment: string; budgetRange?: [number, number]; city: string; targetYear: number; plannedDp?: number; tradeInValue?: number; }
+interface HouseInputs { area: string; propertyType: "landed" | "apartment"; landM2?: number; buildingM2?: number; budgetRange?: [number, number]; market: "new" | "secondary"; firstHome: boolean; targetYear: number; plannedDp?: number; joint?: "not_married" | "joint" | "single_applicant"; preferredTenorYears?: number; }
+interface CarInputs { condition: "new" | "used"; modelOrSegment: string; budgetRange?: [number, number]; city: string; targetYear: number; plannedDp?: number; tradeInValue?: number; preferredTenorYears?: number; }
 interface WeddingInputs { targetMonth: string; city: string; guests: number; scale: "intimate" | "standard" | "large"; partnerShare: number; familyContribution: number; honeymoon: "no" | "domestic" | "abroad"; honeymoonBudget?: number; }
 
 interface Estimate {

@@ -1,0 +1,71 @@
+{
+  "name": "Freelancer-D",
+  "description": "Freelance designer, married, income varies, one pinjol loan, wants a secondary-market apartment with a joint KPR. The six-month emergency rule applies. Monthly surplus: Rp 5,000,000.",
+  "snapshot": {
+    "month": "2026-09",
+    "netIncome": 22000000,
+    "essentialSpending": 9000000,
+    "discretionarySpending": 6000000,
+    "discretionaryByCategory": {
+      "food_delivery": 1500000,
+      "shopping": 2500000,
+      "entertainment": 1200000,
+      "transport": 800000
+    },
+    "cashWithdrawals": 1000000,
+    "debtPayments": 1000000,
+    "loans": [
+      {
+        "id": "pinjol-1",
+        "month": "2026-09",
+        "lender": "Pinjol",
+        "type": "pinjol",
+        "outstandingPrincipal": 5200000,
+        "monthlyInstallment": 1000000,
+        "effectiveAnnualRate": 0.4,
+        "remainingTenorMonths": 6,
+        "sourceFileId": "doc-pinjol"
+      }
+    ],
+    "liquidAssets": 60000000,
+    "volatileAssets": 40000000,
+    "incomeVariability": 0.35,
+    "estimatedSources": []
+  },
+  "profile": {
+    "age": 33,
+    "employment": "freelance",
+    "netMonthlyIncome": 22000000,
+    "maritalStatus": "married",
+    "dependents": 1,
+    "spouseMonthlyIncome": 10000000,
+    "city": "Jakarta"
+  },
+  "goal": {
+    "id": "freelancer-d",
+    "type": "house",
+    "status": "active",
+    "payPreference": "loan",
+    "inputs": {
+      "area": "Jakarta Selatan",
+      "propertyType": "apartment",
+      "buildingM2": 45,
+      "market": "secondary",
+      "firstHome": true,
+      "targetYear": 2029,
+      "joint": "joint"
+    },
+    "estimate": {
+      "targetToday": 950000000,
+      "rangeLow": 850000000,
+      "rangeHigh": 1100000000,
+      "growthRatePerYear": 0.06,
+      "targetAtGoalDate": 1130000000,
+      "sources": [],
+      "inputsUsed": {},
+      "calculatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    "createdAt": "2026-10-01T00:00:00.000Z",
+    "updatedAt": "2026-10-01T00:00:00.000Z"
+  }
+}
