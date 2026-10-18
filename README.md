@@ -78,7 +78,7 @@ Then start the services against them. `web/.env`: `NEXT_PUBLIC_USE_EMULATORS=1`.
 
 ### Firestore rules tests
 
-`firestore.rules` is tested with `@firebase/rules-unit-testing` against the Firestore emulator (`firestore-tests/`). The emulator is a jar, so it needs a Java runtime: `scripts/with-emulators.sh` uses `java` from the PATH, or the Homebrew OpenJDK (`brew install openjdk`), or macOS's `java_home`. The firebase CLI comes from the root dev dependencies; the first run downloads the emulator into `~/.cache/firebase/emulators`.
+`firestore.rules` is tested with `@firebase/rules-unit-testing` against the Firestore emulator (`firestore-tests/`). The suite clears the whole emulator database between cases, so never point it at the emulator you develop against (`pnpm emulators`): `pnpm --filter firestore-tests test` starts a throwaway instance of its own. The emulator is a jar, so it needs a Java runtime: `scripts/with-emulators.sh` uses `java` from the PATH, or the Homebrew OpenJDK (`brew install openjdk`), or macOS's `java_home`. The firebase CLI comes from the root dev dependencies; the first run downloads the emulator into `~/.cache/firebase/emulators`.
 
 ### Demo data
 
