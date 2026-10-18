@@ -3,7 +3,25 @@
     "public": "web/out",
     "cleanUrls": true,
     "trailingSlash": true,
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "/goals/*/documents{,/**}",
+        "destination": "/goals/_/documents/index.html"
+      },
+      {
+        "source": "/goals/*/progress{,/**}",
+        "destination": "/goals/_/progress/index.html"
+      },
+      {
+        "source": "/goals/*/result{,/**}",
+        "destination": "/goals/_/result/index.html"
+      }
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
     "headers": [
       {
         "source": "/_next/static/**",
@@ -13,12 +31,6 @@
             "value": "public, max-age=31536000, immutable"
           }
         ]
-      }
-    ],
-    "rewrites": [
-      {
-        "source": "/goals/*/documents{,/**}",
-        "destination": "/goals/_/documents/index.html"
       }
     ]
   },

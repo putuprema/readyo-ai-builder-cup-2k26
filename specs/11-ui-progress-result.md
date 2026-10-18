@@ -32,6 +32,17 @@ The full-screen progress view after Submit and the readiness result page: path c
 - Bottom cards: key assumptions (link to Assumptions) and next check-in text ("any time from 1 {next month}"). No reminder.
 - Export PDF: browser print stylesheet is enough for the hackathon.
 
+## Decisions taken while building (2026-10-18)
+
+- **Routes under the static export**: `next.config.ts` switches `output: "export"` on for `next build` only; in `next dev` the dynamic routes render any goal id. Each page exports `generateStaticParams()` returning the placeholder id `_`, `firebase.json` rewrites `/goals/*/progress` and `/goals/*/result` to the exported placeholder pages, and the client reads the real goal id from `window.location` (`web/components/result/goal-id.ts`). Later routes under `/goals/[id]/` should follow the same pattern.
+- **Data sources**: with `NEXT_PUBLIC_FIREBASE_PROJECT_ID` (or `NEXT_PUBLIC_USE_EMULATORS=1`) the pages listen to Firestore and call the api; without either they show the shared demo analysis with a mock choices api that runs the shared `planWithChoices()`, so the design can be reviewed from a plain `pnpm dev`. The Firebase init, the user hook and the emulator demo sign-in live inside `web/components/result/` until spec 10's shell sign-in lands; against the emulators a signed-out visitor is signed in as the seeded demo account.
+- **Run to follow**: `?run=<id>` (what Submit passes), else the latest run whose `goalIds` holds the goal (picked client-side from an `array-contains` query, so no composite index is needed).
+- **Plan line**: "X in your plan" counts committed actions (as the design's script does); "Y skipped" counts dismissed ones; N is `withChoices` on the analysis document or the PATCH response's `plan.monthsToReady`, never computed in the browser. Before any choice the line reads "Together they move KPR approval from 24 months to this month. Order matters." A month-0 plan shows "Now · approvable this month" on the path card and "this month" in sentences; a null baseline reads "not within 30 years" (`DEFAULT_MAX_MONTHS / 12`).
+- **Numbers on the page**: everything is selected and formatted from the analysis document (`web/components/result/model.ts`, `rules-table.ts`, tested against the shared demo). The only conversions are display ones: months to years on the cash card, ratios to percent, rupiah formatting. The subline under the headline says whether anything blocks without counting.
+- **Stage chips** carry fixed notes without numbers; the run document has no counts. The footer copy says "Usually a few minutes" (the e2e run took three).
+- **Documents step link**: the failed state and the result's Upload button link to `/goals/{id}/documents/` and `/documents/`; spec 10 and spec 13 own those routes and may change them.
+- **Assumptions**: the bottom card lists the values from `rulesChecked` (growth, emergency fund, DTI cap, DP, rate) rather than the design's fixed five; the money-market return is not in `rulesChecked`.
+
 ## Acceptance criteria
 
 - With the seeded analysis, the page matches artboard 3 in layout and copy structure at 1280 px and stays usable at 390 px.
