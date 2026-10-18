@@ -97,6 +97,7 @@ Secrets never live in the repo. Locally, put them in a `.env` file (ignored by g
 ### One-time GCP setup (by hand)
 
 1. Create a GCP project with billing, and a Firebase project linked to it.
+   Create the Firestore database in the same region as Cloud Run (`gcloud firestore databases create --location=asia-southeast1`): its location cannot be changed later, and a US database adds about 0.5–5 s to every api write from Singapore.
 2. Enable the APIs: Cloud Run, Cloud Build, Artifact Registry, Cloud Tasks, Firestore, Cloud Storage, Secret Manager, and the Gemini API (or Vertex AI).
 3. Create an Artifact Registry Docker repository in the region (default `adidi` in `asia-southeast1`):
    ```bash
