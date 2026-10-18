@@ -72,11 +72,11 @@ describe("demo metrics", () => {
   it("has the seven readiness metrics", () => {
     expect(demoMetrics.map((m) => m.id)).toEqual([
       "net_income",
-      "savings_rate",
-      "emergency_fund",
       "dti",
+      "emergency_fund",
       "expensive_debt",
-      "goal_funding",
+      "savings_rate",
+      "goal_progress",
       "horizon_risk",
     ]);
   });
@@ -95,7 +95,9 @@ describe("demo metrics", () => {
       sum(demoLoans.filter((l) => l.effectiveAnnualRate > 0.24).map((l) => l.outstandingPrincipal)),
     );
     const dpNeeded = 0.2 * (demoGoal.estimate?.targetToday ?? 0);
-    expect(metric("goal_funding").you).toBeCloseTo(s.liquidAssets / dpNeeded, 2);
+    const earmarked = s.liquidAssets - 3 * s.essentialSpending;
+    expect(metric("goal_progress").you).toBeCloseTo(earmarked / dpNeeded, 2);
+    expect(metric("dti").you).toBeCloseTo(demoWithoutPlan.loan?.timeline[0]?.dti ?? 0, 4);
     expect(metric("horizon_risk").you).toBeCloseTo(
       s.volatileAssets / (s.liquidAssets + s.volatileAssets),
       2,
@@ -104,7 +106,12 @@ describe("demo metrics", () => {
 
   it("blocks exactly where the loan path is blocked today", () => {
     const blocking = demoMetrics.filter((m) => m.status === "blocks").map((m) => m.id);
-    expect(blocking).toEqual(["dti", "expensive_debt"]);
+    expect(blocking).toEqual(["dti"]);
+    expect(metric("expensive_debt").status).toBe("needs_work");
+    expect(metric("horizon_risk").status).toBe("needs_work");
+    expect(metric("dti").meaning).toBe(
+      "Kredivo Rp 2.1 m/mo plus the KPR installment of Rp 8.1 m would take 36% of your income; banks cap it at 35%.",
+    );
     const blockedBy = demoAnalysis.withoutPlan.loan?.blockedBy.map((b) => b.rule);
     expect(blockedBy).toContain("dti_cap");
   });

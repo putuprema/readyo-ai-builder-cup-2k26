@@ -1,5 +1,6 @@
 import { firestorePaths } from "../paths.js";
 import { simulate } from "../simulate/simulate.js";
+import { computeMetrics } from "../snapshot/metrics.js";
 import type {
   ActionCard,
   Analysis,
@@ -20,8 +21,9 @@ import { demoRules } from "./rules.js";
 
 // One demo user with an active house goal and its September 2026 analysis, so UI work can
 // start before the pipeline exists (specs/01-contracts.md, task 4). The snapshot, profile,
-// goal, metrics and action cards are sample data chosen to be internally consistent; both
-// simulation results are real simulate() output over that data (see index.test.ts). The demo
+// goal and action cards are sample data chosen to be internally consistent; both simulation
+// results are real simulate() output over that data and the metrics are real computeMetrics()
+// output (see index.test.ts). The demo
 // story from docs/product.md: the PayLater pushes DTI over the cap, the plan clears it and
 // brings approval from month 26 to month 14.
 
@@ -374,65 +376,6 @@ function tx(
   };
 }
 
-// Seven readiness metrics (docs/analysis.md). "you" values follow the snapshot above.
-export const demoMetrics: Metric[] = [
-  {
-    id: "net_income",
-    label: "Verified net income",
-    you: 28_000_000,
-    status: "passes",
-    meaning: "Recurring salary from one employer, own transfers excluded.",
-  },
-  {
-    id: "savings_rate",
-    label: "Savings rate",
-    you: 0.336,
-    rule: 0.2,
-    status: "passes",
-    meaning: "You keep about a third of your income after spending and debt payments.",
-  },
-  {
-    id: "emergency_fund",
-    label: "Emergency fund",
-    you: 4.6,
-    rule: 3,
-    status: "passes",
-    meaning: "Liquid savings cover 4.6 months of essential spending.",
-  },
-  {
-    id: "dti",
-    label: "Debt-to-income",
-    you: 0.363,
-    rule: 0.35,
-    status: "blocks",
-    meaning: "The Kredivo installment plus the KPR installment would take 36% of your income.",
-  },
-  {
-    id: "expensive_debt",
-    label: "Expensive debt",
-    you: 12_400_000,
-    rule: 0,
-    status: "blocks",
-    meaning: "Rp 12.4 m outstanding at 31% a year. Banks want this cleared before a KPR.",
-  },
-  {
-    id: "goal_funding",
-    label: "Down payment progress",
-    you: 0.153,
-    rule: 1,
-    status: "needs_work",
-    meaning: "Rp 41.2 m saved of the Rp 270 m down payment (20% of the price today).",
-  },
-  {
-    id: "horizon_risk",
-    label: "Horizon vs risk",
-    you: 0.72,
-    rule: 0.2,
-    status: "needs_work",
-    meaning: "72% of your savings are in crypto and stocks, with the goal under three years away.",
-  },
-];
-
 export const demoActions: ActionCard[] = [
   {
     id: "a1",
@@ -492,6 +435,16 @@ export const demoWithPlan: SimulationResult = simulate({
   goal: demoGoal,
   rules: demoRules,
   changes: demoChanges,
+});
+
+// The readiness table is computeMetrics() over the same snapshot and the no-change
+// simulation, so the demo shows exactly the rows and sentences the pipeline will produce.
+export const demoMetrics: Metric[] = computeMetrics({
+  snapshot: demoSnapshot,
+  profile: demoProfile,
+  goal: demoGoal,
+  rules: demoRules,
+  simulation: demoWithoutPlan,
 });
 
 export const demoAnalysis: Analysis = {
