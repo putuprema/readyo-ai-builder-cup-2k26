@@ -103,8 +103,8 @@ function DocumentsStep() {
       const samples = await loadSampleStatements();
       const sampleMonth = monthOptions().includes(SAMPLE_MONTH) ? SAMPLE_MONTH : month;
       setMonth(sampleMonth);
-      for (const { file, card, sourceKind, url } of samples) {
-        add([file], { group: card, card, sourceKind, month: sampleMonth, previewUrl: url });
+      for (const { file, card, sourceKind } of samples) {
+        add([file], { group: card, card, sourceKind, month: sampleMonth });
       }
     } catch {
       setNotice("Could not load the sample statements. Try again, or add your own files.");

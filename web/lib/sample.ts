@@ -54,23 +54,27 @@ export const SAMPLE_STATEMENTS: readonly { file: string; card: CardId; sourceKin
 
 export const SAMPLE_STATEMENTS_URL = "/samples/";
 
-/** Where a sample statement is served, for the fetch and for the preview. */
+/** Where a sample statement is served. */
 export function sampleUrl(file: string): string {
   return `${SAMPLE_STATEMENTS_URL}${file}`;
 }
 
-/** Fetches the sample PDFs and wraps each as a File with its own name, as a file picker would. */
+/**
+ * Fetches the sample PDFs and wraps each as a File with its own name, as a file picker would.
+ * `no-cache` makes the browser check for a newer copy every time, so a browser that loaded the
+ * samples before a deploy never uploads the old ones (Hosting otherwise lets it reuse them for an
+ * hour). The preview shows these same bytes.
+ */
 export async function loadSampleStatements(): Promise<
-  { file: File; card: CardId; sourceKind: SourceKind; url: string }[]
+  { file: File; card: CardId; sourceKind: SourceKind }[]
 > {
   return Promise.all(
     SAMPLE_STATEMENTS.map(async (sample) => {
-      const url = sampleUrl(sample.file);
-      const res = await fetch(url);
+      const res = await fetch(sampleUrl(sample.file), { cache: "no-cache" });
       if (!res.ok) throw new Error(`Could not load ${sample.file} (${res.status})`);
       const blob = await res.blob();
       const file = new File([blob], sample.file, { type: "application/pdf" });
-      return { file, card: sample.card, sourceKind: sample.sourceKind, url };
+      return { file, card: sample.card, sourceKind: sample.sourceKind };
     }),
   );
 }

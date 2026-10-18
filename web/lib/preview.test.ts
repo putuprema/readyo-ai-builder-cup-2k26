@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CARDS } from "./documents";
-import { isObjectUrl, kindLabel, previewKind, previewSrc, previewSubtitle } from "./preview";
+import { kindLabel, previewKind, previewSrc, previewSubtitle } from "./preview";
 
 // The preview dialog of the documents step (docs/screens.md, "2 · Documents").
 
@@ -13,10 +13,7 @@ describe("previewKind", () => {
 });
 
 describe("previewSrc", () => {
-  it("fits a PDF to the width, from a hosted sample or an object URL", () => {
-    expect(previewSrc("/samples/sample_bank_sep_2026.pdf", "application/pdf")).toBe(
-      "/samples/sample_bank_sep_2026.pdf#view=FitH",
-    );
+  it("fits a PDF to the width", () => {
     expect(previewSrc("blob:http://localhost:3000/abc", "application/pdf")).toBe(
       "blob:http://localhost:3000/abc#view=FitH",
     );
@@ -44,12 +41,5 @@ describe("previewSubtitle", () => {
     for (const card of CARDS) {
       for (const k of card.kinds) expect(kindLabel(k.value)).toBe(k.label);
     }
-  });
-});
-
-describe("isObjectUrl", () => {
-  it("releases object URLs only, never a hosted sample", () => {
-    expect(isObjectUrl("blob:http://localhost:3000/abc")).toBe(true);
-    expect(isObjectUrl("/samples/sample_bank_sep_2026.pdf")).toBe(false);
   });
 });

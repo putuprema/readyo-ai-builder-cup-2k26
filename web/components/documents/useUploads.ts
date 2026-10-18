@@ -3,7 +3,6 @@
 import type { SourceKind } from "@adidi/shared";
 import { useEffect, useRef, useState } from "react";
 import { type CardId, normalizedType, rejectReason, type UploadItem } from "@/lib/documents";
-import { isObjectUrl } from "@/lib/preview";
 import { apiUploader, setDocumentKind, type Uploader } from "@/lib/uploader";
 
 // The upload state shared by the documents step and the monthly check-in: files picked into
@@ -21,8 +20,6 @@ export interface AddOptions {
   slot?: string;
   /** The month for these files when it differs from the hook's (set in the same event). */
   month?: string;
-  /** A hosted copy to preview from instead of an object URL (the sample statements). */
-  previewUrl?: string;
 }
 
 export function useUploads({
@@ -86,11 +83,10 @@ export function useUploads({
       const localId = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
       let previewUrl: string | undefined;
       if (previews) {
-        // An untyped file would download instead of showing; give its blob the accepted type.
-        previewUrl =
-          options.previewUrl ??
-          URL.createObjectURL(file.type === type ? file : new Blob([file], { type }));
-        if (isObjectUrl(previewUrl)) objectUrls.current.set(localId, previewUrl);
+        // The bytes being uploaded, so the preview always shows what is analysed. An untyped
+        // file would download instead of showing; give its blob the accepted type.
+        previewUrl = URL.createObjectURL(file.type === type ? file : new Blob([file], { type }));
+        objectUrls.current.set(localId, previewUrl);
       }
       const item: UploadItem = {
         localId,

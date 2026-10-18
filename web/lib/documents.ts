@@ -71,7 +71,7 @@ export interface UploadItem {
   /** The `documents` record id once the api created it. */
   docId?: string;
   error?: string;
-  /** Where the dialog shows the file before Submit: an object URL, or a sample's hosted copy. */
+  /** Where the dialog shows the file before Submit: an object URL of the bytes being uploaded. */
   previewUrl?: string;
 }
 

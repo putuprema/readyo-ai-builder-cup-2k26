@@ -27,7 +27,7 @@ describe("sample statements", () => {
     expect(new Set(SAMPLE_STATEMENTS.map((s) => s.card)).size).toBe(3);
   });
 
-  it("is fetched and previewed from its copy in web/public", () => {
+  it("is fetched from its copy in web/public", () => {
     for (const { file } of SAMPLE_STATEMENTS) {
       const url = sampleUrl(file);
       expect(url).toBe(`/samples/${file}`);
