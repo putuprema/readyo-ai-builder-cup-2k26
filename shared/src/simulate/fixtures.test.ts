@@ -65,12 +65,7 @@ describe("fixtures/profiles/rules-test.json", () => {
     const file = loadTestRulesFile();
     expect(file.note).toMatch(/TEST-ONLY/);
     expect(file.placeholders).toEqual(
-      expect.arrayContaining([
-        "min_dp_other_home",
-        "flpp_income_ceiling",
-        "min_dp_kkb",
-        "kkb_rate",
-      ]),
+      expect.arrayContaining(["min_dp_other_home", "min_dp_kkb", "kkb_rate"]),
     );
     for (const id of file.placeholders) expect(RULE_IDS).toContain(id);
     expect(Object.keys(file.rules).sort()).toEqual([...RULE_IDS].sort());

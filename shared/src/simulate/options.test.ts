@@ -55,7 +55,7 @@ describe("rejectedOptions", () => {
   });
 
   it("rejects FLPP when income is above the ceiling or the home is not a first home", () => {
-    // House-A earns 18 m, above the test ceiling.
+    // House-A is single and earns 18 m, above the 12 m ceiling for an unmarried applicant.
     const above = runHouse();
     expect(option(above, "flpp")).toEqual([
       expect.objectContaining({ option: "flpp", rule: "flpp_income_ceiling" }),
@@ -76,6 +76,29 @@ describe("rejectedOptions", () => {
     expect(eligible.rulesChecked.find((c) => c.rule === "flpp_income_ceiling")?.effect).toBe(
       "passes",
     );
+  });
+
+  it("checks a married couple's combined income against the married FLPP ceiling", () => {
+    // 9 m + 6 m = 15 m is above the 14 m married ceiling, though each alone is under 12 m.
+    const married = { maritalStatus: "married" as const, netMonthlyIncome: 9_000_000 };
+    const above = runHouse({}, { ...married, spouseMonthlyIncome: 6_000_000 });
+    expect(option(above, "flpp")).toEqual([
+      expect.objectContaining({ option: "flpp", rule: "flpp_income_ceiling" }),
+    ]);
+    expect(above.rejectedOptions.find((o) => o.option === "flpp")?.reason).toMatch(/combined/);
+    expect(above.rulesChecked.find((c) => c.rule === "flpp_income_ceiling")).toMatchObject({
+      valueUsed: rules.flpp_income_ceiling_married,
+      you: 15_000_000,
+      effect: "rejects_option",
+    });
+
+    const eligible = runHouse({}, { ...married, spouseMonthlyIncome: 4_000_000 });
+    expect(option(eligible, "flpp")).toEqual([]);
+    expect(eligible.rulesChecked.find((c) => c.rule === "flpp_income_ceiling")).toMatchObject({
+      valueUsed: rules.flpp_income_ceiling_married,
+      you: 13_000_000,
+      effect: "passes",
+    });
   });
 
   it("rejects a car tenor beyond kkb_max_tenor_years", () => {

@@ -5,7 +5,6 @@ import { simulate } from "../simulate/simulate.js";
 import type { RuleValue } from "../types.js";
 import {
   DEMO_MONTH,
-  DEMO_RULE_PLACEHOLDERS,
   DEMO_UID,
   demoActions,
   demoAnalysis,
@@ -112,22 +111,13 @@ describe("demo metrics", () => {
 });
 
 describe("demo rules", () => {
-  it("are shared/rules/defaults.json plus the declared placeholders, nothing else", () => {
+  it("are exactly shared/rules/defaults.json", () => {
     const file = JSON.parse(
       readFileSync(new URL("../../rules/defaults.json", import.meta.url), "utf8"),
     ) as RuleValue[];
     expect(demoRuleDefaults).toEqual(file);
-    const expected: Record<string, number> = { ...DEMO_RULE_PLACEHOLDERS };
-    for (const r of file) expected[r.id] = r.value;
-    expect(demoRules).toEqual(expected);
-  });
-
-  it("placeholders fill only [__] rules that the defaults leave out", () => {
-    const defaultIds = new Set(demoRuleDefaults.map((r) => r.id));
-    for (const id of Object.keys(DEMO_RULE_PLACEHOLDERS)) {
-      expect(RULE_IDS).toContain(id);
-      expect(defaultIds.has(id)).toBe(false);
-    }
+    expect(demoRules).toEqual(Object.fromEntries(file.map((r) => [r.id, r.value])));
+    for (const id of Object.keys(demoRules)) expect(RULE_IDS).toContain(id);
   });
 });
 

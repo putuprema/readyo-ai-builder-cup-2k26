@@ -45,6 +45,30 @@
     "checkedAt": "2026-10-18"
   },
   {
+    "id": "flpp_income_ceiling",
+    "label": "Maximum monthly income for subsidised KPR (FLPP), not married",
+    "value": 12000000,
+    "unit": "rupiah",
+    "usedFor": ["kpr"],
+    "source": {
+      "title": "Permen PKP No. 5/2025 (as amended by No. 11/2025 and No. 1/2026), Lampiran: Zone 4, Jakarta, Bogor, Depok, Tangerang, Bekasi; lower ceilings in zones 1 to 3",
+      "url": "https://pkp.go.id/s3/website-perumahan/prod-storage/perumahan/produk/permen-pkp-nomor-5-tahun-2025/01k49fvyrmrzdgdjzgvre6d44k.pdf"
+    },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "flpp_income_ceiling_married",
+    "label": "Maximum combined monthly income for subsidised KPR (FLPP), married",
+    "value": 14000000,
+    "unit": "rupiah",
+    "usedFor": ["kpr"],
+    "source": {
+      "title": "Permen PKP No. 5/2025 (as amended by No. 11/2025 and No. 1/2026), Lampiran: Zone 4, Jakarta, Bogor, Depok, Tangerang, Bekasi; lower ceilings in zones 1 to 3",
+      "url": "https://pkp.go.id/s3/website-perumahan/prod-storage/perumahan/produk/permen-pkp-nomor-5-tahun-2025/01k49fvyrmrzdgdjzgvre6d44k.pdf"
+    },
+    "checkedAt": "2026-10-18"
+  },
+  {
     "id": "kpr_rate_fixed",
     "label": "KPR rate during the fixed period (used to qualify)",
     "value": 0.065,

@@ -25,7 +25,7 @@ import { demoRules } from "./rules.js";
 // story from docs/product.md: the PayLater pushes DTI over the cap, the plan clears it and
 // brings approval from month 26 to month 14.
 
-export { DEMO_RULE_PLACEHOLDERS, demoRuleDefaults, demoRules } from "./rules.js";
+export { demoRuleDefaults, demoRules } from "./rules.js";
 
 export const DEMO_UID = "demo-user";
 export const DEMO_EMAIL = "demo@adidi.app";
