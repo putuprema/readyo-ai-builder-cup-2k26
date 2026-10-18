@@ -92,8 +92,14 @@ export function viewOf(ctx: AgentContext, result: SimulationResult): SimulationV
 
 export type CandidateCheck = { ok: true; change: Change } | { ok: false; error: string };
 
-/** Turn the model's arguments into a Change, or explain what is wrong with them. */
-export function checkCandidate(ctx: AgentContext, raw: unknown): CandidateCheck {
+/** Turn the model's arguments into a Change, or explain what is wrong with them. `kept` is
+ *  the plan so far: a plan holds at most one spending cap, one asset move and one action per
+ *  loan, so three caps never crowd out the debt or the volatile assets. */
+export function checkCandidate(
+  ctx: AgentContext,
+  raw: unknown,
+  kept: Change[] = [],
+): CandidateCheck {
   const parsed = simulateArgsSchema.safeParse(raw);
   if (!parsed.success) {
     const issues = parsed.error.issues
@@ -111,7 +117,30 @@ export function checkCandidate(ctx: AgentContext, raw: unknown): CandidateCheck 
       error: "The user dismissed this action in an earlier month. Propose something else.",
     };
   }
+  const crowded = crowdsThePlan(built.change, kept);
+  if (crowded) return { ok: false, error: crowded };
   return built;
+}
+
+function crowdsThePlan(change: Change, kept: Change[]): string | undefined {
+  switch (change.type) {
+    case "cap_spending":
+      return kept.some((k) => k.type === "cap_spending")
+        ? "The plan already has a spending cap. Test a different kind of action (a loan action or moving volatile assets), or stop."
+        : undefined;
+    case "move_assets":
+      return kept.some((k) => k.type === "move_assets")
+        ? "The plan already moves volatile assets. Test a different kind of action, or stop."
+        : undefined;
+    case "pay_off_loan":
+    case "refinance_loan":
+      return kept.some(
+        (k) =>
+          (k.type === "pay_off_loan" || k.type === "refinance_loan") && k.loanId === change.loanId,
+      )
+        ? `The plan already has an action on loan ${change.loanId}. Test a different loan or kind of action, or stop.`
+        : undefined;
+  }
 }
 
 function buildChange(ctx: AgentContext, args: SimulateArgs): CandidateCheck {
@@ -226,7 +255,7 @@ export type SimulateToolResult =
 
 /** The `simulate` tool: validate the candidate, then run it alone and with the kept changes. */
 export function simulateTool(ctx: AgentContext, kept: Change[], raw: unknown): SimulateToolResult {
-  const check = checkCandidate(ctx, raw);
+  const check = checkCandidate(ctx, raw, kept);
   if (!check.ok) return check;
   const alone = simulateWith(ctx, [check.change]);
   const cumulative = kept.length === 0 ? alone : simulateWith(ctx, [...kept, check.change]);

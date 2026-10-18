@@ -5,6 +5,7 @@ import {
   type FunctionCall,
   GoogleGenAI,
   type Part,
+  ThinkingLevel as ThinkingLevelEnum,
 } from "@google/genai";
 
 // The one place the worker talks to Gemini. Extraction, classification and card writing ask
@@ -13,6 +14,10 @@ import {
 // answer with zod. Tests pass fakes for both.
 
 export type ModelTier = "pro" | "flash";
+
+/** How much the model may think before answering. Default: the model's own default. The
+ *  agent uses "low": its turns are short decisions over numbers code already computed. */
+export type ThinkingLevel = "low" | "medium" | "high";
 
 export interface FilePart {
   bytes: Uint8Array;
@@ -27,6 +32,7 @@ export interface JsonRequest {
   prompt: string;
   responseJsonSchema: Record<string, unknown>;
   temperature?: number;
+  thinking?: ThinkingLevel;
 }
 
 export interface JsonModel {
@@ -50,6 +56,7 @@ export interface ToolStepRequest {
   history: Content[];
   tools: ToolDeclaration[];
   temperature?: number;
+  thinking?: ThinkingLevel;
 }
 
 export interface ToolCall {
@@ -148,6 +155,7 @@ export function createGeminiModel(env: GeminiEnv = process.env): JsonModel & Too
             responseMimeType: "application/json",
             responseJsonSchema: request.responseJsonSchema,
             temperature: request.temperature ?? 0,
+            ...thinkingConfig(request.thinking),
           },
         });
         if (response.promptFeedback?.blockReason) {
@@ -178,6 +186,7 @@ export function createGeminiModel(env: GeminiEnv = process.env): JsonModel & Too
             systemInstruction: request.systemInstruction,
             tools: [{ functionDeclarations: request.tools }],
             temperature: request.temperature ?? 0,
+            ...thinkingConfig(request.thinking),
           },
         });
         if (response.promptFeedback?.blockReason) {
@@ -200,6 +209,16 @@ export function createGeminiModel(env: GeminiEnv = process.env): JsonModel & Too
       }
     },
   };
+}
+
+const THINKING_LEVELS: Record<ThinkingLevel, ThinkingLevelEnum> = {
+  low: ThinkingLevelEnum.LOW,
+  medium: ThinkingLevelEnum.MEDIUM,
+  high: ThinkingLevelEnum.HIGH,
+};
+
+function thinkingConfig(level: ThinkingLevel | undefined) {
+  return level ? { thinkingConfig: { thinkingLevel: THINKING_LEVELS[level] } } : {};
 }
 
 function toToolCall(call: FunctionCall): ToolCall {

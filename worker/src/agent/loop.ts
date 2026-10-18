@@ -88,12 +88,14 @@ export async function runProposeVerifyLoop(
 
   while (stoppedBecause === undefined) {
     let step: Awaited<ReturnType<ToolModel["step"]>>;
+    const startedAt = Date.now();
     try {
       step = await model.step({
         tier: options.tier ?? "pro",
         systemInstruction: AGENT_SYSTEM_INSTRUCTION,
         history: [...history],
         tools,
+        thinking: "low",
       });
     } catch (e) {
       error = e instanceof ModelError ? e.message : "The model call failed";
@@ -102,6 +104,7 @@ export async function runProposeVerifyLoop(
       break;
     }
     history.push(step.content);
+    log(`agent: model turn in ${Date.now() - startedAt} ms (${step.functionCalls.length} call(s))`);
     if (step.text) modelText = step.text;
     if (step.functionCalls.length === 0) {
       stoppedBecause = "model_done";

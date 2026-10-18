@@ -168,8 +168,13 @@ describe("runProposeVerifyLoop", () => {
 
   it("drops a candidate that adds nothing to the kept set and tells the model why", async () => {
     const ctx = context();
-    const smallMove = call(SIMULATE_TOOL, { type: "move_assets", amount: 1_000_000, fromMonth: 0 });
-    const model = new FakeToolModel([[moveAll], [smallMove], "Nothing else helps."]);
+    const tinyCap = call(SIMULATE_TOOL, {
+      type: "cap_spending",
+      category: "food_delivery",
+      monthlyCap: 1_399_999,
+      fromMonth: 1,
+    });
+    const model = new FakeToolModel([[moveAll], [tinyCap], "Nothing else helps."]);
     const result = await runProposeVerifyLoop(ctx, model);
     expect(result.stoppedBecause).toBe("model_done");
     expect(result.kept.map((k) => k.change.type)).toEqual(["move_assets"]);
@@ -179,12 +184,13 @@ describe("runProposeVerifyLoop", () => {
     expect(result.modelText).toBe("Nothing else helps.");
   });
 
-  it("the same candidate twice is kept once", async () => {
+  it("the same candidate twice is kept once: the repeat is refused as a second action on the loan", async () => {
     const ctx = context();
     const model = new FakeToolModel([[payOff], [payOff], "Done."]);
     const result = await runProposeVerifyLoop(ctx, model);
     expect(result.kept).toHaveLength(1);
-    expect(result.trace.map((t) => t.kept)).toEqual([true, false]);
+    expect(result.trace[0]?.kept).toBe(true);
+    expect(result.trace[1]?.error).toMatch(/already has an action on loan paylater-1/);
   });
 
   it("never keeps a dismissed action, even when the model insists", async () => {
@@ -305,5 +311,52 @@ describe("runProposeVerifyLoop", () => {
     expect(String(model.requests[0]?.history[0]?.parts?.[0]?.text)).toContain(
       "Dismissed by the user earlier (never propose these): cap_spending shopping.",
     );
+  });
+});
+
+describe("plan diversity", () => {
+  it("a second spending cap, a second move and a second action on the same loan are refused", async () => {
+    const ctx = context();
+    const capShopping = call(SIMULATE_TOOL, {
+      type: "cap_spending",
+      category: "shopping",
+      monthlyCap: 800_000,
+      fromMonth: 0,
+    });
+    const model = new FakeToolModel([
+      [capFood],
+      [capShopping],
+      [moveAll],
+      [call(SIMULATE_TOOL, { type: "move_assets", amount: 1_000_000, fromMonth: 0 })],
+      [payOff],
+      [refinance24],
+      "Done.",
+    ]);
+    // maxActions 4 so the loop does not stop before the sixth call.
+    const result = await runProposeVerifyLoop(ctx, model, { maxActions: 4 });
+    expect(result.trace.map((t) => (t.error ? "refused" : t.kept ? "kept" : "dropped"))).toEqual([
+      "kept",
+      "refused",
+      "kept",
+      "refused",
+      "kept",
+      "refused",
+    ]);
+    expect(result.trace[1]?.error).toMatch(/already has a spending cap/);
+    expect(result.trace[3]?.error).toMatch(/already moves volatile assets/);
+    expect(result.trace[5]?.error).toMatch(/already has an action on loan paylater-1/);
+    expect(result.kept.map((k) => k.change.type).sort()).toEqual([
+      "cap_spending",
+      "move_assets",
+      "pay_off_loan",
+    ]);
+    expectEachImprovesAlone(ctx, result.kept);
+  });
+
+  it("the loop asks the model to think low", async () => {
+    const ctx = context();
+    const model = new FakeToolModel(["Done."]);
+    await runProposeVerifyLoop(ctx, model);
+    expect(model.requests[0]?.thinking).toBe("low");
   });
 });

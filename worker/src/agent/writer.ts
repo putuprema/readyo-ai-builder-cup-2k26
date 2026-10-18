@@ -85,6 +85,7 @@ export async function writeCards(
       const pending = facts.filter((f) => !accepted.has(f.id));
       const askSummary = summaryFacts !== undefined && summary === undefined;
       let raw: unknown;
+      const startedAt = Date.now();
       try {
         raw = await model.generateJson({
           tier: options.tier ?? "pro",
@@ -92,6 +93,7 @@ export async function writeCards(
           prompt: writerPrompt(ctx, pending, feedback, askSummary ? summaryFacts : undefined),
           responseJsonSchema: geminiJsonSchema(writtenCardsSchema),
           temperature: 0.2,
+          thinking: "low",
         });
       } catch (error) {
         const message = error instanceof ModelError ? error.message : "The model call failed";
@@ -99,6 +101,7 @@ export async function writeCards(
         log(`agent: card writer attempt ${attempts} failed (${message})`);
         continue;
       }
+      log(`agent: card writer attempt ${attempts} answered in ${Date.now() - startedAt} ms`);
       const parsed = writtenCardsSchema.safeParse(raw);
       if (!parsed.success) {
         warnings.push(`Card writer attempt ${attempts}: answer did not match the schema`);
