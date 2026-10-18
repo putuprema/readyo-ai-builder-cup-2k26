@@ -19,7 +19,7 @@ Everything is TypeScript in one pnpm workspace. One lockfile at the root.
 
 ## Prerequisites
 
-- Node 26 (`.nvmrc`) and pnpm 10 (`corepack enable` gives you the pinned version).
+- Node 26 (`.nvmrc`) and pnpm 10.28 (`npm install -g pnpm@10.28.0`; Node 26 no longer ships corepack).
 - For deploys only: `gcloud` and `firebase` CLIs (see "Deploy"). Docker is not needed; images are built by Cloud Build.
 
 ### With Nix
