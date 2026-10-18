@@ -95,6 +95,15 @@ Secrets never live in the repo. Locally, put them in a `.env` file (ignored by g
    firebase login
    ```
 5. Put the project ID (and region, if different) in `scripts/env.sh` and `.firebaserc`.
+6. Create the Gemini API key secret and let Cloud Run read it. Both services run as the project's default compute service account, which cannot read secrets until it is granted the accessor role on this one:
+   ```bash
+   printf '%s' "YOUR_GEMINI_API_KEY" | gcloud secrets create GEMINI_API_KEY --data-file=-
+   PROJECT_NUMBER=$(gcloud projects describe YOUR_PROJECT_ID --format 'value(projectNumber)')
+   gcloud secrets add-iam-policy-binding GEMINI_API_KEY \
+     --member "serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+     --role roles/secretmanager.secretAccessor
+   ```
+   Without the binding, `gcloud run deploy` fails with "Permission denied on secret ... for Revision service account".
 
 ### Deploy each part
 
@@ -119,7 +128,7 @@ scripts/setup-tasks.sh               # queue, invoker service account, IAM bindi
 scripts/deploy-service.sh api        # again, so the api knows WORKER_URL
 ```
 
-Both services read `GEMINI_API_KEY` from the Secret Manager secret named in `GEMINI_SECRET` (`gemini-api-key` by default); create it once with `gcloud secrets create gemini-api-key --data-file=-`. The worker is deployed with a 30-minute request timeout because a first run takes a few minutes.
+Both services read `GEMINI_API_KEY` from the Secret Manager secret named in `GEMINI_SECRET` (`GEMINI_API_KEY` by default), created and shared with Cloud Run in step 6 of the one-time setup. The worker is deployed with a 30-minute request timeout because a first run takes a few minutes.
 
 Locally, the api posts straight to the worker instead of Cloud Tasks: set `WORKER_URL=http://localhost:8081` and `TASKS_MODE=direct` in `api/.env`, and `TASKS_AUTH=off` in `worker/.env`.
 
