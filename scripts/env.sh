@@ -12,9 +12,9 @@ export API_URL="${API_URL:-https://api-e24frmx3ka-as.a.run.app}"
 
 # Public URL of the deployed worker service (printed by scripts/deploy-service.sh worker). The api
 # enqueues Cloud Tasks to it and the worker checks it as the OIDC audience (spec 07).
-export WORKER_URL="${WORKER_URL:-}"
+export WORKER_URL="${WORKER_URL:-https://worker-e24frmx3ka-as.a.run.app}"
 # Cloud Tasks queue and the service account whose token the tasks carry (scripts/setup-tasks.sh).
 export TASKS_QUEUE="${TASKS_QUEUE:-runs}"
 export TASKS_SERVICE_ACCOUNT="${TASKS_SERVICE_ACCOUNT:-tasks-invoker@${PROJECT_ID}.iam.gserviceaccount.com}"
 # Secret Manager secret holding the Gemini API key, mounted as GEMINI_API_KEY on both services.
-export GEMINI_SECRET="${GEMINI_SECRET:-gemini-api-key}"
+export GEMINI_SECRET="${GEMINI_SECRET:-GEMINI_API_KEY}"
