@@ -161,10 +161,6 @@ export function firestoreUserData(db: Firestore = getFirestore(firebaseApp())): 
   const user = (uid: string) => db.doc(firestorePaths.user(uid));
   const count = async (path: string) => (await db.collection(path).count().get()).data().count;
   return {
-    async listGoalStatuses(uid) {
-      const snap = await user(uid).collection("goals").select("status").get();
-      return snap.docs.map((d) => d.get("status") as Goal["status"]);
-    },
     async listRuns(uid) {
       const snap = await user(uid)
         .collection("runs")

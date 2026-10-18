@@ -1,4 +1,4 @@
-import type { GoalStatus, RunStage } from "@adidi/shared";
+import type { RunStage } from "@adidi/shared";
 
 // What DELETE /me/data needs from Firestore and Cloud Storage, as two small interfaces so the
 // handler is unit-tested with `./fakes.ts`. `../infra/firestore.ts` and `../infra/storage.ts`
@@ -20,8 +20,6 @@ export interface DeletedCounts {
 }
 
 export interface UserDataStore {
-  /** The status of every goal the user has. */
-  listGoalStatuses(uid: string): Promise<GoalStatus[]>;
   /** Every run the user has: its stage and when it last moved. */
   listRuns(uid: string): Promise<{ stage: RunStage; updatedAt: string }[]>;
   /** What is stored under users/{uid}, counted before it is deleted. */

@@ -60,7 +60,7 @@ export function DeleteAllData() {
         onConfirm={() => void confirm()}
       >
         <p className="m-0 text-[14px]">This removes:</p>
-        <ul className="m-0 flex flex-col gap-1 pl-5 text-[14px]">
+        <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-[14px]">
           {DELETE_ALL_COPY.removes.map((line) => (
             <li key={line}>{line}</li>
           ))}

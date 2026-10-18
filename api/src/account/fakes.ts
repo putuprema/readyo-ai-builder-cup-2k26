@@ -1,4 +1,4 @@
-import type { GoalStatus, RunStage } from "@adidi/shared";
+import type { RunStage } from "@adidi/shared";
 import type { DeletedCounts, UserDataStore, UserFiles } from "./ports.js";
 
 // In-memory versions of the user tree and the bucket for the DELETE /me/data tests. Documents
@@ -17,10 +17,6 @@ export class FakeUserDataStore implements UserDataStore {
     return [...this.docs].filter(
       ([p]) => p.startsWith(prefix) && !p.slice(prefix.length).includes("/"),
     );
-  }
-
-  async listGoalStatuses(uid: string): Promise<GoalStatus[]> {
-    return this.under(uid, "goals").map(([, d]) => d.status as GoalStatus);
   }
 
   async listRuns(uid: string) {

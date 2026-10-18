@@ -4,7 +4,9 @@ import { userStoragePrefix } from "./ports.js";
 // DELETE /me/data (docs/product.md, "Privacy": the user can delete all their data at any
 // time). Removes everything under users/{uid} in Firestore and the user's files in Cloud
 // Storage, keeps the Auth account, and refuses while a run is analysing: the worker would
-// write the goal back half-way through.
+// write the goal back half-way through. POST /runs writes the run and the goals' `analysing`
+// status in one batch, so the runs decide: a goal left `analysing` by a run that died does not
+// block the delete once that run is stale.
 
 export interface DeleteDataDeps {
   store: UserDataStore;
@@ -26,17 +28,14 @@ export type DeleteDataOutcome =
 
 export async function deleteAllData(uid: string, deps: DeleteDataDeps): Promise<DeleteDataOutcome> {
   const now = (deps.now ?? (() => new Date()))().getTime();
-  const [statuses, runs] = await Promise.all([
-    deps.store.listGoalStatuses(uid),
-    deps.store.listRuns(uid),
-  ]);
+  const runs = await deps.store.listRuns(uid);
   const running = runs.some(
     (r) =>
       r.stage !== "done" &&
       r.stage !== "failed" &&
       now - new Date(r.updatedAt).getTime() < STALE_RUN_MS,
   );
-  if (running || statuses.includes("analysing")) {
+  if (running) {
     return {
       status: 409,
       body: {

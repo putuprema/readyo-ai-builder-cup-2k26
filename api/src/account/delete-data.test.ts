@@ -89,7 +89,9 @@ describe("DELETE /me/data", () => {
   });
 
   it("refuses with 409 while a goal is analysing", async () => {
-    const store = filledStore().set("users/u1/goals/g3", { status: "analysing" });
+    const store = filledStore()
+      .set("users/u1/goals/g3", { status: "analysing" })
+      .set("users/u1/runs/r3", { stage: "reading", updatedAt: "2026-10-18T09:29:00.000Z" });
     const { del } = setup(store);
     const res = await del();
     expect(res.status).toBe(409);
@@ -107,11 +109,10 @@ describe("DELETE /me/data", () => {
     expect(files.paths.size).toBe(3);
   });
 
-  it("does not let a run stuck for over an hour block the delete", async () => {
-    const store = filledStore().set("users/u1/runs/r2", {
-      stage: "reading",
-      updatedAt: "2026-10-18T07:00:00.000Z",
-    });
+  it("does not let a run stuck for over an hour block the delete, nor the goal it left analysing", async () => {
+    const store = filledStore()
+      .set("users/u1/goals/g3", { status: "analysing" })
+      .set("users/u1/runs/r2", { stage: "reading", updatedAt: "2026-10-18T07:00:00.000Z" });
     const { del } = setup(store);
     expect((await del()).status).toBe(200);
   });
