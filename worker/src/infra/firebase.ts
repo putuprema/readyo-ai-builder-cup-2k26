@@ -1,8 +1,19 @@
-import { firestorePaths } from "@adidi/shared";
+import {
+  type Analysis,
+  firestorePaths,
+  type Goal,
+  type MonthRecord,
+  type Override,
+  type RuleValue,
+  type RunStatus,
+  type Transaction,
+  type UserRecord,
+} from "@adidi/shared";
 import { type App, getApps, initializeApp } from "firebase-admin/app";
 import { type Firestore, getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import type { ExtractedRecords, RecordsPort, StoragePort } from "../extraction/ports.js";
+import type { RunStore } from "../pipeline/ports.js";
 
 // Cloud Run adapters for the extraction ports. Firebase Admin uses Application Default
 // Credentials (the Cloud Run service account; `gcloud auth application-default login` locally).
@@ -83,6 +94,84 @@ export function firestoreRecords(db: Firestore = getFirestore(firebaseApp())): R
         read<ExtractedRecords["holdings"][number]>("holdings"),
       ]);
       return { transactions, loans, holdings };
+    },
+  };
+}
+
+// Firestore adapter for the pipeline's run store (specs/07-pipeline-runs.md). Patches are
+// merged; whole documents (month record, analysis) are replaced, so a retry that recomputes a
+// stage leaves no stale fields behind.
+export function firestoreRunStore(db: Firestore = getFirestore(firebaseApp())): RunStore {
+  const userPath = firestorePaths.user;
+  return {
+    async getRun(uid, runId) {
+      const snap = await db.doc(firestorePaths.run(uid, runId)).get();
+      return snap.exists ? ({ id: snap.id, ...(snap.data() as object) } as RunStatus) : null;
+    },
+    async updateRun(uid, runId, patch) {
+      await db.doc(firestorePaths.run(uid, runId)).set(patch, { merge: true });
+    },
+    async getUser(uid) {
+      const snap = await db.doc(userPath(uid)).get();
+      return snap.exists ? (snap.data() as UserRecord) : null;
+    },
+    async getGoal(uid, goalId) {
+      const snap = await db.doc(firestorePaths.goal(uid, goalId)).get();
+      return snap.exists ? ({ id: snap.id, ...(snap.data() as object) } as Goal) : null;
+    },
+    async updateGoal(uid, goalId, patch) {
+      await db.doc(firestorePaths.goal(uid, goalId)).set(patch, { merge: true });
+    },
+    async listRules() {
+      const snap = await db.collection("rules").get();
+      return snap.docs.map((d) => ({ id: d.id, ...(d.data() as object) }) as RuleValue);
+    },
+    async listOverrides(uid) {
+      const snap = await db.collection(`${userPath(uid)}/overrides`).get();
+      return snap.docs.map((d) => ({ ruleId: d.id, ...(d.data() as object) }) as Override);
+    },
+    async getMonth(uid, month) {
+      const snap = await db.doc(firestorePaths.month(uid, month)).get();
+      return snap.exists ? (snap.data() as MonthRecord) : null;
+    },
+    async listMonths(uid) {
+      const snap = await db.collection(`${userPath(uid)}/months`).get();
+      return snap.docs
+        .map((d) => ({ month: d.id, record: d.data() as MonthRecord }))
+        .sort((a, b) => a.month.localeCompare(b.month));
+    },
+    async setMonth(uid, month, record) {
+      await db.doc(firestorePaths.month(uid, month)).set(record);
+    },
+    async getAnalysis(uid, goalId, month) {
+      const snap = await db.doc(firestorePaths.analysis(uid, goalId, month)).get();
+      return snap.exists ? (snap.data() as Analysis) : null;
+    },
+    async setAnalysis(uid, goalId, month, analysis) {
+      await db.doc(firestorePaths.analysis(uid, goalId, month)).set(analysis);
+    },
+    async listTransactionsBefore(uid, month) {
+      const snap = await db
+        .collection(`${userPath(uid)}/transactions`)
+        .where("month", "<", month)
+        .get();
+      return snap.docs.map((d) => d.data() as Transaction);
+    },
+    async writeTransactions(uid, transactions) {
+      for (let i = 0; i < transactions.length; i += BATCH_LIMIT) {
+        const batch = db.batch();
+        for (const t of transactions.slice(i, i + BATCH_LIMIT))
+          batch.set(db.doc(firestorePaths.transaction(uid, t.id)), t);
+        await batch.commit();
+      }
+    },
+    async deleteTransactions(uid, ids) {
+      for (let i = 0; i < ids.length; i += BATCH_LIMIT) {
+        const batch = db.batch();
+        for (const id of ids.slice(i, i + BATCH_LIMIT))
+          batch.delete(db.doc(firestorePaths.transaction(uid, id)));
+        await batch.commit();
+      }
     },
   };
 }

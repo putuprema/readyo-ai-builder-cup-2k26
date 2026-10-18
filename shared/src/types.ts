@@ -256,6 +256,15 @@ export interface DismissedAction {
   category?: string;
 }
 
+/** `users/{uid}`: the Profile plus the preferences later runs read (specs/06-agent.md). */
+export interface UserPreferences {
+  dismissedActions?: DismissedAction[];
+}
+
+export interface UserRecord extends Profile {
+  preferences?: UserPreferences;
+}
+
 export interface Analysis {
   goalId: string;
   month: string;

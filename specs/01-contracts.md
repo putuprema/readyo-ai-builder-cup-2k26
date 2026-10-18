@@ -134,7 +134,7 @@ interface RunStatus {
 
 `Change` and `SimulationResult` are defined in `specs/02-simulate.md`. They are also written in `shared/types` because `Analysis` and `ActionCard` depend on them.
 
-Also in `shared/types`, for records the layout below names without a type: `DocumentRecord` (`name, type, size, sourceKind, month, status, createdAt`, optional `reason` when `status` is `failed`, optional `closingBalance` for bank and e-wallet statements so a retried run can rebuild the snapshot), `MonthRecord` (`snapshot`, `sources`, `submittedAt`, optional `runId`) and `Override` (`ruleId`, `value`, `updatedAt`). `SourceKind` is `bank | ewallet | paylater | pinjol | investment`. `firestorePaths` in `@adidi/shared` builds every document path of the layout.
+Also in `shared/types`, for records the layout below names without a type: `DocumentRecord` (`name, type, size, sourceKind, month, status, createdAt`, optional `reason` when `status` is `failed`, optional `closingBalance` for bank and e-wallet statements so a retried run can rebuild the snapshot), `MonthRecord` (`snapshot`, `sources`, `submittedAt`, optional `runId`) and `Override` (`ruleId`, `value`, `updatedAt`). `SourceKind` is `bank | ewallet | paylater | pinjol | investment`. `UserRecord` is the `Profile` plus `preferences?: { dismissedActions?: DismissedAction[] }`, the shape of `users/{uid}`. `firestorePaths` in `@adidi/shared` builds every document path of the layout.
 
 ## Firestore layout
 
