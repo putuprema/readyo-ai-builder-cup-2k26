@@ -16,12 +16,16 @@ import { normalize } from "../src/normalization/index.js";
 //
 //   pnpm --filter worker accuracy            prints the table
 //   pnpm --filter worker accuracy -- --out report.json   also writes the scores as JSON
+//   pnpm --filter worker accuracy -- --verbose          prints the extracted rows and holdings
 //
 // Exit code 1 when any fixture fails a criterion, so it can gate a release.
 
 async function main() {
   const outIndex = process.argv.indexOf("--out");
   const outPath = outIndex >= 0 ? process.argv[outIndex + 1] : undefined;
+  // --verbose prints the extracted rows as date | direction | amount | class, and holdings as
+  // instrument | type | value. Never descriptions or account labels.
+  const verbose = process.argv.includes("--verbose");
 
   const { fixtures, unmatched } = loadFixtures();
   for (const file of unmatched) {
@@ -81,6 +85,27 @@ async function main() {
       holdings: result.holdings,
     }),
   );
+
+  if (verbose) {
+    for (const { fixture, result } of extractions) {
+      console.log(`\n${fixture.name}:`);
+      for (const t of byFile.get(fixture.document.id) ?? []) {
+        console.log(
+          `  ${t.date} | ${t.direction} | ${t.amount} | ${t.cls ?? "-"} | ${t.category ?? "-"}`,
+        );
+      }
+      for (const h of result.holdings) {
+        console.log(
+          `  ${h.instrument} | ${h.liquidityClass} | volatile=${h.volatile} | ${h.currency ? `${h.currency} ${h.nativeValue}` : `Rp ${h.currentValue}`}`,
+        );
+      }
+      for (const l of result.loans) {
+        console.log(
+          `  ${l.lender} | ${l.type} | Rp ${l.outstandingPrincipal} | Rp ${l.monthlyInstallment}/mo | ${l.effectiveAnnualRate}`,
+        );
+      }
+    }
+  }
 
   console.log(`\n${formatTable(scores)}\n`);
   const overall = overallRowAccuracy(scores);

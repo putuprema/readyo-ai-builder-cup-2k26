@@ -1,7 +1,7 @@
 import type { Holding, Loan, Transaction } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
 import type { ExpectedFile } from "../fixtures.js";
-import { formatTable, overallRowAccuracy, scoreFixture } from "./compare.js";
+import { formatTable, instrumentMatches, overallRowAccuracy, scoreFixture } from "./compare.js";
 
 // specs/04-extraction.md task 6: the scoring behind the accuracy table, checked on hand-made
 // data so the thresholds mean what the spec says.
@@ -207,6 +207,20 @@ describe("scoreFixture for loans and holdings", () => {
       holdings: [holding({ volatile: false }), holding({ id: "h3", instrument: "ETH" })],
     });
     expect(bad.failures).toEqual(["1 holding(s) missing", "volatile flag differs"]);
+  });
+});
+
+describe("instrumentMatches", () => {
+  it.each([
+    ["Cash USD", "*Cash USD", true],
+    ["Cash USD", "*Cash", true],
+    ["NVDA", "NVDA NVIDIA CORPORATION COM", true],
+    ["Sucorinvest Money Market", "sucorinvest money market fund", true],
+    ["BTC", "ETH", false],
+    ["BBCA", "BBRI", false],
+    ["", "Cash", false],
+  ])("%s vs %s -> %s", (expected, extracted, result) => {
+    expect(instrumentMatches(expected, extracted)).toBe(result);
   });
 });
 

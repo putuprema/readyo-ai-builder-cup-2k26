@@ -41,7 +41,9 @@
     "cash withdrawal",
     "wd atm",
     "atm wd",
-    "tarikan tunai"
+    "tarikan tunai",
+    "cardless withdrawal",
+    "tarik tunai tanpa kartu"
   ],
   "lenders": [
     "spaylater",
@@ -80,14 +82,27 @@
     "biaya transfer",
     "biaya layanan",
     "pajak bunga",
-    "materai"
+    "materai",
+    "tax on interest",
+    "insufficient funds fee",
+    "service fee",
+    "monthly fee",
+    "transaction fee",
+    "transfer fee",
+    "atm fee",
+    "card fee",
+    "annual fee",
+    "pajak",
+    "pph"
   ],
   "interestWords": [
     "bunga tabungan",
     "bunga simpanan",
     "interest credit",
     "bunga deposito",
-    "bagi hasil"
+    "bagi hasil",
+    "interest",
+    "bunga"
   ],
   "subscriptions": [
     "netflix",
@@ -109,7 +124,15 @@
     "canva",
     "wetv",
     "iqiyi",
-    "amazon prime"
+    "amazon prime",
+    "msbill.info",
+    "microsoft",
+    "adobe",
+    "notion",
+    "github",
+    "dropbox",
+    "apple.com",
+    "spotify ab"
   ],
   "rentWords": ["sewa rumah", "sewa kos", "sewa kost", "kost ", "kos ", "indekos", "rent "],
   "utilityWords": [

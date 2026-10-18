@@ -1,7 +1,13 @@
 import type { Transaction } from "@adidi/shared";
 import { z } from "zod";
 import type { JsonModel } from "../gemini/client.js";
-import { applyRules, type Category, type Classification, categories } from "./rules.js";
+import {
+  applyRules,
+  type Category,
+  type Classification,
+  categories,
+  classForCategory,
+} from "./rules.js";
 
 // Stage 3 step 3 (specs/04-extraction.md): classify every transaction into
 // income | essential | discretionary | debt_payment | investment | own_transfer | cash plus a
@@ -156,7 +162,10 @@ async function askModel(
   if (!parsed.success) throw new Error("the model's answer did not match the schema");
   const answers = new Map<string, Classification>();
   for (const item of parsed.data.items) {
-    if (refs.has(item.ref)) answers.set(item.ref, { cls: item.cls, category: item.category });
+    // The category decides the class (rules.ts); the model's own class is only a hint.
+    if (refs.has(item.ref)) {
+      answers.set(item.ref, { cls: classForCategory(item.category), category: item.category });
+    }
   }
   return answers;
 }

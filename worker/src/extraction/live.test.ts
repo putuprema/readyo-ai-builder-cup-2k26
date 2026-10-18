@@ -1,5 +1,6 @@
 import { hasLongDigitRun } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
+import { instrumentMatches } from "../accuracy/compare.js";
 import { loadFixtures, readFixtureBytes } from "../fixtures.js";
 import { createGeminiModel } from "../gemini/client.js";
 import { extractDocument } from "./extract.js";
@@ -43,8 +44,8 @@ describe.skipIf(!enabled)("live extraction over fixtures", () => {
 
       // Investment fixture: holdings with correct values and volatile flags.
       for (const expectedHolding of fixture.expected.holdings) {
-        const found = result.holdings.find(
-          (h) => h.instrument.toLowerCase() === expectedHolding.instrument.toLowerCase(),
+        const found = result.holdings.find((h) =>
+          instrumentMatches(expectedHolding.instrument, h.instrument),
         );
         expect(found, expectedHolding.instrument).toBeDefined();
         if (expectedHolding.currency !== undefined) {

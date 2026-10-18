@@ -190,12 +190,9 @@ export function scoreHoldings(expected: ExpectedFile, holdings: Holding[]): Hold
   let volatileCorrect = 0;
   const used = new Set<string>();
   for (const exp of expected.holdings) {
-    const name = normalizeText(exp.instrument);
-    const got = holdings.find((h) => {
-      if (used.has(h.id)) return false;
-      const got = normalizeText(h.instrument);
-      return got === name || got.includes(name) || name.includes(got);
-    });
+    const got = holdings.find(
+      (h) => !used.has(h.id) && instrumentMatches(exp.instrument, h.instrument),
+    );
     if (!got) continue;
     used.add(got.id);
     found += 1;
@@ -209,6 +206,18 @@ export function scoreHoldings(expected: ExpectedFile, holdings: Holding[]): Hold
     valueCorrect,
     volatileCorrect,
   };
+}
+
+/**
+ * Instrument names as printed vary between runs ("*Cash USD", "*Cash", "NVDA NVIDIA CORPORATION
+ * COM", "NVDA"), so names match when one contains the other once case, spaces and punctuation
+ * are ignored. Exported for the live test.
+ */
+export function instrumentMatches(expected: string, extracted: string): boolean {
+  const a = normalizeText(expected).replace(/[^a-z0-9]/g, "");
+  const b = normalizeText(extracted).replace(/[^a-z0-9]/g, "");
+  if (a.length === 0 || b.length === 0) return false;
+  return a === b || a.includes(b) || b.includes(a);
 }
 
 /** Rupiah compared exactly; a foreign-currency expectation compares the printed value. */

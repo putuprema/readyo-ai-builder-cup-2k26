@@ -128,6 +128,43 @@ function hit(cls: TransactionClass, category: Category): Classification {
   return { cls, category };
 }
 
+// Every category has one class, so the class is derived from the category rather than asked for
+// twice. The model is still asked for a class (it helps it pick the category), but code has the
+// last word.
+const classOfCategory: Record<Category, TransactionClass> = {
+  salary: "income",
+  freelance: "income",
+  interest: "income",
+  refund: "income",
+  other_income: "income",
+  rent: "essential",
+  utilities: "essential",
+  insurance: "essential",
+  groceries: "essential",
+  health: "essential",
+  education: "essential",
+  transport: "essential",
+  fuel: "essential",
+  family: "essential",
+  bank_fees: "essential",
+  food_delivery: "discretionary",
+  dining: "discretionary",
+  shopping: "discretionary",
+  entertainment: "discretionary",
+  subscriptions: "discretionary",
+  travel: "discretionary",
+  charity: "discretionary",
+  other_spending: "discretionary",
+  installment: "debt_payment",
+  investment: "investment",
+  own_transfer: "own_transfer",
+  atm_withdrawal: "cash",
+};
+
+export function classForCategory(category: Category): TransactionClass {
+  return classOfCategory[category];
+}
+
 /** The first rule that is certain about this transaction, or null to let the model decide. */
 export function applyRules(t: Transaction): RuleHit | null {
   const text = searchText(t);

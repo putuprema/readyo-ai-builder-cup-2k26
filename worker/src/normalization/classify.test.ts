@@ -128,6 +128,22 @@ describe("classifyTransactions", () => {
     expect(bad.warnings[0]).toContain("did not match the schema");
   });
 
+  it("derives the class from the model's category, ignoring a contradicting class", async () => {
+    const model = new FakeModel({
+      items: [
+        { ref: "r1", cls: "discretionary", category: "bank_fees" },
+        { ref: "r2", cls: "essential", category: "dining" },
+        { ref: "r3", cls: "income", category: "installment" },
+      ],
+    });
+    const result = await classifyTransactions([txn({}), txn({}), txn({})], model);
+    expect(result.transactions.map((t) => t.cls)).toEqual([
+      "essential",
+      "discretionary",
+      "debt_payment",
+    ]);
+  });
+
   it("does not call the model when every row is already decided", async () => {
     const model = new FakeModel({ items: [] });
     await classifyTransactions([txn({ rawDescription: "TARIKAN ATM" })], model);
