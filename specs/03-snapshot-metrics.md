@@ -22,7 +22,13 @@ buildSnapshot(input: {
   sources?: SourceKind[];        // source kinds read this month (carry-forward)
   carriedFrom?: { snapshot: Snapshot; sources: SourceKind[] };   // last month, for a check-in
 }): Snapshot
-computeMetrics(snapshot, profile, goal, rules, simulation: SimulationResult): Metric[]
+computeMetrics(input: {
+  snapshot: Snapshot;
+  profile: Profile;
+  goal: Goal;
+  rules: Record<string, number>; // merged defaults + overrides
+  simulation: SimulationResult;  // simulate() over the same snapshot with no changes
+}): Metric[]
 ```
 
 Both pure functions in `shared/` (`shared/src/snapshot/`), taking one options object like `simulate()`.
@@ -52,7 +58,17 @@ Both pure functions in `shared/` (`shared/src/snapshot/`), taking one options ob
 | `goal_progress` | (liquid − emergency requirement) / DP needed (or cash target for wedding / cash preference) | 1.0 | needs work if below |
 | `horizon_risk` | volatile share of goal savings, only if goal < 36 months away | 0.20 | needs work if above |
 
-Wedding: `dti` and `expensive_debt` still shown (debt still slows saving) but `dti` never "blocks" since there is no loan.
+The thresholds are rules in `shared/rules/defaults.json` (source "Our rule", `usedFor: ["readiness"]`), never literals in code: `expensive_debt_rate` (0.24), `savings_rate_good` (0.20), `savings_rate_min` (0.10), `horizon_volatile_share_max` (0.20). `dti_cap` and `emergency_months_required` (or the freelance record) are the same rules `simulate()` uses. `expensive_debt` and `goal_progress` report the target (0 and 1.0) as `rule`.
+
+Where the figures come from:
+
+- `dti` reads month 0 of the simulation's loan timeline (`dti`, `installment`), so the table and the loan path card can never disagree. Without a loan path (wedding) it is `debtPayments / netIncome`.
+- `goal_progress` uses `max(0, liquidAssets − emergencyRequired × essentialSpending)` over month 0's `dpNeeded` (loan path) or month 0's cash `target` (wedding, or `payPreference: "cash"`). Label "Down payment progress" on the loan path, "Savings progress" otherwise.
+- `horizon_risk` is `volatileAssets / (liquidAssets + volatileAssets)`. It is always in the list; it passes when the goal date (`goalDateOf`) is 36 or more months away, with a sentence saying volatile assets still count.
+- `emergency_fund` is `liquidAssets / essentialSpending` in months; `savings_rate` is the month-0 surplus (`netIncome − essential − discretionary − cash − debtPayments`) over `netIncome`.
+- Ratios are rounded to 4 decimals, months to 2; rupiah stay integers.
+
+Wedding: `dti` and `expensive_debt` still shown (debt still slows saving) but `dti` never "blocks" since there is no loan (`needs_work` at most).
 
 `meaning` is a short plain-language sentence produced by a template with the numbers filled in by code (e.g. "PayLater Rp 2.1 m/mo plus the KPR installment pushes you over the cap banks use"). Gemini may rephrase it later in the summary, but the numbers come from code.
 

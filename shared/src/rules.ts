@@ -4,7 +4,8 @@ import type { Override, RuleValue } from "./types.js";
 // live in the `rules` collection and in shared/rules/defaults.json; a user's overrides live in
 // users/{uid}/overrides. simulate() receives the merged flat map and never a hard-coded value.
 
-/** Every rule id simulate() may read. Ids marked [__] in the spec have no checked default yet. */
+/** Every rule id simulate() or computeMetrics() may read. Ids marked [__] in the spec have no
+ *  checked default yet. The last four are the readiness thresholds (specs/03-snapshot-metrics.md). */
 export const RULE_IDS = [
   "dti_cap",
   "min_dp_first_home_new",
@@ -24,6 +25,10 @@ export const RULE_IDS = [
   "growth_car",
   "growth_wedding",
   "return_money_market",
+  "expensive_debt_rate",
+  "savings_rate_good",
+  "savings_rate_min",
+  "horizon_volatile_share_max",
 ] as const;
 
 export type RuleId = (typeof RULE_IDS)[number];

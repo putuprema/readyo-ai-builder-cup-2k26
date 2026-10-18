@@ -26,6 +26,10 @@
     "growth_property": 0.06,
     "growth_car": 0.03,
     "growth_wedding": 0.05,
-    "return_money_market": 0.045
+    "return_money_market": 0.045,
+    "expensive_debt_rate": 0.24,
+    "savings_rate_good": 0.2,
+    "savings_rate_min": 0.1,
+    "horizon_volatile_share_max": 0.2
   }
 }

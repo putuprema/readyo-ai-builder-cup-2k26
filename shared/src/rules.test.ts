@@ -35,6 +35,11 @@ describe("shared/rules/defaults.json", () => {
     expect(m.kpr_fixed_years).toBe(3);
     expect(m.growth_property).toBe(0.06);
     expect(m.return_money_market).toBe(0.045);
+    // Readiness thresholds (specs/03-snapshot-metrics.md)
+    expect(m.expensive_debt_rate).toBe(0.24);
+    expect(m.savings_rate_good).toBe(0.2);
+    expect(m.savings_rate_min).toBe(0.1);
+    expect(m.horizon_volatile_share_max).toBe(0.2);
   });
 
   it("leaves the [__] values out until they are checked", () => {

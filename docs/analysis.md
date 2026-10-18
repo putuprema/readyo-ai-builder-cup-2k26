@@ -94,7 +94,7 @@ Stored as data with defaults, a source and a "last checked" date. Users can over
 }
 ```
 
-Rules: DTI cap, minimum DP first home new build, minimum DP secondary/second home, loan must end by age, FLPP income ceiling, minimum DP for KKB, emergency fund required before applying (our rule, 3 months).
+Rules: DTI cap, minimum DP first home new build, minimum DP secondary/second home, loan must end by age, FLPP income ceiling, minimum DP for KKB, emergency fund required before applying (our rule, 3 months). Readiness thresholds (our rules, `specs/03-snapshot-metrics.md`): expensive-debt rate (24%/yr), savings rate good (20%) and minimum (10%), maximum volatile share for a goal under three years away (20%).
 
 Assumptions: KPR rate (fixed period, then floating), price growth per goal type (property, car, wedding), returns (money-market, deposit; volatile assets counted at 0% for goals under 3 years).
 

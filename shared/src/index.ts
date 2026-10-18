@@ -21,4 +21,11 @@ export {
   missingSources,
   SOURCE_KINDS,
 } from "./snapshot/build.js";
+export {
+  type ComputeMetricsInput,
+  computeMetrics,
+  METRIC_IDS,
+  type MetricId,
+  monthlySurplus,
+} from "./snapshot/metrics.js";
 export type * from "./types.js";

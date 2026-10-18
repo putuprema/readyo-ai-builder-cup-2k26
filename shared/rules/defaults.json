@@ -112,5 +112,41 @@
     "usedFor": ["house", "car", "wedding"],
     "source": { "title": "[money-market fund returns, to be checked]", "url": "" },
     "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "expensive_debt_rate",
+    "label": "Debt above this rate counts as expensive",
+    "value": 0.24,
+    "unit": "rate",
+    "usedFor": ["readiness"],
+    "source": { "title": "Our rule", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "savings_rate_good",
+    "label": "Savings rate that passes",
+    "value": 0.2,
+    "unit": "ratio",
+    "usedFor": ["readiness"],
+    "source": { "title": "Our rule", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "savings_rate_min",
+    "label": "Savings rate below which the goal is blocked",
+    "value": 0.1,
+    "unit": "ratio",
+    "usedFor": ["readiness"],
+    "source": { "title": "Our rule", "url": "" },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "horizon_volatile_share_max",
+    "label": "Maximum share of goal savings in volatile assets, goal under three years away",
+    "value": 0.2,
+    "unit": "ratio",
+    "usedFor": ["readiness"],
+    "source": { "title": "Our rule", "url": "" },
+    "checkedAt": "2026-10-18"
   }
 ]
