@@ -54,17 +54,23 @@ export const SAMPLE_STATEMENTS: readonly { file: string; card: CardId; sourceKin
 
 export const SAMPLE_STATEMENTS_URL = "/samples/";
 
+/** Where a sample statement is served, for the fetch and for the preview. */
+export function sampleUrl(file: string): string {
+  return `${SAMPLE_STATEMENTS_URL}${file}`;
+}
+
 /** Fetches the sample PDFs and wraps each as a File with its own name, as a file picker would. */
 export async function loadSampleStatements(): Promise<
-  { file: File; card: CardId; sourceKind: SourceKind }[]
+  { file: File; card: CardId; sourceKind: SourceKind; url: string }[]
 > {
   return Promise.all(
     SAMPLE_STATEMENTS.map(async (sample) => {
-      const res = await fetch(`${SAMPLE_STATEMENTS_URL}${sample.file}`);
+      const url = sampleUrl(sample.file);
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`Could not load ${sample.file} (${res.status})`);
       const blob = await res.blob();
       const file = new File([blob], sample.file, { type: "application/pdf" });
-      return { file, card: sample.card, sourceKind: sample.sourceKind };
+      return { file, card: sample.card, sourceKind: sample.sourceKind, url };
     }),
   );
 }

@@ -71,6 +71,8 @@ export interface UploadItem {
   /** The `documents` record id once the api created it. */
   docId?: string;
   error?: string;
+  /** Where the dialog shows the file before Submit: an object URL, or a sample's hosted copy. */
+  previewUrl?: string;
 }
 
 /** Why a picked file is refused, or null when it is accepted. */
