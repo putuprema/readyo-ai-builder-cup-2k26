@@ -18,7 +18,7 @@ Defaults live in `rules/` (Firestore) and in `shared/rules/defaults.json` for te
 | `min_dp_first_home_new` | Minimum DP, first home, new build | 0.20 |
 | `min_dp_other_home` | Minimum DP, secondary or second home | [__] |
 | `loan_end_age` | Loan must end by this age | 55 |
-| `flpp_income_ceiling` | Max monthly income for subsidised KPR | [__] |
+| `flpp_income_ceiling` | Max monthly income for subsidised KPR (FLPP), not married; `flpp_income_ceiling_married` is the combined-income ceiling for a married couple | 12,000,000 / 14,000,000 (Permen PKP No. 5/2025, zone 4: Jabodetabek) |
 | `min_dp_kkb` | Minimum DP, car loan | [__] |
 | `kkb_max_tenor_years` | Longest car loan | [__] |
 | `emergency_months_required` | Emergency fund before applying (our rule) | 3, or 6 if freelance |
@@ -33,9 +33,12 @@ Defaults live in `rules/` (Firestore) and in `shared/rules/defaults.json` for te
 
 `[__]` values must be filled from a checked source before the demo. Until then, tests use the values in `fixtures/profiles/rules-test.json` (the defaults above with plausible placeholders, clearly marked as test-only). `shared/rules/defaults.json` leaves the `[__]` rules out: `simulate()` throws a clear error when a rule it needs is missing, so an unchecked value can never be guessed silently.
 
+`pnpm seed:rules` (`api/scripts/seed-rules.ts`) writes `defaults.json` to the `rules` collection, one document per rule; it never reads `rules-test.json`. The demo analysis in `shared/src/demo/` is simulated with `defaults.json` alone: every rule a first-home KPR reads has a checked default.
+
 Data notes:
 
 - `emergency_months_required` is stored as two records, `emergency_months_required` (3) and `emergency_months_required_freelance` (6); code picks one by `profile.employment` and reports the rule as `emergency_months_required`.
+- `flpp_income_ceiling` is stored the same way: `flpp_income_ceiling` (not married, the applicant's income) and `flpp_income_ceiling_married` (married, the couple's combined income); code picks one by `profile.maritalStatus` and reports the rule as `flpp_income_ceiling`. The values are zone 4 of Permen PKP No. 5/2025 (Jakarta, Bogor, Depok, Tangerang, Bekasi), the highest of the four zones, so a user elsewhere is never wrongly told FLPP is out of reach; a zone lookup from `profile.city` is a later refinement.
 - The preferred loan tenor is `inputs.preferredTenorYears` on house and car goals (optional; default 20 years for a house, `kkb_max_tenor_years` for a car).
 - `mergeRules(defaults, overrides)` in `shared/src/rules.ts` builds the flat map `simulate()` takes; overrides never change the defaults.
 

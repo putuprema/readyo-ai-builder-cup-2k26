@@ -11,6 +11,7 @@ export const RULE_IDS = [
   "min_dp_other_home",
   "loan_end_age",
   "flpp_income_ceiling",
+  "flpp_income_ceiling_married",
   "min_dp_kkb",
   "kkb_max_tenor_years",
   "emergency_months_required",

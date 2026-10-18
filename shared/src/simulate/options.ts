@@ -32,18 +32,18 @@ export function rejectedOptionsFor(
             : "A joint application needs a spouse income; none is recorded.",
       });
     }
-    const ceiling = requireRule(rules, "flpp_income_ceiling");
+    const flpp = flppIncomeCheck(profile, rules);
     if (!inputs.firstHome) {
       rejected.push({
         option: "flpp",
         rule: FLPP_FIRST_HOME_RULE,
         reason: "Subsidised KPR (FLPP) is for a first home only.",
       });
-    } else if (profile.netMonthlyIncome > ceiling) {
+    } else if (flpp.income > flpp.ceiling) {
       rejected.push({
         option: "flpp",
         rule: "flpp_income_ceiling",
-        reason: `Subsidised KPR (FLPP) needs a monthly income of at most Rp ${ceiling.toLocaleString("en-US")}.`,
+        reason: `Subsidised KPR (FLPP) needs a ${flpp.married ? "combined " : ""}monthly income of at most Rp ${flpp.ceiling.toLocaleString("en-US")}.`,
       });
     }
   }
@@ -64,4 +64,26 @@ export function rejectedOptionsFor(
     });
   }
   return rejected;
+}
+
+export interface FlppIncomeCheck {
+  /** The ceiling that applies: the single record, or the married one (combined income). */
+  ceiling: number;
+  /** The income the rule counts: the applicant's, plus the spouse's when married. */
+  income: number;
+  married: boolean;
+}
+
+/**
+ * The FLPP income ceiling depends on marital status (Permen PKP No. 5/2025: a married
+ * couple's combined income against the married ceiling). Stored as two records,
+ * `flpp_income_ceiling` and `flpp_income_ceiling_married`; reported as `flpp_income_ceiling`.
+ */
+export function flppIncomeCheck(profile: Profile, rules: Rules): FlppIncomeCheck {
+  const married = profile.maritalStatus === "married";
+  return {
+    ceiling: requireRule(rules, married ? "flpp_income_ceiling_married" : "flpp_income_ceiling"),
+    income: profile.netMonthlyIncome + (married ? (profile.spouseMonthlyIncome ?? 0) : 0),
+    married,
+  };
 }

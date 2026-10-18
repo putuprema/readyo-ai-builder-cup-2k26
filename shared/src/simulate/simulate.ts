@@ -14,7 +14,7 @@ import type {
 import { applyChanges } from "./changes.js";
 import { checkLoanMonth, type LoanMonthCheck, planLoan } from "./loan.js";
 import { amortizeOneMonth, grow, monthsBetween } from "./money.js";
-import { rejectedOptionsFor } from "./options.js";
+import { flppIncomeCheck, rejectedOptionsFor } from "./options.js";
 
 // simulate(): plays a person's finances forward month by month (specs/02-simulate.md,
 // "Behavior"). Pure: no I/O, no clock, no randomness. Month 0 is the snapshot month as given;
@@ -93,6 +93,7 @@ export function simulate(input: SimulateInput): SimulationResult {
   let loanReadyMonth: number | null = null;
   let loanCheckAtReady: LoanMonthCheck | undefined;
   let loanCheckAtStart: LoanMonthCheck | undefined;
+  let liquidAtStart = snapshot.liquidAssets;
 
   for (let m = 0; m <= maxMonths; m++) {
     applyChanges(state, changes, m);
@@ -136,7 +137,10 @@ export function simulate(input: SimulateInput): SimulationResult {
         debtPayments,
         age: profile.age + Math.floor(m / 12),
       });
-      if (m === 0) loanCheckAtStart = check;
+      if (m === 0) {
+        loanCheckAtStart = check;
+        liquidAtStart = state.liquid; // after the changes with fromMonth 0
+      }
       if (check.failing.length === 0 && loanReadyMonth === null) {
         loanReadyMonth = m;
         loanCheckAtReady = check;
@@ -194,7 +198,7 @@ export function simulate(input: SimulateInput): SimulationResult {
       } else if (rule === loanPlan.dpRuleId) {
         blockedBy.push({
           rule,
-          value: Math.max(0, Math.round(snapshot.liquidAssets - reserve)),
+          value: Math.max(0, Math.round(liquidAtStart - reserve)),
           limit: Math.round(start.dpNeeded),
         });
       }
@@ -251,10 +255,11 @@ export function simulate(input: SimulateInput): SimulationResult {
       });
     }
     if (goal.type === "house") {
+      const flpp = flppIncomeCheck(profile, rules);
       rulesChecked.push({
         rule: "flpp_income_ceiling",
-        valueUsed: requireRule(rules, "flpp_income_ceiling"),
-        you: profile.netMonthlyIncome,
+        valueUsed: flpp.ceiling,
+        you: flpp.income,
         effect: rejects("flpp_income_ceiling") ? "rejects_option" : "passes",
       });
     }

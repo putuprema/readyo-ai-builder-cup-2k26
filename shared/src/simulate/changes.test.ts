@@ -145,6 +145,17 @@ describe("move_assets", () => {
     expect(r.cash.timeline[0]?.volatile).toBe(0);
     expect(r.cash.timeline[0]?.liquid).toBe(19_000_000);
   });
+
+  it("at month 0 counts toward the DP that blockedBy reports", () => {
+    // blockedBy describes month 0 after the changes with fromMonth 0, like the timeline does.
+    const r = run("house-a", [{ type: "move_assets", amount: 15_000_000, fromMonth: 0 }]);
+    const dp = r.loan?.blockedBy.find((b) => b.rule === "min_dp_first_home_new");
+    const reserve = 3 * 8_000_000;
+    expect(r.loan?.timeline[0]?.liquid).toBe(19_000_000);
+    expect(dp?.value).toBe(Math.max(0, 19_000_000 - reserve));
+    const base = run("house-a", []);
+    expect(base.loan?.blockedBy.find((b) => b.rule === "min_dp_first_home_new")?.value).toBe(0);
+  });
 });
 
 describe("changes together", () => {

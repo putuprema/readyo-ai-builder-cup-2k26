@@ -28,6 +28,8 @@ describe("shared/rules/defaults.json", () => {
     expect(m.loan_end_age).toBe(55);
     expect(m.emergency_months_required).toBe(3);
     expect(m.emergency_months_required_freelance).toBe(6);
+    expect(m.flpp_income_ceiling).toBe(12_000_000);
+    expect(m.flpp_income_ceiling_married).toBe(14_000_000);
     expect(m.kpr_rate_fixed).toBe(0.065);
     expect(m.kpr_rate_floating).toBe(0.11);
     expect(m.kpr_fixed_years).toBe(3);
@@ -37,7 +39,7 @@ describe("shared/rules/defaults.json", () => {
 
   it("leaves the [__] values out until they are checked", () => {
     const m = mergeRules(defaults);
-    for (const id of ["min_dp_other_home", "flpp_income_ceiling", "min_dp_kkb", "kkb_rate"]) {
+    for (const id of ["min_dp_other_home", "min_dp_kkb", "kkb_rate"]) {
       expect(m[id]).toBeUndefined();
     }
   });
