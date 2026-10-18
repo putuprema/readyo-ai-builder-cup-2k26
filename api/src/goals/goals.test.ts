@@ -97,6 +97,24 @@ describe("PATCH /goals/:id", () => {
     expect((await store.getGoal("u1", "g1"))?.inputs).toEqual(goal.inputs);
   });
 
+  it("removes an optional field sent as null and rejects null for a required one", async () => {
+    const { call } = setup();
+    const res = await call("PATCH", "/goals/g1", {
+      inputs: { landM2: null, buildingM2: null, budgetRange: [1_000_000_000, 1_500_000_000] },
+    });
+    expect(res.status).toBe(200);
+    const goal = (await res.json()) as Goal;
+    expect(goal.inputs).toEqual({
+      area: "Serpong",
+      propertyType: "landed",
+      market: "new",
+      firstHome: true,
+      targetYear: 2028,
+      budgetRange: [1_000_000_000, 1_500_000_000],
+    });
+    expect((await call("PATCH", "/goals/g1", { inputs: { area: null } })).status).toBe(400);
+  });
+
   it("rejects inputs of another goal type with 400", async () => {
     const { call } = setup();
     const res = await call("PATCH", "/goals/g1", { inputs: { condition: "new" } });

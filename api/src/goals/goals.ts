@@ -61,8 +61,14 @@ export async function updateGoal(
   const next: Goal = { ...goal, updatedAt: now };
 
   if (body.inputs) {
-    // Partial inputs are merged, then the whole object is checked against the goal's type.
-    next.inputs = validateInputs(goal.type, { ...goal.inputs, ...body.inputs });
+    // Partial inputs are merged (null removes an optional field), then the whole object is
+    // checked against the goal's type.
+    const merged: Record<string, unknown> = { ...goal.inputs };
+    for (const [key, value] of Object.entries(body.inputs)) {
+      if (value === null) delete merged[key];
+      else if (value !== undefined) merged[key] = value;
+    }
+    next.inputs = validateInputs(goal.type, merged);
   }
   if (body.payPreference !== undefined) {
     if (goal.type === "wedding" && body.payPreference !== "none") {
