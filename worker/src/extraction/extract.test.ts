@@ -86,7 +86,7 @@ describe("extractDocument for a bank statement", () => {
     const b = mapExtraction(bankDocument, twice);
     expect(a.transactions.map((t) => t.id)).toEqual(b.transactions.map((t) => t.id));
     expect(new Set(a.transactions.map((t) => t.id)).size).toBe(4);
-    expect(a.transactions[0]?.id).toMatch(/^txn_[0-9a-f]{20}$/);
+    expect(a.transactions[0]?.id).toMatch(/^txn_[0-9a-f]{5}(-[0-9a-f]{5}){3}$/);
   });
 
   it("keeps the meta the later stages and the accuracy script need", async () => {
