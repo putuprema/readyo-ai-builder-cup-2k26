@@ -18,6 +18,7 @@ import type {
   ToolStepResponse,
 } from "../gemini/client.js";
 import { CLASSIFY_SYSTEM_INSTRUCTION } from "../normalization/classify.js";
+import { DELTA_SYSTEM_INSTRUCTION } from "./delta.js";
 import type { RunStore } from "./ports.js";
 
 // In-memory run store for the pipeline tests. Single user: the uid is checked but not used as
@@ -102,6 +103,8 @@ export interface FakePipelineModelScript {
   extraction: (unknown | Error)[];
   /** The writer's answer; `{ cards: [], summary: "" }` forces the template texts. */
   writer?: unknown;
+  /** The delta summary answer; `{ summary: "" }` (the default) forces the template. */
+  delta?: unknown;
   /** The agent's turns: tool calls or a closing sentence. */
   turns?: (ToolCall[] | string)[];
   /** Called before every answer; throw here to inject a failure at a chosen point. */
@@ -117,6 +120,7 @@ export class FakePipelineModel implements JsonModel, ToolModel {
   readonly extractionRequests: JsonRequest[] = [];
   readonly classifyRequests: JsonRequest[] = [];
   readonly writerRequests: JsonRequest[] = [];
+  readonly deltaRequests: JsonRequest[] = [];
   readonly stepRequests: ToolStepRequest[] = [];
   private readonly extraction: (unknown | Error)[];
   private readonly turns: (ToolCall[] | string)[];
@@ -142,6 +146,10 @@ export class FakePipelineModel implements JsonModel, ToolModel {
     if (request.systemInstruction === WRITER_SYSTEM_INSTRUCTION) {
       this.writerRequests.push(request);
       return structuredClone(this.script.writer ?? { cards: [], summary: "" });
+    }
+    if (request.systemInstruction === DELTA_SYSTEM_INSTRUCTION) {
+      this.deltaRequests.push(request);
+      return structuredClone(this.script.delta ?? { summary: "" });
     }
     return structuredClone(this.script.writer ?? {});
   }
