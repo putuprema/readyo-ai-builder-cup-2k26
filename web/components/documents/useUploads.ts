@@ -17,6 +17,8 @@ export interface AddOptions {
   /** The kind for each file: one kind for all, or a guess from the file name. */
   sourceKind: SourceKind | ((fileName: string) => SourceKind);
   slot?: string;
+  /** The month for these files when it differs from the hook's (set in the same event). */
+  month?: string;
 }
 
 export function useUploads({
@@ -75,12 +77,12 @@ export function useUploads({
       };
       kinds.current.set(localId, item.sourceKind);
       setItems((list) => [...list, item]);
-      void start(item, file);
+      void start(item, file, options.month ?? month);
     }
     setRejected((r) => ({ ...r, [options.group]: refused }));
   }
 
-  async function start(item: UploadItem, file: File) {
+  async function start(item: UploadItem, file: File, fileMonth: string) {
     const controller = new AbortController();
     controllers.current.set(item.localId, controller);
     try {
@@ -88,7 +90,7 @@ export function useUploads({
         file,
         type: item.type,
         sourceKind: item.sourceKind,
-        month,
+        month: fileMonth,
         signal: controller.signal,
         onProgress: (progress) => patch(item.localId, { progress }),
       });

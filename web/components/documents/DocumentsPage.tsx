@@ -25,6 +25,7 @@ import { goalSummary } from "@/lib/goal-summary";
 import { listenGoal } from "@/lib/goals";
 import { useRouteSegment } from "@/lib/route-id";
 import { listSubmittedMonths, runErrorMessage, startRun } from "@/lib/runs";
+import { loadSampleStatements, SAMPLE_MONTH } from "@/lib/sample";
 import { apiUploader, type Uploader } from "@/lib/uploader";
 import { UploadCard } from "./UploadCard";
 import { useUploads } from "./useUploads";
@@ -57,6 +58,7 @@ function DocumentsStep() {
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [reusable, setReusable] = useState<string | null>(null);
+  const [loadingSamples, setLoadingSamples] = useState(false);
   const { items, rejected, add, remove, changeKind } = useUploads({
     month,
     uploader,
@@ -87,6 +89,27 @@ function DocumentsStep() {
     add(files, { group: card, card, sourceKind: (name) => initialKind(card, name) });
   }
 
+  /**
+   * Adds the four sample statements as if the person had picked them: same checks, same
+   * upload path, same progress and errors. Their month is used when it is offered.
+   */
+  async function addSampleStatements() {
+    setLoadingSamples(true);
+    setNotice(null);
+    try {
+      const samples = await loadSampleStatements();
+      const sampleMonth = monthOptions().includes(SAMPLE_MONTH) ? SAMPLE_MONTH : month;
+      setMonth(sampleMonth);
+      for (const { file, card, sourceKind } of samples) {
+        add([file], { group: card, card, sourceKind, month: sampleMonth });
+      }
+    } catch {
+      setNotice("Could not load the sample statements. Try again, or add your own files.");
+    } finally {
+      setLoadingSamples(false);
+    }
+  }
+
   async function submit() {
     if (!canSubmit(items) || !goalId) return;
     setSubmitting(true);
@@ -107,6 +130,8 @@ function DocumentsStep() {
   }
 
   const submitEnabled = canSubmit(items) && !submitting && goal?.status === "draft";
+  const samplesEnabled =
+    items.length === 0 && !loadingSamples && !submitting && goal?.status === "draft";
 
   return (
     <main className="mx-auto box-border flex w-full max-w-[1120px] flex-col gap-8 px-4 pt-8 pb-16 sm:px-8 sm:pt-10">
@@ -180,6 +205,20 @@ function DocumentsStep() {
             ? "Remove the files to change the month."
             : "The most recent full month is best; every file you add here belongs to it."}
         </span>
+        <div className="flex w-full flex-wrap items-center gap-3 border-line border-t pt-3">
+          <button
+            type="button"
+            onClick={() => void addSampleStatements()}
+            disabled={!samplesEnabled}
+            className="inline-flex min-h-11 items-center rounded-[10px] border border-accent bg-surface px-4 font-semibold text-[14px] text-accent-strong hover:bg-accent-tint disabled:border-[#C9CFC9] disabled:text-muted disabled:hover:bg-surface"
+          >
+            {loadingSamples ? "Loading samples" : "Use sample statements"}
+          </button>
+          <span className="text-[13px] text-muted">
+            No statements at hand? Try four made-up ones for one household, September 2026: bank,
+            e-wallet, PayLater and investments.
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
