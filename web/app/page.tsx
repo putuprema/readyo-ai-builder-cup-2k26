@@ -1,8 +1,26 @@
-import { formatRupiah } from "@adidi/shared";
+import { formatRupiah, type Goal } from "@adidi/shared";
 import { ApiStatus } from "@/components/ApiStatus";
 import { SiteHeader } from "@/components/SiteHeader";
+import { goalSummary } from "@/lib/goal-summary";
 
 const SAMPLE_TARGET = 1_520_000_000;
+
+// Sample data in the shape of the shared contracts; replaced by Firestore data in spec 10.
+const SAMPLE_GOAL: Goal = {
+  id: "sample",
+  type: "house",
+  status: "active",
+  payPreference: "loan",
+  inputs: {
+    area: "Tangerang Selatan",
+    propertyType: "landed",
+    market: "new",
+    firstHome: true,
+    targetYear: 2029,
+  },
+  createdAt: "2026-10-01T00:00:00.000Z",
+  updatedAt: "2026-10-01T00:00:00.000Z",
+};
 
 export default function Home() {
   return (
@@ -24,7 +42,7 @@ export default function Home() {
               checked against the same rules a bank uses.
             </p>
             <p className="m-0 text-[13px] text-muted">
-              Sample target from the shared package: {formatRupiah(SAMPLE_TARGET)}
+              {goalSummary(SAMPLE_GOAL)} · target {formatRupiah(SAMPLE_TARGET)}
             </p>
           </div>
 
