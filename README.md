@@ -73,11 +73,11 @@ With the emulators running, seed them once from another terminal (the `*:emulato
 
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 pnpm --filter api seed:rules
-FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 pnpm --filter api seed:demo   # demo@adidi.app, password demo-pass-2026 on the emulators unless DEMO_PASSWORD is set (the script reads api/.env, so a DEMO_PASSWORD there wins)
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 pnpm --filter api seed:demo   # demo@example.com, password demo-pass-2026 on the emulators unless DEMO_PASSWORD is set (the script reads api/.env, so a DEMO_PASSWORD there wins)
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 pnpm --filter api seed:demo --goals-list --empty-user   # adds one analysing, two draft and a second active goal, and empty@adidi.app with no goals (spec 12)
 ```
 
-Then start the services against them. `web/.env`: `NEXT_PUBLIC_USE_EMULATORS=1`. `api/.env`: `FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099`, `FIRESTORE_EMULATOR_HOST=127.0.0.1:8085`, `FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199`, `FIREBASE_PROJECT_ID=demo-adidi`, `STORAGE_BUCKET=demo-adidi.appspot.com`, `WORKER_URL=http://localhost:8081`, `TASKS_MODE=direct`, plus `GEMINI_API_KEY` for estimates. `worker/.env`: the same emulator hosts, project and bucket, `TASKS_AUTH=off` and `GEMINI_API_KEY`. Against the real Firebase project instead, fill in the `NEXT_PUBLIC_FIREBASE_*` values from `web/.env.example`.
+Then start the services against them. `web/.env`: `NEXT_PUBLIC_USE_EMULATORS=1`, plus `NEXT_PUBLIC_DEMO_PASSWORD=demo-pass-2026` to have the sign-in card filled in. `api/.env`: `FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099`, `FIRESTORE_EMULATOR_HOST=127.0.0.1:8085`, `FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199`, `FIREBASE_PROJECT_ID=demo-adidi`, `STORAGE_BUCKET=demo-adidi.appspot.com`, `WORKER_URL=http://localhost:8081`, `TASKS_MODE=direct`, plus `GEMINI_API_KEY` for estimates. `worker/.env`: the same emulator hosts, project and bucket, `TASKS_AUTH=off` and `GEMINI_API_KEY`. Against the real Firebase project instead, fill in the `NEXT_PUBLIC_FIREBASE_*` values from `web/.env.example`.
 
 ### Firestore rules tests
 
@@ -85,7 +85,7 @@ Then start the services against them. `web/.env`: `NEXT_PUBLIC_USE_EMULATORS=1`.
 
 ### Demo data
 
-`pnpm seed:demo` creates the demo account (`demo@adidi.app`, uid `demo-user`) with an active house goal, one month of extracted data and its analysis, so the UI can be built before the pipeline exists. The data lives in `shared/src/demo/` and is tested for internal consistency; `api/scripts/seed-demo.ts` only writes it. Against the real project it needs Application Default Credentials (`gcloud auth application-default login`), `FIREBASE_PROJECT_ID` and `DEMO_PASSWORD`. Against the emulators, `pnpm seed:demo:emulator` needs nothing else. Re-running replaces the demo user's Firestore tree.
+`pnpm seed:demo` creates the demo account (`demo@example.com`, uid `demo-user`) with an active house goal, one month of extracted data and its analysis, so the UI can be built before the pipeline exists. The data lives in `shared/src/demo/` and is tested for internal consistency; `api/scripts/seed-demo.ts` only writes it. Against the real project it needs Application Default Credentials (`gcloud auth application-default login`), `FIREBASE_PROJECT_ID` and `DEMO_PASSWORD`. Against the emulators, `pnpm seed:demo:emulator` needs nothing else. Re-running replaces the demo user's Firestore tree.
 
 ### Rules
 
@@ -135,7 +135,7 @@ Secrets never live in the repo. Locally, put them in a `.env` file (ignored by g
    firebase apps:create WEB adidi-web
    firebase apps:sdkconfig WEB <app id printed above>
    ```
-   Copy `projectId`, `apiKey`, `authDomain` and `appId` into `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` and `NEXT_PUBLIC_FIREBASE_APP_ID`. These are public identifiers, but the key matches the `AIza…` pattern that `pnpm check:secrets` rejects, so they stay out of git.
+   Copy `projectId`, `apiKey`, `authDomain` and `appId` into `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` and `NEXT_PUBLIC_FIREBASE_APP_ID`. These are public identifiers, but the key matches the `AIza…` pattern that `pnpm check:secrets` rejects, so they stay out of git. Add `NEXT_PUBLIC_DEMO_PASSWORD` (the `DEMO_PASSWORD` the real project was seeded with) so the sign-in card is filled in with the demo account `demo@example.com` and judges only press Sign in; it ships in the public bundle, so it must be the demo account only.
 9. Create the Hosting site the web deploys to (`HOSTING_SITE` in `scripts/env.sh`, mapped to the `readyo` target in `.firebaserc`) and authorize its domains for Firebase Auth sign-in (console: Authentication > Settings > Authorized domains, or the Identity Toolkit API below, which replaces the whole list, so keep the existing entries):
    ```bash
    pnpm exec firebase hosting:sites:create getreadyo --project YOUR_PROJECT_ID

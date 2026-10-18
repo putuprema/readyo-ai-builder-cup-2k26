@@ -32,7 +32,7 @@ import { demoRules } from "./rules.js";
 export { demoRuleDefaults, demoRules } from "./rules.js";
 
 export const DEMO_UID = "demo-user";
-export const DEMO_EMAIL = "demo@adidi.app";
+export const DEMO_EMAIL = "demo@example.com";
 export const DEMO_DISPLAY_NAME = "Dimas";
 export const DEMO_MONTH = "2026-09";
 export const DEMO_GOAL_ID = "house-tangsel";

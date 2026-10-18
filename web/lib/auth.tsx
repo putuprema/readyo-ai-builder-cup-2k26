@@ -61,7 +61,7 @@ export function useUser(): User | null {
   return useAuth().state.user;
 }
 
-/** Initials for the avatar: "Dimas" → "D", "demo@adidi.app" → "D". */
+/** Initials for the avatar: "Dimas" → "D", "demo@example.com" → "D". */
 export function initialsOf(user: User): string {
   const source = user.displayName?.trim() || user.email || "?";
   const parts = source.split(/[\s@._-]+/).filter(Boolean);

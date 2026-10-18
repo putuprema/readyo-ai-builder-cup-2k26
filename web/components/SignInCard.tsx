@@ -1,14 +1,19 @@
 "use client";
 
+import { DEMO_EMAIL } from "@adidi/shared";
 import { type FormEvent, useState } from "react";
 import { signInErrorMessage, useAuth } from "@/lib/auth";
 
-// Email and password sign-in (Firebase Auth). The demo account is demo@adidi.app
-// (pnpm seed:demo); the password is never in the repo.
+// The judges' demo account (pnpm seed:demo) is filled in so they only press Sign in. The
+// password comes from NEXT_PUBLIC_DEMO_PASSWORD at build time (git-ignored env file), never
+// from the repo; without it only the email is filled in.
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? "";
+
+// Email and password sign-in (Firebase Auth).
 export function SignInCard({ title = "Sign in to continue" }: { title?: string }) {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(DEMO_EMAIL);
+  const [password, setPassword] = useState(DEMO_PASSWORD);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +41,11 @@ export function SignInCard({ title = "Sign in to continue" }: { title?: string }
         <p className="m-0 text-[13px] text-muted">
           Your goals and statements are tied to your account. Nothing is shared.
         </p>
+        {DEMO_PASSWORD && (
+          <p className="m-0 text-[13px] text-muted">
+            The demo account is filled in. Select Sign in to try it.
+          </p>
+        )}
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="signin-email" className="font-semibold text-[13px]">
