@@ -17,7 +17,16 @@ export {
   maskDigitRuns,
   SENSITIVE_DIGIT_RUN,
 } from "./mask.js";
+export {
+  latestMonth,
+  monthKeyOfDate,
+  monthlyBannerFor,
+  previousMonthKey,
+  REUSE_MAX_AGE_DAYS,
+  reusableMonth,
+} from "./months.js";
 export { firestorePaths, isMonthKey, MONTH_PATTERN } from "./paths.js";
+export { hasUndefined, plainJson } from "./plain.js";
 export {
   dismissedActionsFrom,
   mergeDismissedActions,

@@ -31,6 +31,17 @@ On success: each goal becomes `active` with `latestAnalysisMonth` set; run stage
 
 **Idempotency**: Cloud Tasks may retry. Each stage checks whether its output already exists for this run before redoing work, so a retry never duplicates transactions.
 
+## Decisions taken while building
+
+- **Run document fields**: the Cloud Task body is `{ uid, runId }` only; `documentIds`, `goalStatusBefore` (the goals' statuses before the run, restored on failure), `updatedAt`, `finishedAt`, `attempt` and per-goal agent notes (`goals`) live on the `RunStatus` document (spec 01 updated). The task name is the `runId`, so Cloud Tasks itself drops a duplicate enqueue.
+- **Percent**: the worker writes `{ stage, percent }` when it *enters* a stage, so the ring moves on every stage change and the numbers in the table are what the user sees (`reading` 18 while reading, `done` 100 at the end). `POST /runs` writes `reading` 0 before the worker starts.
+- **Failures**: a known pipeline error (unreadable files, goal without an estimate, no stored month to reuse) fails the run at once with its user-readable message and answers 200, so Cloud Tasks does not retry. An unexpected error answers 500 for a retry; on the third attempt (`X-CloudTasks-TaskRetryCount` ≥ 2) the run is marked `failed` with a generic message. A run already `done` or `failed` answers 200 at once.
+- **Idempotency**: extraction reuses a document already marked `extracted` (spec 04); the month record and each analysis carry the `runId` that wrote them and are not recomputed by a retry of the same run. Normalized rows overwrite the stored transactions by id; removed duplicates are deleted. Bank and e-wallet closing balances are kept on the `DocumentRecord` (`closingBalance`) so a retry can rebuild `bankBalances`.
+- **Carried loans** on a check-in are stored as last month left them, not aged (spec 03).
+- **Delta** lives on the new month's `Analysis` document (`delta`), not in its own collection. Committed actions are checked by code: pay-off → no active loan from that lender; refinance → that lender's installment lower; cap → the category's spending at or under the cap; move → volatile assets down by at least the amount. The summary is a Flash-tier structured call checked with the agent's number check, with a template fallback.
+- **Reuse rule helper** (`reusableMonth`) and **banner rule helper** (`monthlyBannerFor`) are in `shared/src/months.ts`, used by the UI and by the api's validation of `reuse` runs. Age for the reuse rule counts from the end of the month.
+- **Recalculate** carries the user's choices over to the new actions whose change matches (type plus loan or category).
+
 ## Acceptance criteria
 
 - Submitting the House-A fixture files produces stage updates in order and ends `done` with an `Analysis` stored; the UI listener sees each stage.

@@ -266,6 +266,42 @@ export interface Analysis {
   choices: Record<string, ActionChoice>;
   rejectedOptions: { option: string; rule: string; reason: string }[];
   summary: string; // Gemini-written headline sentence
+  /** simulate() with the user's choices applied (PATCH .../choices); absent until the first choice. */
+  withChoices?: SimulationResult;
+  /** What moved since last month (monthly runs only, specs/07-pipeline-runs.md stage 7). */
+  delta?: MonthlyDelta;
+  /** The run that wrote this document, for idempotent retries. */
+  runId?: string;
+}
+
+/** One metric that changed between two months' analyses. */
+export interface MetricChange {
+  id: string;
+  label: string;
+  oldValue: number;
+  newValue: number;
+  oldStatus: MetricStatus;
+  newStatus: MetricStatus;
+}
+
+/** A committed action checked against the new month's statements. */
+export interface CommittedActionCheck {
+  actionId: string;
+  title: string;
+  change: Change;
+  kept: boolean;
+  /** Code-written, e.g. "Kredivo balance gone" or "Shopping Rp 1.9 m, above the Rp 1.5 m cap". */
+  evidence: string;
+}
+
+export interface MonthlyDelta {
+  previousMonth: string;
+  metricsChanged: MetricChange[];
+  committedActions: CommittedActionCheck[];
+  /** Months to ready on the leading path, before and after; null = not within the horizon. */
+  monthsToReady: { leadingPath: "cash" | "loan"; old: number | null; new: number | null };
+  /** Two sentences written by Gemini from the numbers above (or a template when it slips). */
+  summary: string;
 }
 
 export type RunStage = "reading" | "cleaning" | "checking" | "planning" | "done" | "failed";
@@ -279,7 +315,16 @@ export interface RunStatus {
   goalIds: string[];
   month: string;
   kind: RunKind;
-  error?: string;
+  error?: string; // user-readable, when stage is "failed"
+  // Backend fields (specs/07-pipeline-runs.md): the Cloud Task carries only { uid, runId } and
+  // the worker reads everything else from this document, so retries are self-contained.
+  documentIds?: string[]; // first and monthly runs
+  goalStatusBefore?: Record<string, GoalStatus>; // restored when the run fails
+  updatedAt?: string;
+  finishedAt?: string;
+  attempt?: number; // Cloud Tasks attempts seen so far
+  /** Per-goal notes from the agent for the run log; never shown to the user. */
+  goals?: Record<string, { toolCalls: number; stoppedBecause: string; warnings: string[] }>;
 }
 
 // ---- Firestore records that only the layout section of the spec describes ----
@@ -297,6 +342,9 @@ export interface DocumentRecord {
   month: string;
   status: DocumentStatus;
   reason?: string; // why extraction failed, when status is "failed"
+  /** Bank and e-wallet statements: the closing balance read, kept so a retried run can rebuild
+   *  the snapshot from the stored records (specs/07-pipeline-runs.md). */
+  closingBalance?: number | null;
   createdAt: string;
 }
 
@@ -305,6 +353,8 @@ export interface MonthRecord {
   snapshot: Snapshot;
   sources: { kind: SourceKind; documentId: string; name: string }[];
   submittedAt: string;
+  /** The run that wrote this document, for idempotent retries. */
+  runId?: string;
 }
 
 /** users/{uid}/overrides/{ruleId}: the user's own value for a rule or assumption. */

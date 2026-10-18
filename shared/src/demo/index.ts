@@ -1,4 +1,5 @@
 import { firestorePaths } from "../paths.js";
+import { plainJson } from "../plain.js";
 import { simulate } from "../simulate/simulate.js";
 import { computeMetrics } from "../snapshot/metrics.js";
 import type {
@@ -495,5 +496,5 @@ export function demoSeedDocuments(uid: string = DEMO_UID): SeedDocument[] {
 
 /** A deep copy with every `undefined` property dropped, as Firestore stores it. */
 function plain(value: object): Record<string, unknown> {
-  return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+  return plainJson(value) as Record<string, unknown>;
 }

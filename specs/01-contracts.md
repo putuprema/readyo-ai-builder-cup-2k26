@@ -107,15 +107,34 @@ interface Analysis {
   choices: Record<string, ActionChoice>;
   rejectedOptions: { option: string; rule: string; reason: string }[];
   summary: string;                     // Gemini-written headline sentence
+  withChoices?: SimulationResult;      // simulate() with the user's choices (PATCH .../choices)
+  delta?: MonthlyDelta;                // monthly runs: what moved since last month (07-pipeline-runs)
+  runId?: string;                      // the run that wrote it (idempotent retries)
+}
+
+interface MetricChange { id: string; label: string; oldValue: number; newValue: number; oldStatus: MetricStatus; newStatus: MetricStatus; }
+interface CommittedActionCheck { actionId: string; title: string; change: Change; kept: boolean; evidence: string; }
+interface MonthlyDelta {
+  previousMonth: string;
+  metricsChanged: MetricChange[];
+  committedActions: CommittedActionCheck[];
+  monthsToReady: { leadingPath: "cash" | "loan"; old: number | null; new: number | null };
+  summary: string;                     // two Gemini-written sentences from these numbers
 }
 
 type RunStage = "reading" | "cleaning" | "checking" | "planning" | "done" | "failed";
-interface RunStatus { id: string; stage: RunStage; percent: number; startedAt: string; goalIds: string[]; month: string; kind: "first" | "monthly" | "reuse" | "recalculate"; error?: string; }
+interface RunStatus {
+  id: string; stage: RunStage; percent: number; startedAt: string; goalIds: string[]; month: string;
+  kind: "first" | "monthly" | "reuse" | "recalculate"; error?: string;
+  // backend fields (07-pipeline-runs): the Cloud Task carries only { uid, runId }
+  documentIds?: string[]; goalStatusBefore?: Record<string, GoalStatus>; updatedAt?: string; finishedAt?: string; attempt?: number;
+  goals?: Record<string, { toolCalls: number; stoppedBecause: string; warnings: string[] }>;
+}
 ```
 
 `Change` and `SimulationResult` are defined in `specs/02-simulate.md`. They are also written in `shared/types` because `Analysis` and `ActionCard` depend on them.
 
-Also in `shared/types`, for records the layout below names without a type: `DocumentRecord` (`name, type, size, sourceKind, month, status, createdAt`, optional `reason` when `status` is `failed`), `MonthRecord` (`snapshot`, `sources`, `submittedAt`) and `Override` (`ruleId`, `value`, `updatedAt`). `SourceKind` is `bank | ewallet | paylater | pinjol | investment`. `firestorePaths` in `@adidi/shared` builds every document path of the layout.
+Also in `shared/types`, for records the layout below names without a type: `DocumentRecord` (`name, type, size, sourceKind, month, status, createdAt`, optional `reason` when `status` is `failed`, optional `closingBalance` for bank and e-wallet statements so a retried run can rebuild the snapshot), `MonthRecord` (`snapshot`, `sources`, `submittedAt`, optional `runId`) and `Override` (`ruleId`, `value`, `updatedAt`). `SourceKind` is `bank | ewallet | paylater | pinjol | investment`. `firestorePaths` in `@adidi/shared` builds every document path of the layout.
 
 ## Firestore layout
 
