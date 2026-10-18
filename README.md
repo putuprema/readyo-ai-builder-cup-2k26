@@ -2,7 +2,7 @@
 
 A financial readiness planner for Indonesians, built by team ADiDi for AI Builder Cup 2026 (BFSI theme). Pick a goal (house, car or wedding), upload one month of statements, and see how many months until a bank would approve you, what blocks you today, and a verified plan to get there sooner.
 
-**Live app: https://getreadyo.web.app** (the URL to share; the site ids `readyo` and `readyo-app` were taken). The project's default Hosting site, https://adidi-ai-cup-builder-2026.web.app, still serves the last build deployed before the rename and is no longer updated.
+**Live app: https://getreadyo.web.app**
 
 How we work: `AGENTS.md`. Specs: `specs/`. Background: `docs/`.
 
