@@ -10,7 +10,7 @@ Run the analysis in the background after Submit, report progress live to the UI,
 
 ## Behavior
 
-`POST /runs` creates a `RunStatus` (stage `reading`, percent 0), sets the goals to `analysing`, enqueues one Cloud Task to `worker/`, and returns the `runId`.
+`POST /runs` creates a `RunStatus` (stage `reading`, percent 0), sets the goals to `analysing`, enqueues one Cloud Task to `worker/`, and returns `202 { runId }`. It refuses with 409 a goal that is already `analysing` (`goal_analysing`), a goal whose status does not fit the kind (`goal_status`: `first` and `reuse` need drafts, `monthly` and `recalculate` active goals), a goal without an estimate (`goal_not_priced`), and a `reuse` month that was never submitted (`month_missing`) or is older than 45 days (`month_too_old`); 404 for a missing goal or document; 503 `queue_unavailable` when the task could not be enqueued (the goals are restored, the run marked `failed`).
 
 The worker runs stages by kind and updates the run document as it goes:
 

@@ -4,8 +4,9 @@ import { logger } from "hono/logger";
 import { type AuthEnv, requireAuth, type TokenVerifier } from "./auth.js";
 import { createGoalRoutes, type EstimateDeps } from "./routes/goals.js";
 import { overrides, recalculate } from "./routes/overrides.js";
-import { runs } from "./routes/runs.js";
+import { createRunRoutes } from "./routes/runs.js";
 import { uploads } from "./routes/uploads.js";
+import type { CreateRunDeps } from "./runs/create-run.js";
 import { ValidationError } from "./validate.js";
 
 export interface AppOptions {
@@ -15,6 +16,8 @@ export interface AppOptions {
   corsOrigins?: string[];
   /** Model and store for POST /goals/:id/estimate; without them the endpoint answers 501. */
   estimate?: EstimateDeps;
+  /** Store and queue for POST /runs; without them the endpoint answers 501. */
+  runs?: CreateRunDeps;
   log?: boolean;
 }
 
@@ -53,7 +56,7 @@ export function createApp(options: AppOptions) {
 
   app.route("/goals", createGoalRoutes(options.estimate));
   app.route("/uploads", uploads);
-  app.route("/runs", runs);
+  app.route("/runs", createRunRoutes(options.runs));
   app.route("/overrides", overrides);
   app.route("/recalculate", recalculate);
 

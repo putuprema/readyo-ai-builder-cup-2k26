@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@adidi/shared": "workspace:*",
+    "@google-cloud/tasks": "^7.3.0",
     "@google/genai": "^2.30.0",
     "@hono/node-server": "^1",
     "firebase-admin": "^14.5.0",

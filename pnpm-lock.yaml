@@ -23,6 +23,9 @@ importers:
       '@adidi/shared':
         specifier: workspace:*
         version: link:../shared
+      '@google-cloud/tasks':
+        specifier: ^7.3.0
+        version: 7.3.0
       '@google/genai':
         specifier: ^2.30.0
         version: 2.30.0(@modelcontextprotocol/sdk@1.32.1(zod@4.6.7))
@@ -675,6 +678,10 @@ packages:
 
   '@google-cloud/storage@8.4.0':
     resolution: {integrity: sha512-M3kA6UA2Tjp5aznCrgKcm9CzOjiQyRMnquqalqXAeS5wvkqqZxN8wpNjjHafOSYs6lQ82U7f2i8we4eTfIrpkA==}
+    engines: {node: '>=22'}
+
+  '@google-cloud/tasks@7.3.0':
+    resolution: {integrity: sha512-EPK+tFXJ6/j0x5k8TVowVX/Fl8biZX5NioeaQNCqbJVVAGV5wBl0ra0qaBSOyDDYUWiBwHGoxgekVkShQDD73w==}
     engines: {node: '>=22'}
 
   '@google/genai@2.30.0':
@@ -4508,6 +4515,12 @@ snapshots:
       - supports-color
     optional: true
 
+  '@google-cloud/tasks@7.3.0':
+    dependencies:
+      google-gax: 6.12.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@google/genai@2.30.0(@modelcontextprotocol/sdk@1.32.1(zod@4.6.7))':
     dependencies:
       google-auth-library: 10.9.1
@@ -6288,7 +6301,6 @@ snapshots:
       retry-request: 9.1.0
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   google-logging-utils@0.0.2: {}
 
@@ -7128,7 +7140,6 @@ snapshots:
   proto3-json-serializer@4.1.0:
     dependencies:
       protobufjs: 7.6.6
-    optional: true
 
   protobufjs@7.6.6:
     dependencies:
@@ -7269,7 +7280,6 @@ snapshots:
   retry-request@9.1.0:
     dependencies:
       extend: 3.0.2
-    optional: true
 
   retry@0.13.1: {}
 
