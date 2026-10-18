@@ -11,10 +11,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:demo": "tsx --env-file-if-exists=.env scripts/seed-demo.ts",
-    "seed:rules": "tsx --env-file-if-exists=.env scripts/seed-rules.ts"
+    "seed:rules": "tsx --env-file-if-exists=.env scripts/seed-rules.ts",
+    "test:live": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run live"
   },
   "dependencies": {
     "@adidi/shared": "workspace:*",
+    "@google/genai": "^2.30.0",
     "@hono/node-server": "^1",
     "firebase-admin": "^14.5.0",
     "hono": "^4",
