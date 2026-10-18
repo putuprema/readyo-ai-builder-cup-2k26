@@ -169,6 +169,7 @@ Security rules: a user reads and writes only under `users/{uid}`; `rules/` is re
 | PATCH | `/goals/:id/analyses/:month/choices` | Set an action to committed / dismissed / undecided |
 | PUT | `/overrides/:ruleId` | Set or clear a user override |
 | POST | `/recalculate` | Re-run stages 5–6 for all active goals after override changes |
+| DELETE | `/me/data` | Delete all the user's data: everything under `users/{uid}` and their files under `users/{uid}/` in Cloud Storage; keeps the Auth account. Refused with `409 { error: "run_in_progress" }` while a goal is `analysing` or a run that moved in the last hour has not finished. Answers `200 { deleted: { profile, goals, analyses, months, transactions, loans, holdings, documents, runs, overrides, files } }` |
 
 Read-only data (goals, analyses, run status) is read by the web app directly from Firestore with listeners.
 

@@ -69,6 +69,7 @@ const endpoints: { method: string; path: string; body?: unknown }[] = [
   },
   { method: "PUT", path: "/overrides/dti_cap", body: { value: 0.4 } },
   { method: "POST", path: "/recalculate" },
+  { method: "DELETE", path: "/me/data" },
 ];
 
 describe("auth", () => {

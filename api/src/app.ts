@@ -1,10 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import type { DeleteDataDeps } from "./account/delete-data.js";
 import { type AuthEnv, requireAuth, type TokenVerifier } from "./auth.js";
 import type { SetChoiceDeps } from "./choices/set-choice.js";
 import type { GoalDeps } from "./goals/goals.js";
 import { createGoalRoutes, type EstimateDeps } from "./routes/goals.js";
+import { createMeRoutes } from "./routes/me.js";
 import { overrides, recalculate } from "./routes/overrides.js";
 import { createRunRoutes } from "./routes/runs.js";
 import { createUploadRoutes } from "./routes/uploads.js";
@@ -27,6 +29,8 @@ export interface AppOptions {
   goals?: GoalDeps;
   /** Store, bucket and mode for the upload endpoints; without them they answer 501. */
   uploads?: UploadDeps;
+  /** Store and bucket for DELETE /me/data; without them it answers 501. */
+  account?: DeleteDataDeps;
   log?: boolean;
 }
 
@@ -62,12 +66,14 @@ export function createApp(options: AppOptions) {
   app.use("/runs", auth);
   app.use("/overrides/*", auth);
   app.use("/recalculate", auth);
+  app.use("/me/*", auth);
 
   app.route("/goals", createGoalRoutes(options.estimate, options.choices, options.goals));
   app.route("/uploads", createUploadRoutes(options.uploads));
   app.route("/runs", createRunRoutes(options.runs));
   app.route("/overrides", overrides);
   app.route("/recalculate", recalculate);
+  app.route("/me", createMeRoutes(options.account));
 
   app.notFound((c) => c.json({ error: "not_found" }, 404));
   app.onError((err, c) => {

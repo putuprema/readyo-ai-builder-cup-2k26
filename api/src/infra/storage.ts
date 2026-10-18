@@ -1,4 +1,5 @@
 import { getStorage } from "firebase-admin/storage";
+import type { UserFiles } from "../account/ports.js";
 import { firebaseApp } from "../firebase.js";
 import type { UploadStorage } from "../uploads/ports.js";
 
@@ -24,6 +25,19 @@ export function cloudStorageUploads(bucketName = process.env.STORAGE_BUCKET): Up
     },
     async delete(path) {
       await bucket.file(path).delete({ ignoreNotFound: true });
+    },
+  };
+}
+
+// Every file under a prefix, for DELETE /me/data. Raw uploads are normally deleted after
+// extraction; this removes the ones a failed or abandoned run left behind.
+export function cloudStorageUserFiles(bucketName = process.env.STORAGE_BUCKET): UserFiles {
+  const bucket = getStorage(firebaseApp()).bucket(bucketName);
+  return {
+    async deletePrefix(prefix) {
+      const [files] = await bucket.getFiles({ prefix });
+      await Promise.all(files.map((f) => f.delete({ ignoreNotFound: true })));
+      return files.length;
     },
   };
 }

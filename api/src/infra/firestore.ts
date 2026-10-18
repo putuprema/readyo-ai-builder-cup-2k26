@@ -9,6 +9,7 @@ import {
   type UserRecord,
 } from "@adidi/shared";
 import { type Firestore, getFirestore } from "firebase-admin/firestore";
+import type { UserDataStore } from "../account/ports.js";
 import type { AnalysisStore } from "../choices/ports.js";
 import { firebaseApp } from "../firebase.js";
 import type { GoalWriteStore } from "../goals/ports.js";
@@ -149,6 +150,65 @@ export function firestoreAnalyses(db: Firestore = getFirestore(firebaseApp())): 
       await db
         .doc(firestorePaths.user(uid))
         .set({ preferences: { dismissedActions: dismissed } }, { merge: true });
+    },
+  };
+}
+
+// Everything under users/{uid} for DELETE /me/data. The counts come from aggregate queries
+// before the delete; recursiveDelete removes the profile document with every subcollection,
+// including collections added after this was written.
+export function firestoreUserData(db: Firestore = getFirestore(firebaseApp())): UserDataStore {
+  const user = (uid: string) => db.doc(firestorePaths.user(uid));
+  const count = async (path: string) => (await db.collection(path).count().get()).data().count;
+  return {
+    async listGoalStatuses(uid) {
+      const snap = await user(uid).collection("goals").select("status").get();
+      return snap.docs.map((d) => d.get("status") as Goal["status"]);
+    },
+    async listRuns(uid) {
+      const snap = await user(uid)
+        .collection("runs")
+        .select("stage", "updatedAt", "startedAt")
+        .get();
+      return snap.docs.map((d) => ({
+        stage: d.get("stage"),
+        updatedAt: d.get("updatedAt") ?? d.get("startedAt") ?? "",
+      }));
+    },
+    async countUserData(uid) {
+      const base = firestorePaths.user(uid);
+      const [profile, goals] = await Promise.all([
+        user(uid).get(),
+        user(uid).collection("goals").select().get(),
+      ]);
+      const [analyses, months, transactions, loans, holdings, documents, runs, overrides] =
+        await Promise.all([
+          Promise.all(goals.docs.map((g) => count(`${g.ref.path}/analyses`))).then((ns) =>
+            ns.reduce((a, b) => a + b, 0),
+          ),
+          count(`${base}/months`),
+          count(`${base}/transactions`),
+          count(`${base}/loans`),
+          count(`${base}/holdings`),
+          count(`${base}/documents`),
+          count(`${base}/runs`),
+          count(`${base}/overrides`),
+        ]);
+      return {
+        profile: profile.exists ? 1 : 0,
+        goals: goals.size,
+        analyses,
+        months,
+        transactions,
+        loans,
+        holdings,
+        documents,
+        runs,
+        overrides,
+      };
+    },
+    async deleteUserData(uid) {
+      await db.recursiveDelete(user(uid));
     },
   };
 }

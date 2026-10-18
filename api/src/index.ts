@@ -8,8 +8,9 @@ import {
   firestoreGoalWrites,
   firestoreRuns,
   firestoreUploads,
+  firestoreUserData,
 } from "./infra/firestore.js";
-import { cloudStorageUploads } from "./infra/storage.js";
+import { cloudStorageUploads, cloudStorageUserFiles } from "./infra/storage.js";
 import { taskQueueFromEnv } from "./infra/tasks.js";
 import { pricingTier } from "./pricing/price.js";
 import { uploadModeFromEnv } from "./uploads/uploads.js";
@@ -50,6 +51,10 @@ const app = createApp({
   uploads: process.env.STORAGE_BUCKET
     ? { store: firestoreUploads(), storage: cloudStorageUploads(), mode: uploadMode }
     : undefined,
+  account: {
+    store: firestoreUserData(),
+    files: process.env.STORAGE_BUCKET ? cloudStorageUserFiles() : undefined,
+  },
 });
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {

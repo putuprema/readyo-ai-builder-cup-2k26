@@ -49,3 +49,31 @@ export function deleteErrorMessage(code: string): string {
       return "The goal could not be deleted. Try again in a moment.";
   }
 }
+
+/** "Delete all my data" (docs/product.md, "Privacy"): what it removes, and what stays. */
+export const DELETE_ALL_COPY = {
+  action: "Delete all my data",
+  title: "Delete all your data?",
+  removes: [
+    "Your profile (age, income, household)",
+    "Every goal, with its results and plan",
+    "Your statements: the numbers read from them and any files still stored",
+    "Your changes to the assumptions",
+  ],
+  keeps: "Your sign-in stays, so you can start again from an empty list. This cannot be undone.",
+  confirm: "Delete everything",
+  cancel: "Keep my data",
+  done: "All your data was deleted.",
+};
+
+/** What a failed "Delete all my data" tells the person, by the api's error code. */
+export function deleteAllErrorMessage(code: string): string {
+  switch (code) {
+    case "run_in_progress":
+      return "An analysis is running. You can delete your data once it finishes.";
+    case "network":
+      return "Could not reach the server. Check your connection and try again.";
+    default:
+      return "Your data could not be deleted. Try again in a moment.";
+  }
+}

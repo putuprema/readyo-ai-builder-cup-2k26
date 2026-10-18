@@ -10,6 +10,7 @@ import { useUser } from "@/lib/auth";
 import { deleteGoal } from "@/lib/goals";
 import { bannerModel } from "./banner";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
+import { DeleteAllData } from "./DeleteAllData";
 import { DeleteButton } from "./DeleteButton";
 import { deleteErrorMessage, deleteLabel, deleteMode, goalName } from "./delete";
 import { GoalsEmpty } from "./EmptyStates";
@@ -45,9 +46,21 @@ export function GoalsPage() {
   );
 }
 
+// The footer sits outside the per-state content so it keeps its dialog and outcome while
+// "Delete all my data" empties the list underneath it.
 function GoalsList() {
   const user = useUser();
   const state = useGoals(user?.uid ?? null);
+  return (
+    <Main>
+      <GoalsListContent state={state} />
+      {state.status === "ready" && <DeleteAllData />}
+    </Main>
+  );
+}
+
+function GoalsListContent({ state }: { state: ReturnType<typeof useGoals> }) {
+  const user = useUser();
   const [filter, setFilter] = useState<GoalFilter>("all");
   const now = useNow();
   const uid = user?.uid ?? "";
@@ -97,37 +110,37 @@ function GoalsList() {
 
   if (state.status === "loading") {
     return (
-      <Main>
+      <>
         <h1 className={TITLE}>Your goals</h1>
         <p className="m-0 text-muted" aria-busy="true">
           Loading your goals
         </p>
-      </Main>
+      </>
     );
   }
   if (state.status === "error") {
     return (
-      <Main>
+      <>
         <h1 className={TITLE}>Your goals</h1>
         <p role="alert" className="m-0 text-blocked">
           Your goals could not be loaded. Reload the page to try again.
         </p>
-      </Main>
+      </>
     );
   }
 
   // 4a: no goals replaces the list; no banner, filters or New goal button.
   if (ordered.length === 0) {
     return (
-      <Main>
+      <>
         <h1 className={TITLE}>Your goals</h1>
         <GoalsEmpty />
-      </Main>
+      </>
     );
   }
 
   return (
-    <Main>
+    <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <h1 className={TITLE}>Your goals</h1>
@@ -215,7 +228,7 @@ function GoalsList() {
           if (goal) void remove(goal);
         }}
       />
-    </Main>
+    </>
   );
 }
 
