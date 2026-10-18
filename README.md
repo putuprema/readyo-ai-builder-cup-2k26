@@ -108,3 +108,25 @@ scripts/deploy-web.sh               # next build (static export) + firebase depl
 ```
 
 Each service's `/health` returns `{ "ok": true, "service": "<name>", "version": "<git sha>" }`. The Hosting URL shows the placeholder page with the api's health response.
+
+### Analysis runs (Cloud Tasks)
+
+`POST /runs` on the api enqueues one Cloud Task per analysis; the task calls `POST /runs` on the worker with an OIDC token (`specs/07-pipeline-runs.md`). After the first worker deploy:
+
+```bash
+# paste the worker URL into WORKER_URL in scripts/env.sh, then:
+scripts/setup-tasks.sh               # queue, invoker service account, IAM bindings (once)
+scripts/deploy-service.sh api        # again, so the api knows WORKER_URL
+```
+
+Both services read `GEMINI_API_KEY` from the Secret Manager secret named in `GEMINI_SECRET` (`gemini-api-key` by default); create it once with `gcloud secrets create gemini-api-key --data-file=-`. The worker is deployed with a 30-minute request timeout because a first run takes a few minutes.
+
+Locally, the api posts straight to the worker instead of Cloud Tasks: set `WORKER_URL=http://localhost:8081` and `TASKS_MODE=direct` in `api/.env`, and `TASKS_AUTH=off` in `worker/.env`.
+
+### End-to-end run on the emulators
+
+```bash
+pnpm --filter worker e2e:emulator
+```
+
+Seeds the rules, a profile and a priced draft house goal into the Firestore emulator, uploads the four synthetic September 2026 statements from `fixtures/statements/` to the Storage emulator, then runs the worker's `POST /runs` in-process against the real Gemini model and prints every stage update a listener sees, the snapshot, the metrics, the actions and the headline. Needs `GEMINI_API_KEY` in `worker/.env` and Java (the Storage emulator is downloaded on first use with `pnpm exec firebase setup:emulators:storage`).

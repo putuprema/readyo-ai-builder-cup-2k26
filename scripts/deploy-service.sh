@@ -30,13 +30,30 @@ gcloud builds submit "$root" \
 auth_flag="--no-allow-unauthenticated"
 [ "$svc" = api ] && auth_flag="--allow-unauthenticated"
 
+# Environment per service (spec 07): the api needs the worker URL and the queue to enqueue runs;
+# the worker checks the OIDC audience and may take minutes per run. Both read the Gemini key
+# from Secret Manager. WORKER_URL is empty on the very first deploy; redeploy the api once the
+# worker URL is known.
+env_vars="GIT_SHA=$sha"
+extra_flags=()
+if [ "$svc" = api ]; then
+  env_vars="$env_vars,TASKS_QUEUE=$TASKS_QUEUE,TASKS_LOCATION=$REGION,TASKS_SERVICE_ACCOUNT=$TASKS_SERVICE_ACCOUNT"
+  [ -n "$WORKER_URL" ] && env_vars="$env_vars,WORKER_URL=$WORKER_URL"
+else
+  env_vars="$env_vars,TASKS_SERVICE_ACCOUNT=$TASKS_SERVICE_ACCOUNT,STORAGE_BUCKET=${STORAGE_BUCKET:-$PROJECT_ID.firebasestorage.app}"
+  [ -n "$WORKER_URL" ] && env_vars="$env_vars,TASKS_AUDIENCE=$WORKER_URL"
+  extra_flags+=(--timeout 1800)
+fi
+
 echo "Deploying $svc to Cloud Run in $REGION..."
 gcloud run deploy "$svc" \
   --project "$PROJECT_ID" \
   --region "$REGION" \
   --image "$image" \
   --port 8080 \
-  --set-env-vars "GIT_SHA=$sha" \
+  --set-env-vars "$env_vars" \
+  --set-secrets "GEMINI_API_KEY=$GEMINI_SECRET:latest" \
+  "${extra_flags[@]}" \
   "$auth_flag" \
   --quiet
 
@@ -46,4 +63,6 @@ echo "$svc deployed: $url"
 echo "Health: $url/health"
 if [ "$svc" = api ]; then
   echo "Put this URL into API_URL in scripts/env.sh before running scripts/deploy-web.sh."
+else
+  echo "Put this URL into WORKER_URL in scripts/env.sh, run scripts/setup-tasks.sh once, then redeploy the api."
 fi
