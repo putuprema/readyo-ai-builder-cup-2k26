@@ -18,6 +18,14 @@ export {
   SENSITIVE_DIGIT_RUN,
 } from "./mask.js";
 export { firestorePaths, isMonthKey, MONTH_PATTERN } from "./paths.js";
+export {
+  dismissedActionsFrom,
+  mergeDismissedActions,
+  type PlanWithChoices,
+  type PlanWithChoicesInput,
+  planWithChoices,
+  toDismissedAction,
+} from "./plan/choices.js";
 export { effectiveAnnualRate, type FeeKind, type FeeStructure, type LoanFigures } from "./rates.js";
 export { mergeRules, RULE_IDS, type RuleId, type Rules, requireRule } from "./rules.js";
 export { amortizeOneMonth, annuity, grow, monthsBetween } from "./simulate/money.js";
@@ -37,5 +45,7 @@ export {
   METRIC_IDS,
   type MetricId,
   monthlySurplus,
+  months,
+  pct,
 } from "./snapshot/metrics.js";
 export type * from "./types.js";

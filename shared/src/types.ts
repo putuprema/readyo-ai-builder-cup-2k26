@@ -245,6 +245,17 @@ export interface ActionCard {
 
 export type ActionChoice = "undecided" | "committed" | "dismissed";
 
+/**
+ * An action the user dismissed in an earlier month, kept in `users/{uid}` preferences so the
+ * agent never proposes it again (specs/06-agent.md). Matched by type plus the loan or the
+ * category it targets; `move_assets` has neither.
+ */
+export interface DismissedAction {
+  type: Change["type"];
+  loanId?: string;
+  category?: string;
+}
+
 export interface Analysis {
   goalId: string;
   month: string;
