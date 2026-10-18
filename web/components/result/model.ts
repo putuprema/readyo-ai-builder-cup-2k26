@@ -77,12 +77,18 @@ export function eyebrow(goal: Goal): string {
 }
 
 /** The sentence under the headline. No counts: the table below carries them. */
-export function subline(analysis: Analysis): string {
-  const blocks = analysis.metrics.some((m) => m.status === "blocks");
+export function subline(analysis: Analysis, goal: Goal): string {
   const based = `Based on ${monthName(analysis.month)} statements.`;
-  return blocks
-    ? `${based} Some checks below block a bank approval today; the plan has been checked month by month.`
-    : `${based} Nothing blocks a bank approval today; the plan below has been checked month by month.`;
+  if (analysis.metrics.some((m) => m.status === "blocks")) {
+    return `${based} Some checks below block a bank approval today; the plan has been checked month by month.`;
+  }
+  // A rule can block the loan without its metric reading "Blocks" (the down payment check is
+  // "Needs work" at 92%), so the no-change loan path decides too; the path card lists the rule.
+  const loan = analysis.withoutPlan.loan;
+  if (loan && !loan.approvableToday) {
+    return `${based} A bank would not approve a ${loanProduct(goal)} today without changes; the plan has been checked month by month.`;
+  }
+  return `${based} Nothing blocks a bank approval today; the plan below has been checked month by month.`;
 }
 
 // ---- path cards ----
@@ -138,6 +144,17 @@ function blockedByText(
     .concat(loan.approvableToday ? [] : []);
 }
 
+/**
+ * The loan card's badge. It describes today without changes, while the big figure shows the
+ * plan; when the plan makes the loan approvable this month ("Now"), "Not approvable today"
+ * would contradict it, so the badge says what is missing.
+ */
+export function loanBadge(approvableToday: boolean, planMonths: number | null): PathCard["badge"] {
+  if (approvableToday) return { text: "Approvable today", tone: "passes" };
+  if (planMonths === 0) return { text: "Needs the plan", tone: "blocked" };
+  return { text: "Not approvable today", tone: "blocked" };
+}
+
 export function pathCards(goal: Goal, analysis: Analysis): PathCard[] {
   const lead = leadingPath(goal);
   const product = loanProduct(goal);
@@ -174,9 +191,7 @@ export function pathCards(goal: Goal, analysis: Analysis): PathCard[] {
       path: "loan",
       title: loanLeads ? `${product} path · your preference` : `${product} path`,
       leading: loanLeads,
-      badge: today
-        ? { text: "Approvable today", tone: "passes" }
-        : { text: "Not approvable today", tone: "blocked" },
+      badge: loanBadge(today, plan.loan.monthsToReady),
       big: bigFigure(plan.loan.monthsToReady, "months"),
       rows,
       blockedBy: blockedByText(without.loan.blockedBy, without.loan, product),

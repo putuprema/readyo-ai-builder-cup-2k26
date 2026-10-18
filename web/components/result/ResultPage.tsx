@@ -40,7 +40,7 @@ export function ResultPage({
           <h1 className="m-0 font-extrabold text-[28px] leading-[1.15] tracking-[-0.02em] sm:text-[34px]">
             {analysis.summary}
           </h1>
-          <p className="m-0 max-w-[640px] text-muted">{subline(analysis)}</p>
+          <p className="m-0 max-w-[640px] text-muted">{subline(analysis, goal)}</p>
         </div>
         <div className="flex flex-wrap gap-2 print:hidden">
           <a

@@ -5,6 +5,7 @@ import {
   checkIn,
   eyebrow,
   leadingPath,
+  loanBadge,
   metricRow,
   pathCards,
   subline,
@@ -30,8 +31,9 @@ describe("result model over the demo analysis", () => {
     expect(loan?.path).toBe("loan");
     expect(loan?.leading).toBe(true);
     expect(loan?.title).toBe("KPR path · your preference");
-    expect(loan?.badge).toEqual({ text: "Not approvable today", tone: "blocked" });
-    // The demo plan makes the KPR approvable this month; 24 months without it.
+    // The demo plan makes the KPR approvable this month; 24 months without it. The badge names
+    // what is missing instead of contradicting the "Now" under it.
+    expect(loan?.badge).toEqual({ text: "Needs the plan", tone: "blocked" });
     expect(loan?.big.value).toBe("Now");
     expect(loan?.rows.map((r) => `${r.label}: ${r.value}`)).toEqual([
       "Without changes: 24 months",
@@ -77,12 +79,35 @@ describe("result model over the demo analysis", () => {
   });
 
   it("writes the subline from the data month and whether anything blocks", () => {
-    expect(subline(demoAnalysis)).toMatch(/^Based on September 2026 statements\. Some checks/);
+    expect(subline(demoAnalysis, demoGoal)).toMatch(
+      /^Based on September 2026 statements\. Some checks/,
+    );
     const clean = {
       ...demoAnalysis,
       metrics: demoAnalysis.metrics.map((m) => ({ ...m, status: "passes" as const })),
     };
-    expect(subline(clean)).toMatch(/Nothing blocks/);
+    // No metric blocks, but the no-change KPR is still not approvable (a rule such as the down
+    // payment can block while its metric reads "Needs work"): never "Nothing blocks".
+    expect(subline(clean, demoGoal)).toMatch(
+      /A bank would not approve a KPR today without changes/,
+    );
+    const loan = clean.withoutPlan.loan;
+    if (!loan) throw new Error("demo has a loan path");
+    const approvable = {
+      ...clean,
+      withoutPlan: { ...clean.withoutPlan, loan: { ...loan, approvableToday: true } },
+    };
+    expect(subline(approvable, demoGoal)).toMatch(/Nothing blocks/);
+  });
+
+  it("words the loan badge so it never contradicts the plan's month", () => {
+    expect(loanBadge(true, 0)).toEqual({ text: "Approvable today", tone: "passes" });
+    expect(loanBadge(false, 0)).toEqual({
+      text: "Needs the plan",
+      tone: "blocked",
+    });
+    expect(loanBadge(false, 5)).toEqual({ text: "Not approvable today", tone: "blocked" });
+    expect(loanBadge(false, null)).toEqual({ text: "Not approvable today", tone: "blocked" });
   });
 
   it("lists the assumptions the simulation used and the next check-in", () => {
