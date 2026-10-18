@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { STATIC_PLACEHOLDER_ID } from "./routes";
 
 // Dynamic routes under the static export (next.config.ts, `output: "export"`): a page such as
 // /goals/[id]/documents is prerendered once with the placeholder id "_" and Firebase Hosting
 // rewrites every /goals/*/documents URL to that file (firebase.json). The real id is therefore
 // read from the browser's URL, not from the route params, which hold the placeholder.
-
-export const STATIC_PLACEHOLDER_ID = "_";
 
 /**
  * The URL path segment at `index` (0-based, after the leading slash): for
