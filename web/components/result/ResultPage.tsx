@@ -3,6 +3,8 @@
 import type { Analysis, Goal } from "@adidi/shared";
 import { BottomCards } from "./BottomCards";
 import type { ChoicesState } from "./choices/useChoices";
+import { DeltaCard } from "./DeltaCard";
+import { deltaView } from "./delta";
 import { assumptionRows, checkIn, eyebrow, metricRow, pathCards, subline } from "./model";
 import { PathCards } from "./PathCards";
 import { PlanSection } from "./PlanSection";
@@ -85,6 +87,7 @@ export function ResultPage({
 
       <PathCards cards={pathCards(goal, analysis)} />
       <ReadinessTable rows={analysis.metrics.map(metricRow)} />
+      {analysis.delta && <DeltaCard view={deltaView(goal, analysis.delta)} />}
       <PlanSection goal={goal} analysis={analysis} choices={choices} nextMonth={next.nextMonth}>
         <RulesPanel analysis={analysis} assumptionsHref={assumptionsHref} />
       </PlanSection>
