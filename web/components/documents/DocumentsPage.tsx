@@ -1,10 +1,10 @@
 "use client";
 
-import type { Goal, SourceKind } from "@adidi/shared";
+import type { Goal } from "@adidi/shared";
 import { reusableMonth } from "@adidi/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { StepChips } from "@/components/goal/StepChips";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -18,17 +18,15 @@ import {
   footerLine,
   monthLabel,
   monthOptions,
-  normalizedType,
   readyItems,
-  rejectReason,
-  type UploadItem,
 } from "@/lib/documents";
 import { goalSummary } from "@/lib/goal-summary";
 import { listenGoal } from "@/lib/goals";
 import { useRouteSegment } from "@/lib/route-id";
 import { listSubmittedMonths, runErrorMessage, startRun } from "@/lib/runs";
-import { apiUploader, setDocumentKind, type Uploader } from "@/lib/uploader";
+import { apiUploader, type Uploader } from "@/lib/uploader";
 import { UploadCard } from "./UploadCard";
+import { useUploads } from "./useUploads";
 
 // 2 · Documents (docs/screens.md): three upload cards, file rows with progress and remove,
 // Submit once a bank or e-wallet statement is in. Nothing is read before Submit: files go to
@@ -55,18 +53,14 @@ function DocumentsStep() {
 
   const [goal, setGoal] = useState<Goal | null | undefined>(undefined);
   const [month, setMonth] = useState(() => defaultMonth());
-  const [items, setItems] = useState<UploadItem[]>([]);
-  const [rejected, setRejected] = useState<Record<CardId, { name: string; reason: string }[]>>({
-    bank: [],
-    loans: [],
-    investments: [],
-  });
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [reusable, setReusable] = useState<string | null>(null);
-  const controllers = useRef(new Map<string, AbortController>());
-  // The kind each file has now, so an upload that finishes after a change stores the new one.
-  const kinds = useRef(new Map<string, SourceKind>());
+  const { items, rejected, add, remove, changeKind } = useUploads({
+    month,
+    uploader,
+    onNotice: setNotice,
+  });
 
   useEffect(() => {
     if (!uid || !goalId) return;
@@ -88,100 +82,10 @@ function DocumentsStep() {
     };
   }, [uid]);
 
-  // Files in flight are lost on navigation; ask before leaving.
-  const pending = items.some((i) => i.status === "uploading");
-  useEffect(() => {
-    if (!pending) return;
-    const warn = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [pending]);
-
-  function patch(localId: string, update: Partial<UploadItem>) {
-    setItems((list) => list.map((i) => (i.localId === localId ? { ...i, ...update } : i)));
-  }
-
   function addFiles(card: CardId, files: File[]) {
     const spec = CARDS.find((c) => c.id === card);
     if (!spec) return;
-    const refused: { name: string; reason: string }[] = [];
-    for (const file of files) {
-      const reason = rejectReason(file);
-      const type = normalizedType(file);
-      if (reason || !type) {
-        refused.push({ name: file.name, reason: reason ?? "Unsupported file." });
-        continue;
-      }
-      const localId = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-      const item: UploadItem = {
-        localId,
-        card,
-        sourceKind: spec.kinds[0]?.value ?? "bank",
-        name: file.name,
-        type,
-        size: file.size,
-        status: "uploading",
-        progress: 0,
-      };
-      kinds.current.set(localId, item.sourceKind);
-      setItems((list) => [...list, item]);
-      void start(item, file);
-    }
-    setRejected((r) => ({ ...r, [card]: refused }));
-  }
-
-  async function start(item: UploadItem, file: File) {
-    const controller = new AbortController();
-    controllers.current.set(item.localId, controller);
-    try {
-      const { docId } = await uploader.upload({
-        file,
-        type: item.type,
-        sourceKind: item.sourceKind,
-        month,
-        signal: controller.signal,
-        onProgress: (progress) => patch(item.localId, { progress }),
-      });
-      patch(item.localId, { status: "uploaded", progress: 100, docId });
-      const latestKind = kinds.current.get(item.localId);
-      if (latestKind && latestKind !== item.sourceKind) await setDocumentKind(docId, latestKind);
-    } catch (error) {
-      if (controller.signal.aborted) return;
-      patch(item.localId, {
-        status: "failed",
-        error: error instanceof Error ? error.message : "Upload failed.",
-      });
-    } finally {
-      controllers.current.delete(item.localId);
-    }
-  }
-
-  async function remove(item: UploadItem) {
-    controllers.current.get(item.localId)?.abort();
-    if (!item.docId) {
-      setItems((list) => list.filter((i) => i.localId !== item.localId));
-      return;
-    }
-    patch(item.localId, { status: "removing" });
-    try {
-      await uploader.remove(item.docId);
-      setItems((list) => list.filter((i) => i.localId !== item.localId));
-    } catch {
-      patch(item.localId, { status: "uploaded", error: undefined });
-      setNotice(`Could not remove ${item.name}. Try again.`);
-    }
-  }
-
-  function changeKind(item: UploadItem, sourceKind: SourceKind) {
-    kinds.current.set(item.localId, sourceKind);
-    patch(item.localId, { sourceKind });
-    if (item.docId) {
-      setDocumentKind(item.docId, sourceKind).catch(() =>
-        setNotice(`Could not change the kind of ${item.name}. Try again.`),
-      );
-    }
+    add(files, { group: card, card, sourceKind: spec.kinds[0]?.value ?? "bank" });
   }
 
   async function submit() {
@@ -285,7 +189,7 @@ function DocumentsStep() {
             key={spec.id}
             spec={spec}
             items={items.filter((i) => i.card === spec.id)}
-            rejected={rejected[spec.id]}
+            rejected={rejected[spec.id] ?? []}
             onFiles={(files) => addFiles(spec.id, files)}
             onRemove={(item) => void remove(item)}
             onKindChange={changeKind}

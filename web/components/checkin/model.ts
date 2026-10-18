@@ -8,6 +8,7 @@ import type {
   Transaction,
 } from "@adidi/shared";
 import { formatRupiah, isMonthKey, monthlyBannerFor } from "@adidi/shared";
+import type { UploadItem } from "../../lib/documents";
 import { monthShortName } from "../result/format";
 import { currentPlan, leadingPath, loanProduct } from "../result/model";
 
@@ -214,3 +215,29 @@ export function checkInFooter(files: number, goals: number): string {
 export function monthOnly(month: string): string {
   return monthShortName(month);
 }
+
+// ---- uploads and Submit ----
+
+type SlotItem = Pick<UploadItem, "slot" | "status">;
+
+/** How many of last month's sources have this month's file uploaded. */
+export function addedCount(rows: readonly SourceRow[], items: readonly SlotItem[]): number {
+  return rows.filter((row) =>
+    items.some((i) => i.slot === row.documentId && i.status === "uploaded"),
+  ).length;
+}
+
+/** Submit is allowed with sources missing, but needs one file in and nothing in flight. */
+export function canSubmitCheckIn(items: readonly SlotItem[]): boolean {
+  const inFlight = items.some((i) => i.status === "uploading" || i.status === "removing");
+  return !inFlight && items.some((i) => i.status === "uploaded");
+}
+
+/** Every source kind, for a file added as a new source. */
+export const ALL_KINDS: { value: SourceKind; label: string }[] = [
+  { value: "bank", label: "Bank" },
+  { value: "ewallet", label: "E-wallet" },
+  { value: "paylater", label: "PayLater" },
+  { value: "pinjol", label: "Pinjol" },
+  { value: "investment", label: "Investment" },
+];

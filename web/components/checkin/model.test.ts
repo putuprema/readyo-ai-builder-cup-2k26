@@ -8,7 +8,9 @@ import {
 } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
 import {
+  addedCount,
   addedCounter,
+  canSubmitCheckIn,
   checkInFooter,
   checkInMonth,
   goalChip,
@@ -108,5 +110,29 @@ describe("copy", () => {
     expect(checkInFooter(1, 1)).toBe("1 file added · updates 1 goal");
     expect(checkInFooter(0, 1)).toBe("No files yet · updates 1 goal");
     expect(missingHint("paylater", "October")).toBe("Still paying it off? Add October's bill.");
+  });
+});
+
+describe("uploads", () => {
+  const rows = sourceRows(demoMonth, records);
+  it("counts the rows that have this month's file", () => {
+    const items = [
+      { slot: "doc-bca", status: "uploaded" as const },
+      { slot: "doc-gopay", status: "uploading" as const },
+      { slot: "new", status: "uploaded" as const },
+    ];
+    expect(addedCount(rows, items)).toBe(1);
+  });
+
+  it("submits with sources missing once a file is in and nothing is in flight", () => {
+    expect(canSubmitCheckIn([])).toBe(false);
+    expect(canSubmitCheckIn([{ slot: "doc-bca", status: "uploaded" }])).toBe(true);
+    expect(
+      canSubmitCheckIn([
+        { slot: "doc-bca", status: "uploaded" },
+        { slot: "new", status: "uploading" },
+      ]),
+    ).toBe(false);
+    expect(canSubmitCheckIn([{ slot: "doc-bca", status: "failed" }])).toBe(false);
   });
 });

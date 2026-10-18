@@ -60,76 +60,14 @@ export function UploadCard({
       {items.length > 0 && (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {items.map((item) => (
-            <li
-              key={item.localId}
-              className={`flex flex-col gap-2 rounded-[10px] border px-3 py-2.5 text-[13px] ${
-                item.status === "failed" ? "border-blocked" : "border-line"
-              } ${item.status === "removing" ? "opacity-50" : ""}`}
-            >
-              <div className="flex items-center gap-3">
-                <FileIcon type={item.type} />
-                <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                {spec.kinds.length > 1 ? (
-                  <label className="flex items-center gap-1.5 text-[12px] text-muted">
-                    <span className="sr-only">Source kind for {item.name}</span>
-                    <select
-                      value={item.sourceKind}
-                      disabled={disabled || item.status === "removing"}
-                      onChange={(e) => onKindChange(item, e.target.value as SourceKind)}
-                      className="h-8 rounded-lg border border-line bg-surface px-2 text-[12px] text-ink"
-                    >
-                      {spec.kinds.map((k) => (
-                        <option key={k.value} value={k.value}>
-                          {k.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : null}
-                <span className="hidden whitespace-nowrap font-medium text-muted tabular-nums sm:inline">
-                  {describeFile(item)}
-                </span>
-                <button
-                  type="button"
-                  aria-label={`Remove ${item.name}`}
-                  disabled={disabled || item.status === "removing"}
-                  onClick={() => onRemove(item)}
-                  className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-page hover:text-ink disabled:opacity-50"
-                >
-                  <svg
-                    aria-hidden="true"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <path d="M6 6l12 12M18 6 6 18" />
-                  </svg>
-                </button>
-              </div>
-              {item.status === "uploading" && (
-                <div
-                  role="progressbar"
-                  aria-label={`Uploading ${item.name}`}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={item.progress}
-                  className="h-1.5 overflow-hidden rounded-full bg-page"
-                >
-                  <div
-                    className="h-full rounded-full bg-accent transition-[width] duration-200"
-                    style={{ width: `${item.progress}%` }}
-                  />
-                </div>
-              )}
-              {item.status === "failed" && (
-                <span role="alert" className="text-[12px] text-blocked">
-                  {item.error ?? "Upload failed."} Remove it and try again.
-                </span>
-              )}
+            <li key={item.localId}>
+              <FileRow
+                item={item}
+                kinds={spec.kinds}
+                onRemove={onRemove}
+                onKindChange={onKindChange}
+                disabled={disabled}
+              />
             </li>
           ))}
         </ul>
@@ -175,6 +113,94 @@ export function UploadCard({
         </ul>
       )}
     </section>
+  );
+}
+
+/** One file: icon, name, kind select (when there is a choice), type and size, remove, progress. */
+export function FileRow({
+  item,
+  kinds,
+  onRemove,
+  onKindChange,
+  disabled,
+}: {
+  item: UploadItem;
+  kinds: { value: SourceKind; label: string }[];
+  onRemove: (item: UploadItem) => void;
+  onKindChange: (item: UploadItem, kind: SourceKind) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div
+      className={`flex flex-col gap-2 rounded-[10px] border bg-surface px-3 py-2.5 text-[13px] ${
+        item.status === "failed" ? "border-blocked" : "border-line"
+      } ${item.status === "removing" ? "opacity-50" : ""}`}
+    >
+      <div className="flex items-center gap-3">
+        <FileIcon type={item.type} />
+        <span className="min-w-0 flex-1 truncate">{item.name}</span>
+        {kinds.length > 1 ? (
+          <label className="flex items-center gap-1.5 text-[12px] text-muted">
+            <span className="sr-only">Source kind for {item.name}</span>
+            <select
+              value={item.sourceKind}
+              disabled={disabled || item.status === "removing"}
+              onChange={(e) => onKindChange(item, e.target.value as SourceKind)}
+              className="h-8 rounded-lg border border-line bg-surface px-2 text-[12px] text-ink"
+            >
+              {kinds.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        <span className="hidden whitespace-nowrap font-medium text-muted tabular-nums sm:inline">
+          {describeFile(item)}
+        </span>
+        <button
+          type="button"
+          aria-label={`Remove ${item.name}`}
+          disabled={disabled || item.status === "removing"}
+          onClick={() => onRemove(item)}
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-page hover:text-ink disabled:opacity-50"
+        >
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </div>
+      {item.status === "uploading" && (
+        <div
+          role="progressbar"
+          aria-label={`Uploading ${item.name}`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={item.progress}
+          className="h-1.5 overflow-hidden rounded-full bg-page"
+        >
+          <div
+            className="h-full rounded-full bg-accent transition-[width] duration-200"
+            style={{ width: `${item.progress}%` }}
+          />
+        </div>
+      )}
+      {item.status === "failed" && (
+        <span role="alert" className="text-[12px] text-blocked">
+          {item.error ?? "Upload failed."} Remove it and try again.
+        </span>
+      )}
+    </div>
   );
 }
 

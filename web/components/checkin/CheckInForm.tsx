@@ -2,10 +2,27 @@
 
 import type { Goal, MonthRecord } from "@adidi/shared";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { FileRow } from "@/components/documents/UploadCard";
+import { useUploads } from "@/components/documents/useUploads";
 import { monthName } from "@/components/result/format";
+import { ApiError } from "@/lib/api";
+import { cardOf, readyItems } from "@/lib/documents";
+import { runErrorMessage, startRun } from "@/lib/runs";
 import { AddSourceZone, MissingSlot } from "./DropSlots";
 import { GoalChips } from "./GoalChips";
-import { checkInFooter, type GoalChip, missingHint, monthOnly, sourceRows } from "./model";
+import {
+  ALL_KINDS,
+  addedCount,
+  canSubmitCheckIn,
+  checkInFooter,
+  type GoalChip,
+  missingHint,
+  monthOnly,
+  type SourceRow,
+  sourceRows,
+} from "./model";
 import { SourcesTable } from "./SourcesTable";
 import { useMonthRecords } from "./useCheckInData";
 
@@ -27,10 +44,80 @@ export function CheckInForm({
   goals: Goal[];
   chips: GoalChip[];
 }) {
+  const router = useRouter();
   const records = useMonthRecords(uid, previousMonth);
   const rows = record && records ? sourceRows(record, records) : [];
   const name = monthOnly(month);
   const previousName = previousMonth ? monthOnly(previousMonth) : "Last month";
+  const [notice, setNotice] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const { items, rejected, add, remove, changeKind } = useUploads({ month, onNotice: setNotice });
+  const ready = readyItems(items);
+  const newItems = items.filter((i) => i.slot === "new");
+
+  function addToRow(row: SourceRow, files: File[]) {
+    add(files.slice(0, 1), {
+      group: row.documentId,
+      card: cardOf(row.kind),
+      sourceKind: row.kind,
+      slot: row.documentId,
+    });
+  }
+
+  async function submit() {
+    if (!canSubmitCheckIn(items) || goals.length === 0) return;
+    setSubmitting(true);
+    setNotice(null);
+    const documentIds = ready.flatMap((i) => (i.docId ? [i.docId] : []));
+    try {
+      const { runId } = await startRun({
+        kind: "monthly",
+        goalIds: goals.map((g) => g.id),
+        month,
+        documentIds,
+      });
+      router.push(`/goals/${encodeURIComponent(goals[0]?.id ?? "")}/progress/?run=${runId}`);
+    } catch (error) {
+      const fallback = "Could not start the analysis. Try again.";
+      setNotice(
+        error instanceof ApiError
+          ? runErrorMessage(error.code, error.message || fallback)
+          : fallback,
+      );
+      setSubmitting(false);
+    }
+  }
+
+  const submitEnabled = canSubmitCheckIn(items) && !submitting;
+
+  function renderSlot(row: SourceRow) {
+    const mine = items.filter((i) => i.slot === row.documentId);
+    const refused = rejected[row.documentId] ?? [];
+    return (
+      <div className="flex flex-col gap-1.5">
+        {mine.length > 0 ? (
+          mine.map((item) => (
+            <FileRow
+              key={item.localId}
+              item={item}
+              kinds={[{ value: row.kind, label: row.kindLabel }]}
+              onRemove={(i) => void remove(i)}
+              onKindChange={changeKind}
+              disabled={submitting}
+            />
+          ))
+        ) : (
+          <MissingSlot
+            hint={missingHint(row.kind, name)}
+            sourceTitle={row.title}
+            onFiles={(files) => addToRow(row, files)}
+            disabled={submitting}
+          />
+        )}
+        {refused.length > 0 && <Refused list={refused} />}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -58,17 +145,34 @@ export function CheckInForm({
           rows={rows}
           previousMonthName={previousName}
           monthName={name}
-          added={0}
-          renderSlot={(row) => (
-            <MissingSlot
-              hint={missingHint(row.kind, name)}
-              sourceTitle={row.title}
-              onFiles={() => {}}
-            />
-          )}
+          added={addedCount(rows, items)}
+          renderSlot={renderSlot}
         >
+          {newItems.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <h3 className="m-0 font-bold text-[14px]">New sources</h3>
+              <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                {newItems.map((item) => (
+                  <li key={item.localId}>
+                    <FileRow
+                      item={item}
+                      kinds={ALL_KINDS}
+                      onRemove={(i) => void remove(i)}
+                      onKindChange={changeKind}
+                      disabled={submitting}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="flex flex-wrap gap-4">
-            <AddSourceZone onFiles={() => {}} />
+            <AddSourceZone
+              onFiles={(files) =>
+                add(files, { group: "new", card: "bank", sourceKind: "bank", slot: "new" })
+              }
+              disabled={submitting}
+            />
             <p className="m-0 flex flex-[1_1_320px] items-start gap-2.5 rounded-xl bg-page px-4 py-3 text-[13px] text-muted">
               <InfoIcon />
               <span>
@@ -77,13 +181,23 @@ export function CheckInForm({
               </span>
             </p>
           </div>
+          {(rejected.new ?? []).length > 0 && <Refused list={rejected.new ?? []} />}
         </SourcesTable>
+      )}
+
+      {notice && (
+        <p
+          role="alert"
+          className="m-0 rounded-[10px] bg-[#FDECEA] px-3.5 py-3 text-[13px] text-blocked"
+        >
+          {notice}
+        </p>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-4 border-line border-t pt-6">
         <div className="flex flex-col gap-1">
           <span className="font-semibold text-[14px]" aria-live="polite">
-            {checkInFooter(0, goals.length)}
+            {checkInFooter(ready.length, goals.length)}
           </span>
           <span className="flex items-center gap-2 text-[13px] text-muted">
             <LockIcon />
@@ -99,15 +213,28 @@ export function CheckInForm({
           </Link>
           <button
             type="button"
-            disabled
+            onClick={() => void submit()}
+            disabled={!submitEnabled}
             className="inline-flex min-h-12 items-center gap-2.5 rounded-xl bg-accent px-6 font-bold text-[15px] text-white disabled:bg-[#9BB5A6]"
           >
-            Submit
+            {submitting ? "Submitting" : "Submit"}
             <ArrowIcon />
           </button>
         </div>
       </div>
     </>
+  );
+}
+
+function Refused({ list }: { list: { name: string; reason: string }[] }) {
+  return (
+    <ul role="alert" className="m-0 flex list-none flex-col gap-1 p-0 text-[12px] text-blocked">
+      {list.map((r) => (
+        <li key={r.name}>
+          {r.name}: {r.reason}
+        </li>
+      ))}
+    </ul>
   );
 }
 

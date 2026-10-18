@@ -59,6 +59,8 @@ export type UploadStatus = "queued" | "uploading" | "uploaded" | "failed" | "rem
 export interface UploadItem {
   localId: string;
   card: CardId;
+  /** The monthly check-in's row: last month's document id the file replaces, or "new". */
+  slot?: string;
   sourceKind: SourceKind;
   name: string;
   type: AcceptedType;
@@ -104,6 +106,13 @@ export function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${bytes} B`;
+}
+
+/** The card a source kind belongs to. */
+export function cardOf(kind: SourceKind): CardId {
+  if (kind === "bank" || kind === "ewallet") return "bank";
+  if (kind === "paylater" || kind === "pinjol") return "loans";
+  return "investments";
 }
 
 /** Files that count: uploaded and not being removed. */
