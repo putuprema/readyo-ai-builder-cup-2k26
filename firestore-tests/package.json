@@ -1,0 +1,17 @@
+{
+  "name": "firestore-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bash ../scripts/test-rules.sh",
+    "test:inner": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5",
+    "@types/node": "^26",
+    "firebase": "^12",
+    "vitest": "^5.0.5"
+  }
+}

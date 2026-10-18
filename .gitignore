@@ -17,6 +17,8 @@ out/
 # Firebase and gcloud local state
 .firebase/
 firebase-debug.log
+firestore-debug.log
+ui-debug.log
 .gcloudignore.local
 
 # Editors and OS

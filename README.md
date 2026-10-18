@@ -46,6 +46,7 @@ Each part has one command. Run them in separate terminals, or all at once with `
 | api    | `pnpm --filter api dev`            | http://localhost:8080/health |
 | worker | `pnpm --filter worker dev`         | http://localhost:8081/health |
 | shared | `pnpm --filter @adidi/shared test` | unit tests                   |
+| rules  | `pnpm --filter firestore-tests test` | Firestore security rules tests on the emulator |
 
 Copy each `.env.example` to `.env` where you need to override a default (none is required for the hello-world setup).
 
@@ -55,10 +56,14 @@ Checks from the root:
 pnpm lint        # Biome: lint + format check
 pnpm format      # Biome: write formatting
 pnpm typecheck   # tsc in every package
-pnpm test        # Vitest in every package that has tests
+pnpm test        # Vitest in every package that has tests (includes the rules tests, see below)
 pnpm build       # builds shared, web (static export to web/out), api and worker
 pnpm check:secrets   # fails if a credential is tracked by git
 ```
+
+### Firestore rules tests
+
+`firestore.rules` is tested with `@firebase/rules-unit-testing` against the Firestore emulator (`firestore-tests/`). The emulator is a jar, so it needs a Java runtime: `scripts/test-rules.sh` uses `java` from the PATH, or the Homebrew OpenJDK (`brew install openjdk`), or macOS's `java_home`. The firebase CLI comes from the root dev dependencies; the first run downloads the emulator into `~/.cache/firebase/emulators`.
 
 ## Secrets
 

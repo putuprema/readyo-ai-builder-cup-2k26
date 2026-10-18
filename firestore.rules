@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Layout: specs/01-contracts.md ("Firestore layout").
+// A signed-in user reads and writes only their own tree under users/{uid}.
+// rules/ holds the default rule values: readable by any signed-in user, written only by
+// the backend (Admin SDK bypasses these rules).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /{document=**} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    match /rules/{ruleId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

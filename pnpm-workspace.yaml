@@ -3,6 +3,7 @@ packages:
   - web
   - api
   - worker
+  - firestore-tests
 
 ignoredBuiltDependencies:
   - sharp
