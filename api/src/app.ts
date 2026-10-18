@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { type AuthEnv, requireAuth, type TokenVerifier } from "./auth.js";
+import type { SetChoiceDeps } from "./choices/set-choice.js";
 import { createGoalRoutes, type EstimateDeps } from "./routes/goals.js";
 import { overrides, recalculate } from "./routes/overrides.js";
 import { createRunRoutes } from "./routes/runs.js";
@@ -18,6 +19,8 @@ export interface AppOptions {
   estimate?: EstimateDeps;
   /** Store and queue for POST /runs; without them the endpoint answers 501. */
   runs?: CreateRunDeps;
+  /** Store for PATCH /goals/:id/analyses/:month/choices; without it the endpoint answers 501. */
+  choices?: SetChoiceDeps;
   log?: boolean;
 }
 
@@ -54,7 +57,7 @@ export function createApp(options: AppOptions) {
   app.use("/overrides/*", auth);
   app.use("/recalculate", auth);
 
-  app.route("/goals", createGoalRoutes(options.estimate));
+  app.route("/goals", createGoalRoutes(options.estimate, options.choices));
   app.route("/uploads", uploads);
   app.route("/runs", createRunRoutes(options.runs));
   app.route("/overrides", overrides);

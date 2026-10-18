@@ -1,6 +1,7 @@
 import { buildEstimate, type EstimateResponse, mergeRules } from "@adidi/shared";
 import { Hono } from "hono";
 import type { AuthEnv } from "../auth.js";
+import { type SetChoiceDeps, setChoice } from "../choices/set-choice.js";
 import type { JsonModel } from "../gemini/client.js";
 import type { GoalStore } from "../pricing/ports.js";
 import { type PriceOptions, priceGoal } from "../pricing/price.js";
@@ -27,7 +28,7 @@ export interface EstimateDeps {
   now?: () => Date;
 }
 
-export function createGoalRoutes(estimate?: EstimateDeps) {
+export function createGoalRoutes(estimate?: EstimateDeps, choices?: SetChoiceDeps) {
   const goals = new Hono<AuthEnv>();
 
   // Create a draft goal.
@@ -102,11 +103,15 @@ export function createGoalRoutes(estimate?: EstimateDeps) {
     return c.json(response, 200);
   });
 
-  // Set an action to committed / dismissed / undecided.
+  // Set an action to committed / dismissed / undecided and recompute the plan line
+  // (specs/06-agent.md, "Choices"). Without a store the endpoint answers 501.
   goals.patch("/:id/analyses/:month/choices", async (c) => {
     const { id, month } = parse(c.req.param(), analysisParams);
     const body = await parseBody(c, setChoiceBody);
-    return notImplemented(c, "set action choice", { id, month, actionId: body.actionId });
+    if (!choices)
+      return notImplemented(c, "set action choice", { id, month, actionId: body.actionId });
+    const outcome = await setChoice(c.get("user").uid, id, month, body, choices);
+    return c.json(outcome.body, outcome.status);
   });
 
   return goals;

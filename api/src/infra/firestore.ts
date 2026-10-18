@@ -1,11 +1,15 @@
 import {
+  type Analysis,
   type DocumentRecord,
   firestorePaths,
   type Goal,
+  type MonthRecord,
   type Override,
   type RuleValue,
+  type UserRecord,
 } from "@adidi/shared";
 import { type Firestore, getFirestore } from "firebase-admin/firestore";
+import type { AnalysisStore } from "../choices/ports.js";
 import { firebaseApp } from "../firebase.js";
 import type { GoalStore } from "../pricing/ports.js";
 import type { RunStore } from "../runs/ports.js";
@@ -78,6 +82,36 @@ export function firestoreRuns(db: Firestore = getFirestore(firebaseApp())): RunS
         batch.update(db.doc(firestorePaths.goal(uid, goalId)), { status, updatedAt: now });
       }
       await batch.commit();
+    },
+  };
+}
+
+// Analysis store for the choices endpoint (specs/06-agent.md, "Choices").
+export function firestoreAnalyses(db: Firestore = getFirestore(firebaseApp())): AnalysisStore {
+  const goals = firestoreGoals(db);
+  return {
+    getGoal: goals.getGoal,
+    listRules: goals.listRules,
+    listOverrides: goals.listOverrides,
+    async getAnalysis(uid, goalId, month) {
+      const snap = await db.doc(firestorePaths.analysis(uid, goalId, month)).get();
+      return snap.exists ? (snap.data() as Analysis) : null;
+    },
+    async updateAnalysis(uid, goalId, month, patch) {
+      await db.doc(firestorePaths.analysis(uid, goalId, month)).update({ ...patch });
+    },
+    async getUser(uid) {
+      const snap = await db.doc(firestorePaths.user(uid)).get();
+      return snap.exists ? (snap.data() as UserRecord) : null;
+    },
+    async getMonth(uid, month) {
+      const snap = await db.doc(firestorePaths.month(uid, month)).get();
+      return snap.exists ? (snap.data() as MonthRecord) : null;
+    },
+    async setDismissedActions(uid, dismissed) {
+      await db
+        .doc(firestorePaths.user(uid))
+        .set({ preferences: { dismissedActions: dismissed } }, { merge: true });
     },
   };
 }
