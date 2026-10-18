@@ -37,6 +37,23 @@ describe("deltaView", () => {
     });
   });
 
+  it("drops a stored metric row whose values read the same", () => {
+    const flat = deltaView(demoGoal, {
+      ...sampleDelta,
+      metricsChanged: [
+        {
+          id: "goal_progress",
+          label: "Down payment progress",
+          oldValue: 0.262,
+          newValue: 0.258,
+          oldStatus: "needs_work",
+          newStatus: "needs_work",
+        },
+      ],
+    });
+    expect(flat.metrics).toEqual([]);
+  });
+
   it("lists committed actions as kept or not, with the evidence", () => {
     expect(view.actions.map((a) => [a.title, a.kept, a.evidence])).toEqual([
       ["Pay off Kredivo", true, "Kredivo balance gone"],

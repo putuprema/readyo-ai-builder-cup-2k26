@@ -83,6 +83,12 @@ describe("changedMetrics", () => {
       },
     ]);
   });
+
+  it("skips a value move that reads the same once formatted", () => {
+    const old = analysis({ metrics: [metric("goal_progress", 0.262, "needs_work")] });
+    const now = analysis({ metrics: [metric("goal_progress", 0.258, "needs_work")] });
+    expect(changedMetrics(old, now)).toEqual([]);
+  });
 });
 
 describe("checkCommittedActions", () => {
@@ -255,7 +261,10 @@ describe("computeDelta and the template", () => {
       readyNow: "17 months",
       metricsMoved: "1",
       metric1: "Debt-to-income: 38% → 35% (blocks → passes)",
+      committedActions: "none, so do not mention committed actions",
     });
+    expect(result.facts).not.toHaveProperty("actionsCommitted");
+    expect(result.facts).not.toHaveProperty("actionsKept");
     expect(result.fallback).toBe(
       "One metric moved in October 2026: debt-to-income 38% → 35%. Readiness improved: not within 30 years before, 17 months now.",
     );

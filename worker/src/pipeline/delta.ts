@@ -37,7 +37,10 @@ export interface DeltaFacts {
   fallback: string;
 }
 
-/** A metric moved when its value changed by more than this share, or its status changed. */
+/**
+ * A metric moved when its status changed, or its value changed by more than this share and
+ * reads differently once formatted (26.2% → 25.8% both read "26%" and do not count).
+ */
 export const METRIC_CHANGE_TOLERANCE = 0.005;
 /** Volatile assets must fall by this share of the amount for a move to count as done. */
 export const MOVE_TOLERANCE = 0.9;
@@ -68,8 +71,9 @@ export function changedMetrics(previous: Analysis, current: Analysis): MetricCha
     if (!before) continue;
     const moved =
       before.status !== metric.status ||
-      Math.abs(metric.you - before.you) >
-        METRIC_CHANGE_TOLERANCE * Math.max(1, Math.abs(before.you));
+      (Math.abs(metric.you - before.you) >
+        METRIC_CHANGE_TOLERANCE * Math.max(1, Math.abs(before.you)) &&
+        metricValue(metric.id, metric.you) !== metricValue(metric.id, before.you));
     if (!moved) continue;
     out.push({
       id: metric.id,
@@ -167,9 +171,14 @@ function deltaFacts(
     readyBefore: when(delta.monthsToReady.old),
     readyNow: when(delta.monthsToReady.new),
     metricsMoved: String(delta.metricsChanged.length),
-    actionsKept: String(delta.committedActions.filter((a) => a.kept).length),
-    actionsCommitted: String(delta.committedActions.length),
   };
+  // With nothing committed the counts stay out, so the note cannot say "0 of your 0".
+  if (delta.committedActions.length === 0) {
+    facts.committedActions = "none, so do not mention committed actions";
+  } else {
+    facts.actionsKept = String(delta.committedActions.filter((a) => a.kept).length);
+    facts.actionsCommitted = String(delta.committedActions.length);
+  }
   delta.metricsChanged.forEach((m, i) => {
     facts[`metric${i + 1}`] =
       `${m.label}: ${metricValue(m.id, m.oldValue)} → ${metricValue(m.id, m.newValue)} (${m.oldStatus.replace("_", " ")} → ${m.newStatus.replace("_", " ")})`;
@@ -261,7 +270,7 @@ function capitalize(s: string): string {
 export const DELTA_SYSTEM_INSTRUCTION = `You write the "since last month" note of a financial readiness planner for people in Indonesia, in plain English, in the second person.
 
 Rules:
-- Exactly two sentences. The first says what moved (or that nothing did); the second says how readiness changed and whether the committed actions show in the statements.
+- Exactly two sentences. The first says what moved (or that nothing did); the second says how readiness changed and, only if there are committed actions, whether they show in the statements.
 - Use only the numbers given in the facts, written exactly as given (for example "Rp 12.4 m", "38%", "17 months", "this month"). Never compute, convert, round or add a number, not even a year or a count written as a digit. If a number is not in the facts, leave it out.
 - No emoji, no exclamation marks, no lists, no headings.`;
 

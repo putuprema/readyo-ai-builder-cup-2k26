@@ -44,21 +44,24 @@ export function deltaView(goal: Goal, delta: MonthlyDelta): DeltaView {
     monthsTo: monthsText(next),
     trend,
     trendText: trendText(old, next, trend),
-    metrics: delta.metricsChanged.map((m) => {
-      const value = (you: number, status: MetricStatus) =>
-        metricRow({ id: m.id, label: m.label, you, status, meaning: "" }).you;
-      return {
-        id: m.id,
-        label: m.label,
-        from: value(m.oldValue, m.oldStatus),
-        to: value(m.newValue, m.newStatus),
-        fromStatus: m.oldStatus,
-        toStatus: m.newStatus,
-        fromStatusLabel: STATUS_LABEL[m.oldStatus],
-        toStatusLabel: STATUS_LABEL[m.newStatus],
-        statusChanged: m.oldStatus !== m.newStatus,
-      };
-    }),
+    metrics: delta.metricsChanged
+      .map((m) => {
+        const value = (you: number, status: MetricStatus) =>
+          metricRow({ id: m.id, label: m.label, you, status, meaning: "" }).you;
+        return {
+          id: m.id,
+          label: m.label,
+          from: value(m.oldValue, m.oldStatus),
+          to: value(m.newValue, m.newStatus),
+          fromStatus: m.oldStatus,
+          toStatus: m.newStatus,
+          fromStatusLabel: STATUS_LABEL[m.oldStatus],
+          toStatusLabel: STATUS_LABEL[m.newStatus],
+          statusChanged: m.oldStatus !== m.newStatus,
+        };
+      })
+      // Older deltas may hold a value move that reads the same once formatted ("26% → 26%").
+      .filter((m) => m.statusChanged || m.from !== m.to),
     actions: delta.committedActions.map((a) => ({
       actionId: a.actionId,
       title: a.title,
