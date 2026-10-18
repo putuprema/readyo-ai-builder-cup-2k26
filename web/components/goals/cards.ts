@@ -1,4 +1,11 @@
-import type { Analysis, Goal, HouseInputs, RunStatus } from "@adidi/shared";
+import type {
+  Analysis,
+  CarInputs,
+  Goal,
+  HouseInputs,
+  RunStatus,
+  WeddingInputs,
+} from "@adidi/shared";
 import { formatRupiah } from "@adidi/shared";
 import { goalSummary } from "../../lib/goal-summary";
 import { monthName } from "../result/format";
@@ -7,6 +14,18 @@ import { PIPELINE_STAGES, STAGE_COPY, stepNumber } from "../result/progress/stag
 
 // What each goals-list card shows (docs/screens.md "4"). Selection and formatting only: every
 // number comes from the goal, its run document or its analysis (no arithmetic in the browser).
+
+/** Where the goal is: the house's area, the car's model, the wedding's city. */
+export function goalPlace(goal: Goal): string {
+  switch (goal.type) {
+    case "house":
+      return (goal.inputs as HouseInputs).area;
+    case "car":
+      return (goal.inputs as CarInputs).modelOrSegment;
+    case "wedding":
+      return (goal.inputs as WeddingInputs).city;
+  }
+}
 
 /** "Landed, 72/60 m², Tangerang Selatan · KPR · target Rp 1.52 bn in 2028". */
 export function cardSummary(goal: Goal): string {

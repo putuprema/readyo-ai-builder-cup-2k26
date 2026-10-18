@@ -1,10 +1,16 @@
 "use client";
 
+import type { Goal } from "@adidi/shared";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ApiError } from "@/lib/api";
 import { useUser } from "@/lib/auth";
+import { deleteGoal } from "@/lib/goals";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
+import { DeleteButton } from "./DeleteButton";
+import { deleteErrorMessage, deleteLabel, deleteMode, goalName } from "./delete";
 import { GoalCard } from "./GoalCard";
 import {
   countsSubtitle,
@@ -43,7 +49,44 @@ function GoalsList() {
   const now = useNow();
   const uid = user?.uid ?? "";
 
-  const ordered = useMemo(() => (state.status === "ready" ? orderGoals(state.goals) : []), [state]);
+  // Goals being deleted leave the list at once; a failed delete brings them back.
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
+  const [confirming, setConfirming] = useState<Goal | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const ordered = useMemo(
+    () =>
+      state.status === "ready" ? orderGoals(state.goals.filter((g) => !hidden.has(g.id))) : [],
+    [state, hidden],
+  );
+
+  const remove = useCallback(async (goal: Goal) => {
+    setDeleteError(null);
+    setHidden((prev) => new Set(prev).add(goal.id));
+    try {
+      await deleteGoal(goal.id);
+    } catch (error) {
+      const code = error instanceof ApiError ? error.code : "unknown";
+      if (code === "not_found") return;
+      setHidden((prev) => {
+        const next = new Set(prev);
+        next.delete(goal.id);
+        return next;
+      });
+      setDeleteError(`${goalName(goal)}: ${deleteErrorMessage(code)}`);
+    }
+  }, []);
+
+  const deleteControl = (goal: Goal) => {
+    const mode = deleteMode(goal);
+    if (mode === "none") return undefined;
+    return (
+      <DeleteButton
+        label={deleteLabel(goal)}
+        onClick={() => (mode === "confirm" ? setConfirming(goal) : void remove(goal))}
+      />
+    );
+  };
   const counts = goalCounts(ordered);
   const shown = filterGoals(ordered, filter);
 
@@ -118,6 +161,15 @@ function GoalsList() {
         })}
       </fieldset>
 
+      {deleteError && (
+        <p
+          role="alert"
+          className="m-0 rounded-xl border border-[#F3C5C0] bg-[#FDF1F0] px-4 py-3 text-[14px] text-[#8A1A12]"
+        >
+          {deleteError}
+        </p>
+      )}
+
       {shown.length === 0 ? (
         <p className="m-0 text-muted">
           {filter === "active" ? "No active goals yet." : "No drafts to finish."}
@@ -125,10 +177,27 @@ function GoalsList() {
       ) : (
         <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
           {shown.map((goal) => (
-            <GoalCard key={goal.id} goal={goal} uid={uid} now={now} />
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              uid={uid}
+              now={now}
+              deleteControl={deleteControl(goal)}
+            />
           ))}
         </ul>
       )}
+
+      <ConfirmDeleteDialog
+        open={confirming !== null}
+        goalName={confirming ? goalName(confirming) : ""}
+        onCancel={() => setConfirming(null)}
+        onConfirm={() => {
+          const goal = confirming;
+          setConfirming(null);
+          if (goal) void remove(goal);
+        }}
+      />
     </Main>
   );
 }
