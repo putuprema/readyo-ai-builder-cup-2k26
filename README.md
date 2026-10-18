@@ -61,6 +61,21 @@ pnpm build       # builds shared, web (static export to web/out), api and worker
 pnpm check:secrets   # fails if a credential is tracked by git
 ```
 
+### The whole app on the emulators
+
+```bash
+pnpm emulators                      # Auth 9099, Firestore 8085, Storage 9199 (project demo-adidi); data kept in .firebase/emulator-data
+```
+
+With the emulators running, seed them once from another terminal (the `*:emulator` scripts start their own emulator instance, so they are for one-off runs only):
+
+```bash
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 pnpm --filter api seed:rules
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 pnpm --filter api seed:demo   # demo@adidi.app, password demo-pass-2026 on the emulators
+```
+
+Then start the services against them. `web/.env`: `NEXT_PUBLIC_USE_EMULATORS=1`. `api/.env`: `FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099`, `FIRESTORE_EMULATOR_HOST=127.0.0.1:8085`, `FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199`, `FIREBASE_PROJECT_ID=demo-adidi`, `STORAGE_BUCKET=demo-adidi.appspot.com`, `WORKER_URL=http://localhost:8081`, `TASKS_MODE=direct`, plus `GEMINI_API_KEY` for estimates. `worker/.env`: the same emulator hosts, project and bucket, `TASKS_AUTH=off` and `GEMINI_API_KEY`. Against the real Firebase project instead, fill in the `NEXT_PUBLIC_FIREBASE_*` values from `web/.env.example`.
+
 ### Firestore rules tests
 
 `firestore.rules` is tested with `@firebase/rules-unit-testing` against the Firestore emulator (`firestore-tests/`). The emulator is a jar, so it needs a Java runtime: `scripts/with-emulators.sh` uses `java` from the PATH, or the Homebrew OpenJDK (`brew install openjdk`), or macOS's `java_home`. The firebase CLI comes from the root dev dependencies; the first run downloads the emulator into `~/.cache/firebase/emulators`.
