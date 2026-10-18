@@ -27,3 +27,6 @@ firebase-debug.log
 
 # Test and coverage output
 coverage/
+
+# Next.js generated
+next-env.d.ts

@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* Design tokens from the design handoff (design/, Welcome artboard). */
+@theme {
+  --color-page: #f4f5f2;
+  --color-surface: #ffffff;
+  --color-ink: #14211c;
+  --color-muted: #4b5752;
+  --color-line: #e3e6e1;
+  --color-accent: #1f7a4d;
+  --color-accent-strong: #155c38;
+  --color-accent-tint: #eef5f0;
+  --color-avatar: #d9e4dd;
+  --color-blocked: #b42318;
+  --color-passes: #1f7a4d;
+  --font-sans: var(--font-plus-jakarta), system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+input,
+select,
+button {
+  font-family: inherit;
+}
