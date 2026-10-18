@@ -1,6 +1,6 @@
 {
   "name": "Car-B",
-  "description": "Contract employee, married, no debt, wants a new car on a KKB. Spouse income is present but the application is single. Monthly surplus: Rp 3,500,000.",
+  "description": "Contract employee, married, no debt, wants a new car on a KKB. Spouse income is present but the application is single. Monthly surplus: Rp 3,500,000. Approvable once the DP is saved; DTI stays under the cap.",
   "snapshot": {
     "month": "2026-09",
     "netIncome": 12000000,
@@ -39,11 +39,11 @@
       "targetYear": 2028
     },
     "estimate": {
-      "targetToday": 280000000,
-      "rangeLow": 250000000,
-      "rangeHigh": 310000000,
+      "targetToday": 220000000,
+      "rangeLow": 200000000,
+      "rangeHigh": 240000000,
       "growthRatePerYear": 0.03,
-      "targetAtGoalDate": 297000000,
+      "targetAtGoalDate": 233000000,
       "sources": [],
       "inputsUsed": {},
       "calculatedAt": "2026-10-01T00:00:00.000Z"

@@ -2,13 +2,16 @@ import { type Rules, requireRule } from "../rules.js";
 import type {
   Change,
   Goal,
+  LoanPathResult,
   MonthState,
   PathResult,
   Profile,
+  RuleEffect,
   SimulationResult,
   Snapshot,
   WeddingInputs,
 } from "../types.js";
+import { allowedTenorYears, checkLoanMonth, type LoanMonthCheck, planLoan } from "./loan.js";
 import { amortizeOneMonth, grow, monthsBetween } from "./money.js";
 
 // simulate(): plays a person's finances forward month by month (specs/02-simulate.md,
@@ -80,8 +83,14 @@ export function simulate(input: SimulateInput): SimulationResult {
     caps: {},
   };
 
+  const loanPlan = planLoan(goal, profile, rules);
+
   const cashTimeline: MonthState[] = [];
   let cashReadyMonth: number | null = null;
+  const loanTimeline: MonthState[] = [];
+  let loanReadyMonth: number | null = null;
+  let loanCheckAtReady: LoanMonthCheck | undefined;
+  let loanCheckAtStart: LoanMonthCheck | undefined;
 
   for (let m = 0; m <= maxMonths; m++) {
     applyChanges(state, changes, m);
@@ -103,7 +112,7 @@ export function simulate(input: SimulateInput): SimulationResult {
     const cashReady = cashAvailable >= target && cashFailing.length === 0;
     if (cashReady && cashReadyMonth === null) cashReadyMonth = m;
 
-    cashTimeline.push({
+    const base: MonthState = {
       month: m,
       liquid: Math.round(state.liquid),
       volatile: Math.round(state.volatile),
@@ -111,7 +120,33 @@ export function simulate(input: SimulateInput): SimulationResult {
       target: Math.round(target),
       emergencyMonths,
       failing: cashFailing,
-    });
+    };
+    cashTimeline.push(base);
+
+    // Loan path (house, car): DP, tenor, installment and DTI against the lending rules.
+    if (loanPlan) {
+      const check = checkLoanMonth(loanPlan, {
+        target,
+        liquid: state.liquid,
+        reserve,
+        emergencyMonths,
+        emergencyRequired,
+        debtPayments,
+        age: profile.age + Math.floor(m / 12),
+      });
+      if (m === 0) loanCheckAtStart = check;
+      if (check.failing.length === 0 && loanReadyMonth === null) {
+        loanReadyMonth = m;
+        loanCheckAtReady = check;
+      }
+      loanTimeline.push({
+        ...base,
+        dpNeeded: Math.round(check.dpNeeded),
+        installment: check.installment === undefined ? undefined : Math.round(check.installment),
+        dti: check.dti,
+        failing: check.failing,
+      });
+    }
 
     // Advance to the next month.
     const surplus =
@@ -125,18 +160,97 @@ export function simulate(input: SimulateInput): SimulationResult {
   }
 
   const cash: PathResult = { monthsToReady: cashReadyMonth, timeline: cashTimeline };
+  const month0 = cashTimeline[0];
+  const emergencyAtStart = month0?.emergencyMonths ?? 0;
+
+  const rulesChecked: SimulationResult["rulesChecked"] = [
+    { rule: growthRuleId(goal), valueUsed: growthRate, you: targetToday, effect: "sets_target" },
+    {
+      rule: "emergency_months_required",
+      valueUsed: emergencyRequired,
+      you: emergencyAtStart,
+      effect: emergencyAtStart < emergencyRequired ? "blocks" : "passes",
+    },
+  ];
+
+  let loan: LoanPathResult | undefined;
+  if (loanPlan && loanCheckAtStart) {
+    const start = loanCheckAtStart;
+    const blockedBy: LoanPathResult["blockedBy"] = [];
+    const reserve = emergencyRequired * essential;
+    const ageAtStart = profile.age;
+    for (const rule of start.failing) {
+      if (rule === "dti_cap") {
+        blockedBy.push({ rule, value: start.dti ?? 0, limit: loanPlan.dtiCap });
+      } else if (rule === "emergency_months_required") {
+        blockedBy.push({ rule, value: emergencyAtStart, limit: emergencyRequired });
+      } else if (rule === "loan_end_age") {
+        blockedBy.push({ rule, value: ageAtStart, limit: loanPlan.loanEndAge });
+      } else if (rule === loanPlan.dpRuleId) {
+        blockedBy.push({
+          rule,
+          value: Math.max(0, Math.round(snapshot.liquidAssets - reserve)),
+          limit: Math.round(start.dpNeeded),
+        });
+      }
+    }
+    loan = {
+      monthsToReady: loanReadyMonth,
+      timeline: loanTimeline,
+      approvableToday: start.failing.length === 0,
+      blockedBy,
+      installmentAtApproval:
+        loanCheckAtReady?.installment === undefined
+          ? undefined
+          : Math.round(loanCheckAtReady.installment),
+      tenorYears: loanCheckAtReady?.tenorYears,
+    };
+
+    const passesOr = (blocked: boolean): RuleEffect => (blocked ? "blocks" : "passes");
+    rulesChecked.push(
+      {
+        rule: "dti_cap",
+        valueUsed: loanPlan.dtiCap,
+        you: start.dti ?? "no tenor allowed",
+        effect: passesOr(start.failing.includes("dti_cap")),
+      },
+      {
+        rule: loanPlan.dpRuleId,
+        valueUsed: loanPlan.dpRatio,
+        you: Math.round(start.dpNeeded),
+        effect: start.failing.includes(loanPlan.dpRuleId) ? "blocks" : "sets_target",
+      },
+      {
+        rule: "loan_end_age",
+        valueUsed: loanPlan.loanEndAge,
+        you: start.tenorYears ?? 0,
+        effect: start.failing.includes("loan_end_age")
+          ? "blocks"
+          : allowedTenorYears(loanPlan, ageAtStart) < loanPlan.preferredTenorYears
+            ? "limits"
+            : "passes",
+      },
+      {
+        rule: loanPlan.rateRuleId,
+        valueUsed: loanPlan.annualRate,
+        you: start.installment === undefined ? "no tenor allowed" : Math.round(start.installment),
+        effect: "sets_target",
+      },
+    );
+    if (loanPlan.tenorCapRuleId && loanPlan.tenorCapYears !== undefined) {
+      rulesChecked.push({
+        rule: loanPlan.tenorCapRuleId,
+        valueUsed: loanPlan.tenorCapYears,
+        you: start.tenorYears ?? 0,
+        effect: loanPlan.preferredTenorYears > loanPlan.tenorCapYears ? "limits" : "passes",
+      });
+    }
+  }
 
   return {
     cash,
-    rulesChecked: [
-      { rule: growthRuleId(goal), valueUsed: growthRate, you: targetToday, effect: "sets_target" },
-      {
-        rule: "emergency_months_required",
-        valueUsed: emergencyRequired,
-        you: cashTimeline[0]?.emergencyMonths ?? 0,
-        effect: (cashTimeline[0]?.emergencyMonths ?? 0) < emergencyRequired ? "blocks" : "passes",
-      },
-    ],
+    ...(loan ? { loan } : {}),
+    rulesChecked,
     rejectedOptions: [],
   };
 }

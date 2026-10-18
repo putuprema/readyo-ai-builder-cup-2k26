@@ -114,7 +114,7 @@ Annuity: `installment = P × r / (1 − (1 + r)^−n)`, `r` = annual rate / 12, 
 
 ## Fixtures
 
-All fixtures are `{ name, description, snapshot, profile, goal }` JSON files loaded by the tests. Besides House-A: `car-b.json` (new car on a KKB, married, single applicant), `wedding-c.json` (cash wedding with partner and family shares, no loan path), `freelancer-d.json` (freelance income, secondary-market apartment, joint KPR, six-month emergency rule).
+All fixtures are `{ name, description, snapshot, profile, goal }` JSON files loaded by the tests. Note: with the default rules House-A never reaches KPR approval. Liquid savings cover the DP from about month 50, but the loan must end by 55, so the tenor shrinks every year and the DTI is back above the cap from month 40. Tests that need a finite approval month use House-A with Rp 60,000,000 liquid (approval in month 34). Besides House-A: `car-b.json` (new car on a KKB, married, single applicant), `wedding-c.json` (cash wedding with partner and family shares, no loan path), `freelancer-d.json` (freelance income, secondary-market apartment, joint KPR, six-month emergency rule).
 
 `fixtures/profiles/house-a.json`: net income Rp 18,000,000; essential Rp 8,000,000; discretionary Rp 5,000,000 (food delivery Rp 1,400,000); cash withdrawals Rp 500,000; one PayLater loan, outstanding Rp 12,400,000, installment Rp 2,100,000, 31% per year, 8 months left; liquid Rp 4,000,000; volatile Rp 15,000,000; age 35, permanent, single. Goal: first home, new build, target Rp 800,000,000 today, growth 6%, KPR preference. Monthly surplus before changes: Rp 2,400,000.
 

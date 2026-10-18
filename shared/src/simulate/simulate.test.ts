@@ -127,7 +127,7 @@ describe("simulate: the month loop", () => {
 describe("goal helpers", () => {
   it("targetTodayOf subtracts the partner's and family's shares for a wedding", () => {
     expect(targetTodayOf(loadProfile("wedding-c").goal)).toBe(100_000_000);
-    expect(targetTodayOf(loadProfile("car-b").goal)).toBe(280_000_000);
+    expect(targetTodayOf(loadProfile("car-b").goal)).toBe(220_000_000);
   });
 
   it("goalDateOf is the wedding month or December of the target year", () => {
