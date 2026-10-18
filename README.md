@@ -1,0 +1,87 @@
+# [APP NAME]
+
+A financial readiness planner for Indonesians, built by team ADiDi for AI Builder Cup 2026 (BFSI theme). Pick a goal (house, car or wedding), upload one month of statements, and see how many months until a bank would approve you, what blocks you today, and a verified plan to get there sooner.
+
+How we work: `AGENTS.md`. Specs: `specs/`. Background: `docs/`.
+
+## Repository layout
+
+| Folder | What |
+|---|---|
+| `shared/` | Types and pure logic shared by web, api and worker (display formatting, later `simulate()`, metrics, rules). pnpm package `@adidi/shared`. |
+| `web/` | Next.js app, static export, served by Firebase Hosting. |
+| `api/` | Cloud Run service: uploads, goals, short requests. |
+| `worker/` | Cloud Run service: the analysis pipeline, triggered by Cloud Tasks. |
+| `scripts/` | Deploy scripts and the secrets check. |
+| `docs/`, `specs/`, `design/`, `fixtures/` | Product docs, feature specs, design handoff, test fixtures. |
+
+Everything is TypeScript in one pnpm workspace. One lockfile at the root.
+
+## Prerequisites
+
+- Node 22 (`.nvmrc`) and pnpm 10 (`corepack enable` gives you the pinned version).
+- For deploys only: `gcloud` and `firebase` CLIs (see "Deploy"). Docker is not needed; images are built by Cloud Build.
+
+## Run locally
+
+```bash
+pnpm install
+```
+
+Each part has one command. Run them in separate terminals, or all at once with `pnpm dev` from the root.
+
+| Part | Command | Where |
+|---|---|---|
+| web | `pnpm --filter web dev` | http://localhost:3000 |
+| api | `pnpm --filter api dev` | http://localhost:8080/health |
+| worker | `pnpm --filter worker dev` | http://localhost:8081/health |
+| shared | `pnpm --filter @adidi/shared test` | unit tests |
+
+Copy each `.env.example` to `.env` where you need to override a default (none is required for the hello-world setup).
+
+Checks from the root:
+
+```bash
+pnpm lint        # Biome: lint + format check
+pnpm format      # Biome: write formatting
+pnpm typecheck   # tsc in every package
+pnpm test        # Vitest in every package that has tests
+pnpm build       # builds shared, web (static export to web/out), api and worker
+pnpm check:secrets   # fails if a credential is tracked by git
+```
+
+## Secrets
+
+Secrets never live in the repo. Locally, put them in a `.env` file (ignored by git). On Cloud Run, store them in Secret Manager and mount them as environment variables (`--set-secrets GEMINI_API_KEY=gemini-api-key:latest`). `pnpm check:secrets` greps the tracked files for API keys, private keys and service-account JSON.
+
+## Deploy
+
+### One-time GCP setup (by hand)
+
+1. Create a GCP project with billing, and a Firebase project linked to it.
+2. Enable the APIs: Cloud Run, Cloud Build, Artifact Registry, Cloud Tasks, Firestore, Cloud Storage, Secret Manager, and the Gemini API (or Vertex AI).
+3. Create an Artifact Registry Docker repository in the region (default `adidi` in `asia-southeast2`):
+   ```bash
+   gcloud artifacts repositories create adidi --repository-format=docker --location=asia-southeast2
+   ```
+4. Install and log in to the CLIs:
+   ```bash
+   brew install --cask google-cloud-sdk
+   npm install -g firebase-tools
+   gcloud auth login && gcloud config set project YOUR_PROJECT_ID
+   firebase login
+   ```
+5. Put the project ID (and region, if different) in `scripts/env.sh` and `.firebaserc`.
+
+### Deploy each part
+
+Order matters the first time: the web build needs the api URL.
+
+```bash
+scripts/deploy-service.sh api       # Cloud Build image, deploy to Cloud Run, prints the service URL
+scripts/deploy-service.sh worker    # same, not publicly reachable
+# paste the api URL into API_URL in scripts/env.sh, then:
+scripts/deploy-web.sh               # next build (static export) + firebase deploy --only hosting
+```
+
+Each service's `/health` returns `{ "ok": true, "service": "<name>", "version": "<git sha>" }`. The Hosting URL shows the placeholder page with the api's health response.

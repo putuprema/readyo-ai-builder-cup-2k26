@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# Environment and secrets: never commit these
+.env
+.env.*
+!.env.example
+*service-account*.json
+*serviceAccountKey*.json
+*.pem
+*.key
+
+# Firebase and gcloud local state
+.firebase/
+firebase-debug.log
+.gcloudignore.local
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test and coverage output
+coverage/

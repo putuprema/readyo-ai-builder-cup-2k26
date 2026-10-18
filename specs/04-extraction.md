@@ -1,0 +1,52 @@
+# 04 · Extraction and normalization (stages 2–3)
+
+## Goal
+
+Turn uploaded statements (bank PDF, e-wallet screenshot, PayLater bill, investment screenshot) into clean, classified `Transaction`, `Loan` and `Holding` records. This is the biggest quality risk in the project, so it is measured against hand-labelled fixtures.
+
+## Depends on
+
+01-contracts. Fixtures in `fixtures/statements/` and `fixtures/expected/`. Background: `docs/analysis.md` (stages 2–3).
+
+## Behavior
+
+**Extraction (Gemini, Pro tier)**
+
+- One call per file, file sent as an image or PDF part.
+- Structured output with a response schema per source kind (`bank`, `ewallet`, `paylater`, `investment`), matching the types in `shared/types`. No free-text parsing.
+- The prompt states: Indonesian formats (`Rp 1.250.000`, `12/10/2026`, `DB`/`CR` markers), return amounts as integers in rupiah, never invent rows, mark unreadable fields as null.
+- Account and card numbers are masked (keep last 4 digits) before anything is stored.
+- After a file is extracted successfully, delete it from Cloud Storage and set the `documents` record status to `extracted`. On failure, status `unreadable` with a reason.
+- For loans, compute `effectiveAnnualRate` in code from the fee structure Gemini extracted (e.g. 2.95% per month → about 35% per year), not from the model.
+
+**Normalization (code + Flash tier)**
+
+1. **Dedup**: same date, amount and counterparty within one source → one transaction.
+2. **Own-account transfers**: an `out` in one source and an `in` of the same amount in another source within 2 days → both `own_transfer`. Also known patterns (top-up to GoPay/OVO/ShopeePay, transfer to Bibit/Ajaib).
+3. **Classification** (Flash, batched 50 at a time, structured output): `income`, `essential`, `discretionary`, `debt_payment`, `investment`, plus a `category` (e.g. food_delivery, transport, groceries, rent, utilities, subscriptions, shopping, entertainment). Rules in code override the model where certain (salary credit → income, ATM withdrawal → cash, payment to a known PayLater → debt_payment).
+4. **Recurring detection** in code: same counterparty and similar amount in 2+ months, or known subscription merchants.
+
+## Acceptance criteria
+
+Measured by a test script over `fixtures/` (results also go in the deck's benchmark slide):
+
+- Transaction fields (date, amount, direction) correct on ≥ 95% of rows across the fixture statements.
+- No invented rows: extracted row count never exceeds the expected count.
+- PayLater fixture → exactly one `Loan` with outstanding and installment matching expected.
+- Investment fixture → holdings with correct values and `volatile` flags (crypto and stocks volatile; money-market and deposits not).
+- Fixture with a BCA → GoPay top-up: both legs classified `own_transfer`.
+- No unmasked account numbers in stored records (test scans stored JSON for long digit runs).
+- Raw file deleted from Cloud Storage after success (integration test).
+
+## Tasks
+
+1. Response schemas for the four source kinds.
+2. Extraction call + masking + storage + file deletion, for the bank PDF fixture first.
+3. Add e-wallet, PayLater, investment.
+4. Dedup and own-transfer matching.
+5. Classification with rule overrides.
+6. Accuracy script over `fixtures/` printing a table.
+
+## Out of scope
+
+Email receipt import, handwritten notes, more than one bank format before M1 is done.
