@@ -69,6 +69,10 @@ pnpm check:secrets   # fails if a credential is tracked by git
 
 `pnpm seed:demo` creates the demo account (`demo@adidi.app`, uid `demo-user`) with an active house goal, one month of extracted data and its analysis, so the UI can be built before the pipeline exists. The data lives in `shared/src/demo/` and is tested for internal consistency; `api/scripts/seed-demo.ts` only writes it. Against the real project it needs Application Default Credentials (`gcloud auth application-default login`), `FIREBASE_PROJECT_ID` and `DEMO_PASSWORD`. Against the emulators, `pnpm seed:demo:emulator` needs nothing else. Re-running replaces the demo user's Firestore tree.
 
+### Rules
+
+`pnpm seed:rules` writes the rule defaults from `shared/rules/defaults.json` to the `rules` collection, one document per rule (`pnpm seed:rules:emulator` against the emulator). Only checked values are in that file; the rules still marked `[__]` in `specs/02-simulate.md` are left out until a source is checked, and `fixtures/profiles/rules-test.json` is test-only and never seeded. Re-running overwrites each rule document and lists any document that is no longer in the file.
+
 ## Secrets
 
 Secrets never live in the repo. Locally, put them in a `.env` file (ignored by git). On Cloud Run, store them in Secret Manager and mount them as environment variables (`--set-secrets GEMINI_API_KEY=gemini-api-key:latest`). `pnpm check:secrets` greps the tracked files for API keys, private keys and service-account JSON.

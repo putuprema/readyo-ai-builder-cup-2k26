@@ -33,6 +33,8 @@ Defaults live in `rules/` (Firestore) and in `shared/rules/defaults.json` for te
 
 `[__]` values must be filled from a checked source before the demo. Until then, tests use the values in `fixtures/profiles/rules-test.json` (the defaults above with plausible placeholders, clearly marked as test-only). `shared/rules/defaults.json` leaves the `[__]` rules out: `simulate()` throws a clear error when a rule it needs is missing, so an unchecked value can never be guessed silently.
 
+`pnpm seed:rules` (`api/scripts/seed-rules.ts`) writes `defaults.json` to the `rules` collection, one document per rule; it never reads `rules-test.json`. The demo analysis in `shared/src/demo/` is simulated with `defaults.json` plus a demo-data placeholder for `flpp_income_ceiling` (`DEMO_RULE_PLACEHOLDERS`), the one `[__]` rule a first-home KPR reads.
+
 Data notes:
 
 - `emergency_months_required` is stored as two records, `emergency_months_required` (3) and `emergency_months_required_freelance` (6); code picks one by `profile.employment` and reports the rule as `emergency_months_required`.

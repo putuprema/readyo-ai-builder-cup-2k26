@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p scripts/tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed:demo": "tsx --env-file-if-exists=.env scripts/seed-demo.ts"
+    "seed:demo": "tsx --env-file-if-exists=.env scripts/seed-demo.ts",
+    "seed:rules": "tsx --env-file-if-exists=.env scripts/seed-rules.ts"
   },
   "dependencies": {
     "@adidi/shared": "workspace:*",

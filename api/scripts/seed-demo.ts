@@ -4,19 +4,14 @@
 //   pnpm seed:demo                       against the real project (needs ADC and DEMO_PASSWORD)
 //   pnpm seed:demo:emulator              against the Firestore + Auth emulators
 //
-// Re-running replaces the demo user's Firestore tree and keeps the Auth user.
+// Re-running replaces the demo user's Firestore tree and keeps the Auth user. The rules the
+// analysis was simulated with are seeded separately (pnpm seed:rules).
 import { DEMO_DISPLAY_NAME, DEMO_EMAIL, DEMO_UID, demoSeedDocuments } from "@adidi/shared";
-import { getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { adminApp, onEmulator, resolveProjectId } from "./admin.js";
 
-const onEmulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
-const projectId =
-  process.env.FIREBASE_PROJECT_ID ??
-  process.env.GOOGLE_CLOUD_PROJECT ??
-  process.env.GCLOUD_PROJECT ??
-  (onEmulator ? "demo-adidi" : undefined);
-
+const projectId = resolveProjectId();
 if (!projectId) {
   fail("Set FIREBASE_PROJECT_ID (or run against the emulators with FIRESTORE_EMULATOR_HOST).");
 }
@@ -28,9 +23,7 @@ if (!password) {
   fail("Set DEMO_PASSWORD for the demo account (at least 6 characters).");
 }
 
-// Credentials come from Application Default Credentials. On the emulators none are needed;
-// firebase-admin still looks for them once and prints a MetadataLookupWarning, which is harmless.
-const app = getApps()[0] ?? initializeApp({ projectId });
+const app = adminApp(projectId);
 const auth = getAuth(app);
 const db = getFirestore(app);
 

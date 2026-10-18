@@ -14,7 +14,9 @@
     "format": "biome format --write .",
     "check:secrets": "bash scripts/check-secrets.sh",
     "seed:demo": "pnpm --filter api seed:demo",
-    "seed:demo:emulator": "bash scripts/with-emulators.sh firestore,auth pnpm --filter api seed:demo"
+    "seed:demo:emulator": "bash scripts/with-emulators.sh firestore,auth pnpm --filter api seed:demo",
+    "seed:rules": "pnpm --filter api seed:rules",
+    "seed:rules:emulator": "bash scripts/with-emulators.sh firestore pnpm --filter api seed:rules"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
