@@ -71,3 +71,17 @@ export function useNow(intervalMs = 15_000): Date {
   }, [intervalMs]);
   return now;
 }
+
+/** Month keys the user has submitted (users/{uid}/months), live; null until the first read. */
+export function useSubmittedMonths(uid: string | null): string[] | null {
+  const [months, setMonths] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!uid) return;
+    return onSnapshot(
+      collection(firestore(), `${firestorePaths.user(uid)}/months`),
+      (snap) => setMonths(snap.docs.map((d) => d.id)),
+      () => setMonths(null),
+    );
+  }, [uid]);
+  return months;
+}

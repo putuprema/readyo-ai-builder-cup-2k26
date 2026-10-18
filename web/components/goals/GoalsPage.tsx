@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { ApiError } from "@/lib/api";
 import { useUser } from "@/lib/auth";
 import { deleteGoal } from "@/lib/goals";
+import { bannerModel } from "./banner";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import { DeleteButton } from "./DeleteButton";
 import { deleteErrorMessage, deleteLabel, deleteMode, goalName } from "./delete";
@@ -20,7 +21,8 @@ import {
   goalCounts,
   orderGoals,
 } from "./list";
-import { useNow } from "./live";
+import { useNow, useSubmittedMonths } from "./live";
+import { MonthlyBanner } from "./MonthlyBanner";
 import { useGoals } from "./useGoals";
 
 // 4 · Goals list (docs/screens.md): every goal, analysing first, then drafts, then active.
@@ -88,6 +90,8 @@ function GoalsList() {
     );
   };
   const counts = goalCounts(ordered);
+  const months = useSubmittedMonths(user?.uid ?? null);
+  const banner = months ? bannerModel(now, months, counts.active) : null;
   const shown = filterGoals(ordered, filter);
 
   if (state.status === "loading") {
@@ -137,6 +141,8 @@ function GoalsList() {
           New goal
         </Link>
       </div>
+
+      {banner && <MonthlyBanner banner={banner} />}
 
       <fieldset className="m-0 flex min-w-0 gap-1 self-start rounded-xl border-0 bg-[#E9ECE7] p-1">
         <legend className="sr-only">Filter goals</legend>
