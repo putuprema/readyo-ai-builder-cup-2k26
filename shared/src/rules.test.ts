@@ -24,7 +24,7 @@ describe("shared/rules/defaults.json", () => {
   it("carries the spec's defaults", () => {
     const m = mergeRules(defaults);
     expect(m.dti_cap).toBe(0.35);
-    expect(m.min_dp_first_home_new).toBe(0.2);
+    expect(m.min_dp_first_home_new).toBe(0.05);
     expect(m.loan_end_age).toBe(55);
     expect(m.emergency_months_required).toBe(3);
     expect(m.emergency_months_required_freelance).toBe(6);

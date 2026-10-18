@@ -148,6 +148,7 @@ export function simulate(input: SimulateInput): SimulationResult {
       loanTimeline.push({
         ...base,
         dpNeeded: Math.round(check.dpNeeded),
+        dpPaid: Math.round(check.dpPaid),
         installment: check.installment === undefined ? undefined : Math.round(check.installment),
         dti: check.dti,
         failing: check.failing,

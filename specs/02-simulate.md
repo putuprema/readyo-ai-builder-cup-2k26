@@ -15,7 +15,7 @@ Defaults live in `rules/` (Firestore) and in `shared/rules/defaults.json` for te
 | id | Meaning | Default |
 |---|---|---|
 | `dti_cap` | Max (all debt payments incl. new installment) / net income | 0.35 |
-| `min_dp_first_home_new` | Minimum DP, first home, new build | 0.20 |
+| `min_dp_first_home_new` | Minimum DP, first home, new build | 0.05 (BI PADG 30/2025: LTV 95% for a first facility, landed or apartment above 70 m2, at banks not meeting the NPL/NPF criteria) |
 | `min_dp_other_home` | Minimum DP, secondary or second home | 0.10 (BI PADG 30/2025: LTV 90% for a second facility, landed or apartment above 70 m2, at banks not meeting the NPL/NPF criteria) |
 | `loan_end_age` | Loan must end by this age | 55 |
 | `flpp_income_ceiling` | Max monthly income for subsidised KPR (FLPP), not married; `flpp_income_ceiling_married` is the combined-income ceiling for a married couple | 12,000,000 / 14,000,000 (Permen PKP No. 5/2025, zone 4: Jabodetabek) |
@@ -31,7 +31,7 @@ Defaults live in `rules/` (Firestore) and in `shared/rules/defaults.json` for te
 | `growth_wedding` | Wedding cost growth per year | 0.03 (proxy: 2025 CPI 2.92%, BI/BPS; no wedding index exists) |
 | `return_money_market` | Return on liquid savings per year | 0.045 |
 
-Every rule has a checked default since 2026-10-18 (sources in `shared/rules/defaults.json`). The DP rules follow one principle: the tier BI prescribes for banks not meeting the NPL/NPF criteria under PADG 30/2025 (in force for 2026), the strictest regulatory floor; banks that meet the criteria may lend up to 100%. Exception: `min_dp_first_home_new` (0.20) is a bank-practice figure, stricter than BI's 5% tier, and still marked "to be checked". `fixtures/profiles/rules-test.json` mirrors the defaults for the tests (its `placeholders` list is empty now). `simulate()` still throws a clear error when a rule it needs is missing, so an unchecked value can never be guessed silently.
+Every rule has a checked default since 2026-10-18 (sources in `shared/rules/defaults.json`). The three DP rules follow one principle: the tier BI prescribes for banks not meeting the NPL/NPF criteria under PADG 30/2025 (in force for 2026), the strictest regulatory floor; banks that meet the criteria may lend up to 100%. Because the floors are low, the loan path does not assume the person borrows the maximum: the DP paid is the savings earmarked for the goal (see step 7), so saving more shrinks the loan. `fixtures/profiles/rules-test.json` mirrors the defaults for the tests (its `placeholders` list is empty now). `simulate()` still throws a clear error when a rule it needs is missing, so an unchecked value can never be guessed silently.
 
 `pnpm seed:rules` (`api/scripts/seed-rules.ts`) writes `defaults.json` to the `rules` collection, one document per rule; it never reads `rules-test.json`. The demo analysis in `shared/src/demo/` is simulated with `defaults.json` alone: every rule a first-home KPR reads has a checked default.
 
@@ -68,8 +68,9 @@ interface MonthState {
   volatile: number;
   debtPayments: number;
   target: number;                 // goal price at this month
-  dpNeeded?: number;
-  installment?: number;
+  dpNeeded?: number;              // the minimum DP the rules require
+  dpPaid?: number;                // the DP the person would pay (earmarked savings, capped by plannedDp, at least dpNeeded)
+  installment?: number;           // on target − dpPaid
   dti?: number;
   emergencyMonths: number;
   failing: string[];              // rule ids failing this month
@@ -105,9 +106,10 @@ Each month `m` from 0 to `maxMonths`:
 6. **Cash path ready** when `liquid − emergencyRequired × essential ≥ target_m`. Volatile assets count toward the target only if the goal date is 36 or more months away.
 7. **Loan path** (house, car):
    - `dpNeeded = target_m × minDp` (rule by goal type, market and first-home flag).
-   - Loan amount = `target_m − dpNeeded`. Tenor = `min(preferred 20 years for house / kkb_max_tenor for car, loan_end_age − ageAtMonth)`. Installment by the annuity formula at the qualifying rate (`kpr_rate_fixed` or `kkb_rate`).
+   - `dpPaid = min(target_m, max(dpNeeded, min(earmarked, plannedDp)))` where `earmarked = max(0, liquid − emergencyRequired × essential)` and `plannedDp` (`inputs.plannedDp`, optional) caps how much of the savings goes into the DP. People do not borrow the regulatory maximum when they have savings: a bigger DP means a smaller loan, a lower installment and a lower DTI, so saving more also clears the DTI block.
+   - Loan amount = `target_m − dpPaid`. Tenor = `min(preferred 20 years for house / kkb_max_tenor for car, loan_end_age − ageAtMonth)`. Installment by the annuity formula at the qualifying rate (`kpr_rate_fixed` or `kkb_rate`).
    - `dti = (debtPayments + installment) / netIncome`, with `spouseMonthlyIncome` added only for a joint application.
-   - Passes when: `dti ≤ dti_cap`, `liquid − emergencyRequired × essential ≥ dpNeeded`, `emergencyMonths ≥ emergencyRequired`.
+   - Passes when: `dti ≤ dti_cap`, `earmarked ≥ dpNeeded`, `emergencyMonths ≥ emergencyRequired`.
    - Record failing rule ids in `failing` (`dti_cap`, `emergency_months_required`, and the DP rule id that applied). The first passing month is `monthsToReady`.
 8. **Options** recorded in `rejectedOptions` with the rule that rejects them: joint application when single, preferred tenor longer than allowed by `loan_end_age`, FLPP when income is above `flpp_income_ceiling` or the home is not a first home. Option names: `joint_application`, `tenor_<n>y`, `flpp`. Two rejections have no numeric rule in the table and use the ids `marital_status` (joint application without a spouse) and `flpp_first_home_only` (FLPP for a non-first home). A car tenor above `kkb_max_tenor_years` is rejected the same way. When an option is rejected, the simulation uses the allowed alternative (single applicant, the longest allowed tenor) and the rule's `rulesChecked` effect is `rejects_option`.
 
@@ -117,16 +119,16 @@ Annuity: `installment = P × r / (1 − (1 + r)^−n)`, `r` = annual rate / 12, 
 
 ## Fixtures
 
-All fixtures are `{ name, description, snapshot, profile, goal }` JSON files loaded by the tests. Note: with the default rules House-A never reaches KPR approval. Liquid savings cover the DP from about month 50, but the loan must end by 55, so the tenor shrinks every year and the DTI is back above the cap from month 40. Tests that need a finite approval month use House-A with Rp 60,000,000 liquid (approval in month 34). Besides House-A: `car-b.json` (new car on a KKB, married, single applicant), `wedding-c.json` (cash wedding with partner and family shares, no loan path), `freelancer-d.json` (freelance income, secondary-market apartment, joint KPR, six-month emergency rule).
+All fixtures are `{ name, description, snapshot, profile, goal }` JSON files loaded by the tests. Note: with the default rules House-A never reaches KPR approval. The emergency fund and the 5% DP are covered from about month 17, but by then the KPR installment alone is 35% of income, and the loan must end by 55, so the tenor shrinks every year and DTI hovers just above the cap. Tests that need a finite approval month use House-A with Rp 60,000,000 liquid (approval in month 8, the month after the PayLater's last payment). Besides House-A: `car-b.json` (new car on a KKB, married, single applicant), `wedding-c.json` (cash wedding with partner and family shares, no loan path), `freelancer-d.json` (freelance income, secondary-market apartment, joint KPR, six-month emergency rule).
 
 `fixtures/profiles/house-a.json`: net income Rp 18,000,000; essential Rp 8,000,000; discretionary Rp 5,000,000 (food delivery Rp 1,400,000); cash withdrawals Rp 500,000; one PayLater loan, outstanding Rp 12,400,000, installment Rp 2,100,000, 31% per year, 8 months left; liquid Rp 4,000,000; volatile Rp 15,000,000; age 35, permanent, single. Goal: first home, new build, target Rp 800,000,000 today, growth 6%, KPR preference. Monthly surplus before changes: Rp 2,400,000.
 
 ## Acceptance criteria
 
 - `annuity(640_000_000, 0.065, 240)` = 4,771,668 (±1).
-- House-A, no changes: `loan.approvableToday` is false and `blockedBy` contains `dti_cap` (DTI ≈ 0.382), `emergency_months_required` (0.5 months) and `min_dp_first_home_new` (Rp 160 m needed).
-- House-A with `refinance_loan` to an installment of about Rp 1,100,000: month-0 DTI ≈ 0.326, so `dti_cap` no longer appears in month 0's `failing`.
-- Adding any change in this spec never makes `loan.monthsToReady` larger for House-A (monotonicity tests for each change type).
+- House-A, no changes: `loan.approvableToday` is false and `blockedBy` contains `dti_cap` (DTI ≈ 0.431: the Rp 5.67 m installment on a Rp 760 m loan plus the PayLater), `emergency_months_required` (0.5 months) and `min_dp_first_home_new` (Rp 40 m needed).
+- House-A with `refinance_loan` to 24 months at 13% (installment about Rp 590,000): month-0 DTI ≈ 0.348, so `dti_cap` no longer appears in month 0's `failing`.
+- Adding a `pay_off_loan`, `cap_spending` or `move_assets` change never makes `loan.monthsToReady` larger for House-A, nor does a `refinance_loan` that ends no later than the loan it replaces (monotonicity tests). Stretching a debt past its own end can delay approval under the DTI cap, which is why the agent must verify every refinance with `simulate()`.
 - Raising `dti_cap` never makes `loan.monthsToReady` larger; raising `growth_property` never makes it smaller.
 - A wedding goal returns no `loan` field.
 - A single applicant asking for a joint application gets `rejectedOptions` with `joint_application`; age 35 with a 25-year preference gets `tenor` rejected by `loan_end_age`.

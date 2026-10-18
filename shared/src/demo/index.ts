@@ -24,8 +24,9 @@ import { demoRules } from "./rules.js";
 // goal and action cards are sample data chosen to be internally consistent; both simulation
 // results are real simulate() output over that data and the metrics are real computeMetrics()
 // output (see index.test.ts). The demo
-// story from docs/product.md: the PayLater pushes DTI over the cap, the plan clears it and
-// brings approval from month 26 to month 14.
+// story from docs/product.md: the PayLater pushes DTI over the cap; moving the volatile assets
+// into the down payment and paying the PayLater off make the KPR approvable this month instead
+// of in month 24.
 
 export { demoRuleDefaults, demoRules } from "./rules.js";
 
@@ -129,9 +130,9 @@ export const demoLoans: Loan[] = [
     lender: "Kredivo",
     type: "paylater",
     outstandingPrincipal: 12_400_000,
-    monthlyInstallment: 2_100_000,
+    monthlyInstallment: 700_000,
     effectiveAnnualRate: 0.31,
-    remainingTenorMonths: 7,
+    remainingTenorMonths: 24,
     sourceFileId: "doc-kredivo",
   },
 ];
@@ -187,7 +188,7 @@ export const demoSnapshot: Snapshot = {
   discretionarySpending: 7_000_000,
   discretionaryByCategory,
   cashWithdrawals: 500_000,
-  debtPayments: 2_100_000,
+  debtPayments: 700_000,
   loans: demoLoans,
   liquidAssets: 41_200_000,
   volatileAssets: 105_000_000,
@@ -231,7 +232,7 @@ export const demoTransactions: Transaction[] = [
   tx(
     "tx-03",
     "2026-09-03",
-    2_100_000,
+    700_000,
     "out",
     "Kredivo",
     "KREDIVO CICILAN 3/10",
@@ -379,29 +380,23 @@ function tx(
 export const demoActions: ActionCard[] = [
   {
     id: "a1",
-    title: "Refinance the Rp 12.4 m Kredivo balance with a 12-month bank KTA",
-    impactLine: "Clears the DTI block this month",
+    title: "Move Rp 105 m of crypto and equity funds into a money-market fund",
+    impactLine: "Approval 21 months sooner",
     description:
-      "The same debt at about 13% instead of 31%: the installment drops from Rp 2.1 m to Rp 1.1 m and your debt-to-income goes under the 35% cap.",
-    chips: ["DTI 36% → 33%", "Interest saved Rp 1.9 m", "Do this month"],
-    monthsSaved: 1,
-    change: {
-      type: "refinance_loan",
-      loanId: "loan-kredivo",
-      newAnnualRate: 0.13,
-      newTenorMonths: 12,
-      fromMonth: 0,
-    },
+      "With the goal under three years away, volatile assets do not count toward the home. In a money-market fund they go into the down payment: the loan shrinks by Rp 105 m and the KPR installment with it.",
+    chips: ["Installment Rp 9.6 m → Rp 9.2 m", "Volatile share 72% → 0%", "Do this month"],
+    monthsSaved: 21,
+    change: { type: "move_assets", amount: 105_000_000, fromMonth: 0 },
   },
   {
     id: "a2",
-    title: "Move Rp 105 m of crypto and equity funds into a money-market fund",
-    impactLine: "Approval 10 months sooner",
+    title: "Pay off the Rp 12.4 m Kredivo balance from your savings",
+    impactLine: "Approval 17 months sooner",
     description:
-      "With the goal under three years away, volatile assets do not count toward the down payment. Moved to a money-market fund they count in full.",
-    chips: ["DP progress 15% → 54%", "Volatile share 72% → 0%", "Do this month"],
-    monthsSaved: 10,
-    change: { type: "move_assets", amount: 105_000_000, fromMonth: 0 },
+      "Rp 700 k a month at 31% for another 24 months. Clearing it now from the Rp 41.2 m in savings takes the Kredivo installment out of your debt-to-income and saves Rp 4.4 m of interest.",
+    chips: ["DTI 37% → 34%", "Interest saved Rp 4.4 m", "Do this month"],
+    monthsSaved: 17,
+    change: { type: "pay_off_loan", loanId: "loan-kredivo", fromMonth: 0 },
   },
   {
     id: "a3",
@@ -409,7 +404,7 @@ export const demoActions: ActionCard[] = [
     impactLine: "Approval 2 months sooner",
     description:
       "Food delivery was Rp 1.4 m in September. Capping it adds Rp 900 k a month to the down payment.",
-    chips: ["Saves Rp 900 k a month", "Savings rate 34% → 37%", "From next month"],
+    chips: ["Saves Rp 900 k a month", "Savings rate 39% → 42%", "From next month"],
     monthsSaved: 2,
     change: { type: "cap_spending", category: "food_delivery", monthlyCap: 500_000, fromMonth: 1 },
   },
@@ -457,7 +452,7 @@ export const demoAnalysis: Analysis = {
   choices: { a1: "undecided", a2: "undecided", a3: "undecided" },
   rejectedOptions: demoWithoutPlan.rejectedOptions,
   summary:
-    "You're 14 months from a KPR if you clear the Kredivo balance and move your crypto to safer savings; 26 months if nothing changes.",
+    "You could apply for a KPR this month if you move your crypto to safer savings and pay off the Kredivo balance; 24 months if nothing changes.",
 };
 
 export const demoRun: RunStatus = {

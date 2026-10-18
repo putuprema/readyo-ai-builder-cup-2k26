@@ -25,15 +25,15 @@ describe("refinance_loan", () => {
     type: "refinance_loan",
     loanId: "paylater-1",
     newAnnualRate: 0.13,
-    newTenorMonths: 12,
+    newTenorMonths: 24,
     fromMonth: 0,
   };
 
-  it("House-A refinanced to about Rp 1.1 m clears dti_cap in month 0", () => {
+  it("House-A refinanced to about Rp 590 k clears dti_cap in month 0", () => {
     const r = run("house-a", [refinance]);
     const m0 = r.loan?.timeline[0];
-    expect(m0?.debtPayments).toBeCloseTo(1_107_500, -4);
-    expect(Math.abs((m0?.dti ?? 0) - 0.326)).toBeLessThan(0.001);
+    expect(m0?.debtPayments).toBeCloseTo(589_500, -4);
+    expect(Math.abs((m0?.dti ?? 0) - 0.3475)).toBeLessThan(0.001);
     expect(m0?.failing).not.toContain("dti_cap");
     expect(m0?.failing).toEqual(["min_dp_first_home_new", "emergency_months_required"]);
     expect(r.loan?.approvableToday).toBe(false);
@@ -42,9 +42,9 @@ describe("refinance_loan", () => {
 
   it("keeps the new installment for the new tenor and then drops it", () => {
     const r = run("house-a", [refinance]);
-    const installment = Math.round(annuity(12_400_000, 0.13, 12));
-    for (let m = 0; m < 12; m++) expect(r.cash.timeline[m]?.debtPayments).toBe(installment);
-    expect(r.cash.timeline[12]?.debtPayments).toBe(0);
+    const installment = Math.round(annuity(12_400_000, 0.13, 24));
+    for (let m = 0; m < 24; m++) expect(r.cash.timeline[m]?.debtPayments).toBe(installment);
+    expect(r.cash.timeline[24]?.debtPayments).toBe(0);
   });
 
   it("starts at fromMonth on the balance outstanding then", () => {
@@ -54,9 +54,9 @@ describe("refinance_loan", () => {
     // Three payments of 2.1 m at 31 percent leave about 6.9 m outstanding.
     const m3 = r.cash.timeline[3]?.debtPayments ?? 0;
     expect(m3).toBeLessThan(2_100_000);
-    expect(m3).toBeGreaterThan(Math.round(annuity(6_500_000, 0.13, 12)));
-    expect(m3).toBeLessThan(Math.round(annuity(7_500_000, 0.13, 12)));
-    expect(r.cash.timeline[15]?.debtPayments).toBe(0);
+    expect(m3).toBeGreaterThan(Math.round(annuity(6_500_000, 0.13, 24)));
+    expect(m3).toBeLessThan(Math.round(annuity(7_500_000, 0.13, 24)));
+    expect(r.cash.timeline[27]?.debtPayments).toBe(0);
   });
 
   it("is a no-op for an unknown or finished loan", () => {

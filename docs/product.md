@@ -17,7 +17,7 @@ Indonesians pay across many banks, e-wallets and PayLater/pinjol apps. No tool a
 
 Technical merit and Gen AI implementation 40%, problem alignment and impact 25%, innovation 25%, UX 10%. Judges look for Gen AI used meaningfully, not as decoration. Submission: working prototype, PDF deck, 3-minute demo video, public GitHub repo.
 
-Demo story to protect: upload a PayLater bill → DTI rises from 28% to 42% → KPR approval blocked → the agent proposes refinancing → the simulator verifies it → approval moves from month 26 to month 14.
+Demo story to protect: upload a PayLater bill → DTI rises from 34% to 37% → KPR approval blocked → the agent proposes moving the volatile assets into the down payment and paying the PayLater off → the simulator verifies both → approval moves from month 24 to this month.
 
 ## Goals
 

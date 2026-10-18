@@ -29,7 +29,7 @@ describe("rejectedOptions", () => {
     ]);
     expect(option(r, "joint_application")[0]?.reason).toMatch(/single/);
     // Simulated as a single applicant: DTI over the applicant's income only.
-    expect(r.loan?.timeline[0]?.dti).toBeCloseTo(0.3818, 4);
+    expect(r.loan?.timeline[0]?.dti).toBeCloseTo(0.4315, 4);
   });
 
   it("accepts a joint application for a married applicant with a spouse income", () => {
@@ -45,7 +45,7 @@ describe("rejectedOptions", () => {
     expect(option(r, "tenor_25y")[0]?.reason).toMatch(/20 years/);
     expect(r.rulesChecked.find((c) => c.rule === "loan_end_age")?.effect).toBe("rejects_option");
     // The installment is the 20-year one.
-    expect(Math.abs((r.loan?.timeline[0]?.installment ?? 0) - 4_771_668)).toBeLessThanOrEqual(1);
+    expect(Math.abs((r.loan?.timeline[0]?.installment ?? 0) - 5_666_356)).toBeLessThanOrEqual(1);
   });
 
   it("does not reject the default 20-year tenor at age 35", () => {

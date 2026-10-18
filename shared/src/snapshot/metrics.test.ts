@@ -34,13 +34,13 @@ describe("computeMetrics: House-A (spec acceptance criteria)", () => {
     expect(metrics).toHaveLength(7);
   });
 
-  it("dti ≈ 0.38 blocks", () => {
+  it("dti ≈ 0.43 blocks", () => {
     const dti = byId(metrics, "dti");
-    expect(dti.you).toBeCloseTo(0.382, 3);
+    expect(dti.you).toBeCloseTo(0.4315, 4);
     expect(dti.rule).toBe(0.35);
     expect(dti.status).toBe("blocks");
     expect(dti.meaning).toBe(
-      "PayLater Rp 2.1 m/mo plus the KPR installment of Rp 4.8 m would take 38% of your income; banks cap it at 35%.",
+      "PayLater Rp 2.1 m/mo plus the KPR installment of Rp 5.7 m would take 43% of your income; banks cap it at 35%.",
     );
   });
 
@@ -90,7 +90,7 @@ describe("computeMetrics: House-A (spec acceptance criteria)", () => {
       status: "needs_work",
     });
     expect(m.meaning).toBe(
-      "Rp 4 m liquid, but the 3 months emergency fund (Rp 24 m) comes first, so nothing is earmarked yet for the Rp 160 m down payment (20% of the price today).",
+      "Rp 4 m liquid, but the 3 months emergency fund (Rp 24 m) comes first, so nothing is earmarked yet for the Rp 40 m down payment (5% of the price today).",
     );
   });
 
@@ -116,10 +116,10 @@ describe("computeMetrics: House-A (spec acceptance criteria)", () => {
 
 describe("computeMetrics: statuses follow the rules table", () => {
   it("dti passes when the cap is raised above the figure", () => {
-    const dti = byId(metricsFor("house-a", {}, {}, { dti_cap: 0.4 }), "dti");
+    const dti = byId(metricsFor("house-a", {}, {}, { dti_cap: 0.45 }), "dti");
     expect(dti.status).toBe("passes");
-    expect(dti.rule).toBe(0.4);
-    expect(dti.meaning).toMatch(/banks cap it at 40%, so this passes\.$/);
+    expect(dti.rule).toBe(0.45);
+    expect(dti.meaning).toMatch(/banks cap it at 45%, so this passes\.$/);
   });
 
   it("expensive debt follows expensive_debt_rate", () => {
@@ -154,18 +154,18 @@ describe("computeMetrics: statuses follow the rules table", () => {
 
   it("goal progress passes once the earmarked liquid covers the down payment", () => {
     const m = byId(metricsFor("house-a", { liquidAssets: 200_000_000 }), "goal_progress");
-    expect(m.you).toBeCloseTo(176 / 160, 4);
+    expect(m.you).toBeCloseTo(176 / 40, 4);
     expect(m.status).toBe("passes");
     expect(m.meaning).toBe(
-      "Rp 176 m earmarked after the 3 months emergency fund covers the Rp 160 m down payment (20% of the price today).",
+      "Rp 176 m earmarked after the 3 months emergency fund covers the Rp 40 m down payment (5% of the price today).",
     );
   });
 
   it("goal progress shows the part saved when some is earmarked", () => {
     const m = byId(metricsFor("house-a", { liquidAssets: 40_000_000 }), "goal_progress");
-    expect(m.you).toBe(0.1);
+    expect(m.you).toBe(0.4);
     expect(m.meaning).toBe(
-      "Rp 16 m saved of the Rp 160 m down payment (20% of the price today), after setting aside 3 months of essentials.",
+      "Rp 16 m saved of the Rp 40 m down payment (5% of the price today), after setting aside 3 months of essentials.",
     );
   });
 

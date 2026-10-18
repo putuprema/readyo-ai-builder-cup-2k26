@@ -11,10 +11,13 @@
   {
     "id": "min_dp_first_home_new",
     "label": "Minimum down payment, first home, new build",
-    "value": 0.2,
+    "value": 0.05,
     "unit": "ratio",
     "usedFor": ["kpr"],
-    "source": { "title": "[bank criteria, to be checked]", "url": "" },
+    "source": {
+      "title": "BI PADG No. 30/2025 (seventh amendment of PADG 21/25/PADG/2019), in force 1 January to 31 December 2026: the LTV/FTV tiers for banks not meeting the NPL/NPF criteria (banks meeting them may lend up to 100%); first facility, landed house or apartment above 70 m2: LTV 95%",
+      "url": "https://www.bi.go.id/id/publikasi/peraturan/Pages/PADG_302025.aspx"
+    },
     "checkedAt": "2026-10-18"
   },
   {

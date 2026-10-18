@@ -26,7 +26,7 @@ describe("planLoan", () => {
     const plan = planLoan(f.goal, f.profile, rules);
     expect(plan).toMatchObject({
       dpRuleId: "min_dp_first_home_new",
-      dpRatio: 0.2,
+      dpRatio: 0.05,
       rateRuleId: "kpr_rate_fixed",
       annualRate: 0.065,
       preferredTenorYears: 20,
@@ -103,28 +103,30 @@ describe("the loan path", () => {
       ["dti_cap", "emergency_months_required", "min_dp_first_home_new"].sort(),
     );
     const dti = blocked(r, "dti_cap");
-    expect(dti?.value).toBeCloseTo(0.382, 3);
+    expect(dti?.value).toBeCloseTo(0.431, 3);
     expect(dti?.limit).toBe(0.35);
     const emergency = blocked(r, "emergency_months_required");
     expect(emergency?.value).toBe(0.5);
     expect(emergency?.limit).toBe(3);
     const dp = blocked(r, "min_dp_first_home_new");
-    expect(dp?.limit).toBe(160_000_000);
+    expect(dp?.limit).toBe(40_000_000);
     expect(dp?.value).toBe(0); // liquid is below the emergency reserve
   });
 
   it("House-A month 0 has the spec's installment, DP and DTI", () => {
     const r = run("house-a");
     const m0 = r.loan?.timeline[0];
-    expect(m0?.dpNeeded).toBe(160_000_000);
-    expect(Math.abs((m0?.installment ?? 0) - 4_771_668)).toBeLessThanOrEqual(1);
-    expect(m0?.dti).toBeCloseTo(0.3818, 4);
+    expect(m0?.dpNeeded).toBe(40_000_000);
+    expect(m0?.dpPaid).toBe(40_000_000); // nothing earmarked: liquid is below the reserve
+    expect(Math.abs((m0?.installment ?? 0) - 5_666_356)).toBeLessThanOrEqual(1); // on Rp 760 m
+    expect(m0?.dti).toBeCloseTo(0.4315, 4);
     expect(m0?.failing).toEqual(["dti_cap", "min_dp_first_home_new", "emergency_months_required"]);
   });
 
-  it("House-A as specified never reaches approval: the DP window opens after DTI closes", () => {
-    // Liquid minus the reserve covers the DP from about month 50, but the tenor shrinks every
-    // year (the loan must end by 55) so DTI is back above the cap from month 40.
+  it("House-A as specified never reaches approval: DTI stays just above the cap", () => {
+    // The emergency fund and the 5% DP are covered from about month 17, but by then the KPR
+    // installment alone is 35% of income, and the tenor shrinks every year (the loan must end
+    // by 55), so DTI hovers above the cap from month 17 on.
     const r = run("house-a");
     expect(r.loan?.monthsToReady).toBeNull();
     expect(r.loan?.installmentAtApproval).toBeUndefined();
@@ -142,7 +144,7 @@ describe("the loan path", () => {
       changes: [],
     });
     const m = r.loan?.monthsToReady;
-    expect(m).toBe(34);
+    expect(m).toBe(8); // the month after the PayLater's last payment
     if (m === null || m === undefined) return;
     expect(r.loan?.timeline[m]?.failing).toEqual([]);
     expect(r.loan?.timeline[m - 1]?.failing.length).toBeGreaterThan(0);
@@ -156,7 +158,7 @@ describe("the loan path", () => {
     const r = run("house-a");
     const dti = (m: number) => r.loan?.timeline[m]?.dti ?? 0;
     expect(dti(7)).toBeGreaterThan(0.35);
-    expect(dti(8)).toBeLessThan(0.35); // 4.77 m / 18 m = 0.265 plus price growth
+    expect(dti(8)).toBeLessThan(0.35); // 5.89 m / 18 m = 0.327
     expect(r.loan?.timeline[8]?.failing).not.toContain("dti_cap");
   });
 
@@ -195,10 +197,10 @@ describe("the loan path", () => {
     const r = run("house-a");
     const byRule = Object.fromEntries(r.rulesChecked.map((c) => [c.rule, c]));
     expect(byRule.dti_cap).toMatchObject({ valueUsed: 0.35, effect: "blocks" });
-    expect(byRule.dti_cap?.you).toBeCloseTo(0.3818, 4);
+    expect(byRule.dti_cap?.you).toBeCloseTo(0.4315, 4);
     expect(byRule.min_dp_first_home_new).toMatchObject({
-      valueUsed: 0.2,
-      you: 160_000_000,
+      valueUsed: 0.05,
+      you: 40_000_000,
       effect: "blocks",
     });
     expect(byRule.emergency_months_required).toMatchObject({

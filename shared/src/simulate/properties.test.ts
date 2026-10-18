@@ -42,10 +42,12 @@ const notLater = (before: number | null, after: number | null) =>
 const notSooner = (before: number | null, after: number | null) =>
   after === null || (before !== null && after >= before);
 
+// A refinance that stretches the debt past the PayLater's own end (8 payments) can delay
+// approval under a DTI cap, so the property is stated for refinances that end no later.
 const refinances: Change[] = [];
-for (const rate of [0.1, 0.13, 0.16, 0.2]) {
-  for (const tenor of [6, 12, 18, 24]) {
-    for (const fromMonth of [0, 2, 5]) {
+for (const rate of [0.1, 0.13, 0.2, 0.31]) {
+  for (const tenor of [3, 6]) {
+    for (const fromMonth of [0, 2]) {
       refinances.push({
         type: "refinance_loan",
         loanId: "paylater-1",
@@ -81,7 +83,7 @@ describe.each(profiles)("monotonicity for %s", (_name, input) => {
   const base = loanMonths(input);
 
   it.each([
-    ["refinance_loan (lower rate, tenor up to 24 months)", refinances],
+    ["refinance_loan (ending no later than the PayLater)", refinances],
     ["pay_off_loan", payOffs],
     ["cap_spending", caps],
     ["move_assets", moves],
@@ -95,13 +97,7 @@ describe.each(profiles)("monotonicity for %s", (_name, input) => {
   it("adding a change on top of a plan never makes loan.monthsToReady larger", () => {
     const plan: Change[] = [
       { type: "move_assets", amount: 15_000_000, fromMonth: 0 },
-      {
-        type: "refinance_loan",
-        loanId: "paylater-1",
-        newAnnualRate: 0.13,
-        newTenorMonths: 12,
-        fromMonth: 0,
-      },
+      { type: "pay_off_loan", loanId: "paylater-1", fromMonth: 0 },
     ];
     const withPlan = loanMonths(input, plan);
     expect(notLater(base, withPlan)).toBe(true);
@@ -132,11 +128,12 @@ describe.each(profiles)("monotonicity for %s", (_name, input) => {
 
   it("the properties are not vacuous: the variant with savings is ready and moves", () => {
     if (base === null) return;
-    // (dti_cap is not what binds this variant: the DP is, so raising it leaves month 34 as is.)
+    // The PayLater's last payment binds this variant (approval in month 8), so faster price
+    // growth cannot help and paying the PayLater off early moves the date.
     const slower = loanMonths(input, [], { growth_property: 0.08 });
-    expect(slower === null || slower > base).toBe(true);
+    expect(slower === null || slower >= base).toBe(true);
     expect(
-      loanMonths(input, [{ type: "move_assets", amount: 15_000_000, fromMonth: 0 }]),
+      loanMonths(input, [{ type: "pay_off_loan", loanId: "paylater-1", fromMonth: 0 }]),
     ).toBeLessThan(base);
   });
 });

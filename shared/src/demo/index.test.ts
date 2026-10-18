@@ -94,7 +94,7 @@ describe("demo metrics", () => {
     expect(metric("expensive_debt").you).toBe(
       sum(demoLoans.filter((l) => l.effectiveAnnualRate > 0.24).map((l) => l.outstandingPrincipal)),
     );
-    const dpNeeded = 0.2 * (demoGoal.estimate?.targetToday ?? 0);
+    const dpNeeded = (demoRules.min_dp_first_home_new ?? 0) * (demoGoal.estimate?.targetToday ?? 0);
     const earmarked = s.liquidAssets - 3 * s.essentialSpending;
     expect(metric("goal_progress").you).toBeCloseTo(earmarked / dpNeeded, 2);
     expect(metric("dti").you).toBeCloseTo(demoWithoutPlan.loan?.timeline[0]?.dti ?? 0, 4);
@@ -110,7 +110,7 @@ describe("demo metrics", () => {
     expect(metric("expensive_debt").status).toBe("needs_work");
     expect(metric("horizon_risk").status).toBe("needs_work");
     expect(metric("dti").meaning).toBe(
-      "Kredivo Rp 2.1 m/mo plus the KPR installment of Rp 8.1 m would take 36% of your income; banks cap it at 35%.",
+      "Kredivo Rp 700 k/mo plus the KPR installment of Rp 9.6 m would take 37% of your income; banks cap it at 35%.",
     );
     const blockedBy = demoAnalysis.withoutPlan.loan?.blockedBy.map((b) => b.rule);
     expect(blockedBy).toContain("dti_cap");
@@ -159,7 +159,9 @@ describe("demo analysis", () => {
   });
 
   it("the summary quotes the simulated months", () => {
-    expect(demoAnalysis.summary).toContain(`${demoWithPlan.loan?.monthsToReady} months`);
+    const withPlan = demoWithPlan.loan?.monthsToReady;
+    // Month 0 means approvable this month once the plan is done.
+    expect(demoAnalysis.summary).toContain(withPlan === 0 ? "this month" : `${withPlan} months`);
     expect(demoAnalysis.summary).toContain(`${demoWithoutPlan.loan?.monthsToReady} months`);
   });
 
@@ -174,9 +176,10 @@ describe("demo analysis", () => {
       expect(first?.month).toBe(0);
       expect(first?.failing).toEqual(loan.blockedBy.map((b) => b.rule));
       const reserve = demoRules.emergency_months_required ?? 0;
-      expect(loan.blockedBy.find((b) => b.rule.startsWith("min_dp"))?.value).toBe(
-        (first?.liquid ?? 0) - reserve * demoSnapshot.essentialSpending,
-      );
+      const dpBlock = loan.blockedBy.find((b) => b.rule.startsWith("min_dp"));
+      if (dpBlock) {
+        expect(dpBlock.value).toBe((first?.liquid ?? 0) - reserve * demoSnapshot.essentialSpending);
+      }
     }
   });
 

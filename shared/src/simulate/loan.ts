@@ -23,6 +23,9 @@ export interface LoanPlan {
   /** Income used for DTI: the applicant's, plus the spouse's only for a joint application. */
   income: number;
   jointApplication: boolean;
+  /** The DP the person intends to pay (inputs.plannedDp): a cap on how much of the earmarked
+   *  savings goes into the DP. Undefined means everything earmarked goes in. */
+  plannedDp?: number;
 }
 
 /** Decide the rules that apply to this goal's loan. Undefined for goals without a loan path. */
@@ -50,6 +53,7 @@ export function planLoan(goal: Goal, profile: Profile, rules: Rules): LoanPlan |
       income:
         profile.netMonthlyIncome + (jointApplication ? (profile.spouseMonthlyIncome ?? 0) : 0),
       jointApplication,
+      ...(inputs.plannedDp === undefined ? {} : { plannedDp: inputs.plannedDp }),
     };
   }
 
@@ -67,6 +71,7 @@ export function planLoan(goal: Goal, profile: Profile, rules: Rules): LoanPlan |
     dtiCap,
     income: profile.netMonthlyIncome,
     jointApplication: false,
+    ...(inputs.plannedDp === undefined ? {} : { plannedDp: inputs.plannedDp }),
   };
 }
 
@@ -88,7 +93,11 @@ export interface LoanMonthInput {
 }
 
 export interface LoanMonthCheck {
+  /** The minimum DP the rules require this month. */
   dpNeeded: number;
+  /** The DP the person would pay: everything earmarked (liquid above the reserve), capped by
+   *  plannedDp and the price, and never less than the minimum. */
+  dpPaid: number;
   loanAmount: number;
   tenorYears?: number; // undefined when no tenor of at least a year is allowed
   installment?: number;
@@ -96,10 +105,26 @@ export interface LoanMonthCheck {
   failing: string[];
 }
 
+/**
+ * The DP paid in a month: the savings earmarked for the goal (liquid above the emergency
+ * reserve), capped by the planned DP and the price, and never below the minimum the rules ask.
+ * A bigger DP means a smaller loan and a lower installment, so saving more also lowers DTI.
+ */
+export function dpPaidFor(
+  plan: LoanPlan,
+  target: number,
+  dpNeeded: number,
+  earmarked: number,
+): number {
+  const fromSavings = Math.min(Math.max(0, earmarked), plan.plannedDp ?? Number.POSITIVE_INFINITY);
+  return Math.min(target, Math.max(dpNeeded, fromSavings));
+}
+
 /** Check one month against the lending rules. The order of `failing` is stable. */
 export function checkLoanMonth(plan: LoanPlan, m: LoanMonthInput): LoanMonthCheck {
   const dpNeeded = m.target * plan.dpRatio;
-  const loanAmount = Math.max(0, m.target - dpNeeded);
+  const dpPaid = dpPaidFor(plan, m.target, dpNeeded, m.liquid - m.reserve);
+  const loanAmount = Math.max(0, m.target - dpPaid);
   const failing: string[] = [];
   const tenorYears = allowedTenorYears(plan, m.age);
 
@@ -117,6 +142,7 @@ export function checkLoanMonth(plan: LoanPlan, m: LoanMonthInput): LoanMonthChec
 
   return {
     dpNeeded,
+    dpPaid,
     loanAmount,
     tenorYears: tenorYears >= 1 ? tenorYears : undefined,
     installment,

@@ -74,7 +74,7 @@ Wedding: `dti` and `expensive_debt` still shown (debt still slows saving) but `d
 
 ## Acceptance criteria
 
-- House-A fixture (spec 02) → `dti` ≈ 0.38 blocks, `emergency_fund` 0.5 blocks, `expensive_debt` Rp 12.4 m needs work, `savings_rate` ≈ 0.13 needs work.
+- House-A fixture (spec 02) → `dti` ≈ 0.43 blocks, `emergency_fund` 0.5 blocks, `expensive_debt` Rp 12.4 m needs work, `savings_rate` ≈ 0.13 needs work.
 - Own-account transfers in the fixture transactions do not change `netIncome` or spending.
 - A month with the PayLater source missing reuses last month's loan and lists it in `estimatedSources`.
 - Metrics are returned in the display order above.

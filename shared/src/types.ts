@@ -195,8 +195,9 @@ export interface MonthState {
   volatile: number;
   debtPayments: number;
   target: number; // goal price at this month
-  dpNeeded?: number;
-  installment?: number;
+  dpNeeded?: number; // the minimum DP the rules require (loan path)
+  dpPaid?: number; // the DP the person would pay: earmarked savings, capped by plannedDp, at least dpNeeded
+  installment?: number; // on target − dpPaid
   dti?: number;
   emergencyMonths: number;
   failing: string[]; // rule ids failing this month
