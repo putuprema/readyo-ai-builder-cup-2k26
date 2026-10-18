@@ -1,0 +1,68 @@
+/* Animations of the progress view (design artboard Analyzing). Every one stops under
+   prefers-reduced-motion; the percent and the chips still update from the run document. */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.15;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes bar {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 40px 0;
+  }
+}
+
+.ring {
+  animation: spin 1.6s linear infinite;
+}
+.halo {
+  animation: pulse 2.4s ease-in-out infinite;
+}
+.line {
+  animation: rise 0.6s ease-out both;
+}
+.stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.18) 0 10px,
+    transparent 10px 20px
+  );
+  background-size: 40px 40px;
+  animation: bar 1s linear infinite;
+  transition: width 0.8s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .halo,
+  .line,
+  .stripes {
+    animation: none;
+  }
+  .stripes {
+    transition: none;
+  }
+}
