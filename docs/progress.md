@@ -10,7 +10,7 @@ Update this file at the end of every coding session. Newest entries at the top o
 ## Decisions taken
 
 - 2026-10-18: Backend language is TypeScript. One pnpm workspace; `shared/` (`@adidi/shared`) is imported by `web`, `api` and `worker`. Services use Hono on Node 26. Web is a Next.js static export served by Firebase Hosting; it calls the api by URL (`NEXT_PUBLIC_API_URL`) with CORS, no Hosting rewrite.
-- 2026-10-18: Images are built by Cloud Build (`<svc>/cloudbuild.yaml`, repo-root context) so no local Docker is needed. Region default `asia-southeast2`.
+- 2026-10-18: Images are built by Cloud Build (`<svc>/cloudbuild.yaml`, repo-root context) so no local Docker is needed. Region default `asia-southeast1`.
 
 ## Done
 

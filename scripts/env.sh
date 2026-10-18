@@ -3,7 +3,7 @@
 # Fill these in once the GCP project exists.
 
 export PROJECT_ID="${PROJECT_ID:-YOUR_PROJECT_ID}"
-export REGION="${REGION:-asia-southeast2}"          # Jakarta
+export REGION="${REGION:-asia-southeast1}"          # Jakarta
 export AR_REPO="${AR_REPO:-adidi}"                   # Artifact Registry repository name
 
 # Public URL of the deployed api service. Printed by scripts/deploy-service.sh api.

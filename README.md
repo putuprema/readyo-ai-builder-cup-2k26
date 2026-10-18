@@ -6,14 +6,14 @@ How we work: `AGENTS.md`. Specs: `specs/`. Background: `docs/`.
 
 ## Repository layout
 
-| Folder | What |
-|---|---|
-| `shared/` | Types and pure logic shared by web, api and worker (display formatting, later `simulate()`, metrics, rules). pnpm package `@adidi/shared`. |
-| `web/` | Next.js app, static export, served by Firebase Hosting. |
-| `api/` | Cloud Run service: uploads, goals, short requests. |
-| `worker/` | Cloud Run service: the analysis pipeline, triggered by Cloud Tasks. |
-| `scripts/` | Deploy scripts and the secrets check. |
-| `docs/`, `specs/`, `design/`, `fixtures/` | Product docs, feature specs, design handoff, test fixtures. |
+| Folder                                    | What                                                                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `shared/`                                 | Types and pure logic shared by web, api and worker (display formatting, later `simulate()`, metrics, rules). pnpm package `@adidi/shared`. |
+| `web/`                                    | Next.js app, static export, served by Firebase Hosting.                                                                                    |
+| `api/`                                    | Cloud Run service: uploads, goals, short requests.                                                                                         |
+| `worker/`                                 | Cloud Run service: the analysis pipeline, triggered by Cloud Tasks.                                                                        |
+| `scripts/`                                | Deploy scripts and the secrets check.                                                                                                      |
+| `docs/`, `specs/`, `design/`, `fixtures/` | Product docs, feature specs, design handoff, test fixtures.                                                                                |
 
 Everything is TypeScript in one pnpm workspace. One lockfile at the root.
 
@@ -40,12 +40,12 @@ pnpm install
 
 Each part has one command. Run them in separate terminals, or all at once with `pnpm dev` from the root.
 
-| Part | Command | Where |
-|---|---|---|
-| web | `pnpm --filter web dev` | http://localhost:3000 |
-| api | `pnpm --filter api dev` | http://localhost:8080/health |
-| worker | `pnpm --filter worker dev` | http://localhost:8081/health |
-| shared | `pnpm --filter @adidi/shared test` | unit tests |
+| Part   | Command                            | Where                        |
+| ------ | ---------------------------------- | ---------------------------- |
+| web    | `pnpm --filter web dev`            | http://localhost:3000        |
+| api    | `pnpm --filter api dev`            | http://localhost:8080/health |
+| worker | `pnpm --filter worker dev`         | http://localhost:8081/health |
+| shared | `pnpm --filter @adidi/shared test` | unit tests                   |
 
 Copy each `.env.example` to `.env` where you need to override a default (none is required for the hello-world setup).
 
@@ -70,9 +70,9 @@ Secrets never live in the repo. Locally, put them in a `.env` file (ignored by g
 
 1. Create a GCP project with billing, and a Firebase project linked to it.
 2. Enable the APIs: Cloud Run, Cloud Build, Artifact Registry, Cloud Tasks, Firestore, Cloud Storage, Secret Manager, and the Gemini API (or Vertex AI).
-3. Create an Artifact Registry Docker repository in the region (default `adidi` in `asia-southeast2`):
+3. Create an Artifact Registry Docker repository in the region (default `adidi` in `asia-southeast1`):
    ```bash
-   gcloud artifacts repositories create adidi --repository-format=docker --location=asia-southeast2
+   gcloud artifacts repositories create adidi --repository-format=docker --location=asia-southeast1
    ```
 4. Install and log in to the CLIs (inside `nix-shell`, only the two login commands are needed):
    ```bash
