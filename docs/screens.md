@@ -32,7 +32,7 @@ Title "Your goals", one card: "No goals yet", one-line explanation, three tiles 
 - Form fields per goal: see `docs/product.md`. Optional fields sit in a collapsed "Refine (optional)" section.
 - Radio options are chips; the selected chip gets the green border and tint (the mockup hard-codes this; make it follow the selection).
 - House and car: "How would you prefer to pay?" grey box, with the note that both paths are shown either way. Wedding: "Who's contributing?" grey box instead (partner's share, family contribution), no payment preference.
-- **Calculate Estimate** button at the foot of the form, with a note that it searches current prices, takes about 10 seconds, and should be rerun after changes. Never estimate automatically on input change.
+- **Calculate Estimate** button at the foot of the form, with a note that it searches current prices, takes about 30 seconds (measured 20 to 35 s on Flash with Search grounding), and should be rerun after changes. Never estimate automatically on input change.
 - **Estimate card** (right column), three states:
   - *Empty*: dashed card, "Rp —", hint to press Calculate Estimate. **Continue** is disabled.
   - *Fresh*: editable price field ("Edit if you know a better number"), range seen, growth assumption → target at goal date, "Calculated X ago from: …", sources with dates. Wedding also shows the contribution split ("Partner Rp 50 m + family Rp 60 m → you save Rp 100 m").

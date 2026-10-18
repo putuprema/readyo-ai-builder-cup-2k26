@@ -245,7 +245,7 @@ export function HouseForm({
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-line border-t pt-5">
         <p className="m-0 max-w-[340px] text-[13px] text-muted">
-          We search current listings and price lists for these details. Takes about 20 seconds; run
+          We search current listings and price lists for these details. Takes about 30 seconds; run
           it again after you change anything above.
         </p>
         <button

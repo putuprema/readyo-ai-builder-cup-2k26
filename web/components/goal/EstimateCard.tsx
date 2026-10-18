@@ -52,7 +52,7 @@ export function EstimateCard({
           <h2 className="m-0 font-bold text-[15px]">Estimated target</h2>
           <span className="h-9 w-40 animate-pulse rounded-lg bg-page" aria-hidden="true" />
           <p className="m-0 text-[13px] text-muted">
-            Searching current listings and price lists. This takes about 20 seconds.
+            Searching current listings and price lists. This takes about 30 seconds.
           </p>
         </div>
       )}
