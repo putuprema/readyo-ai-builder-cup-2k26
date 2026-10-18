@@ -2,8 +2,8 @@
 # One place for the deploy settings. Sourced by the deploy scripts.
 # Fill these in once the GCP project exists.
 
-export PROJECT_ID="${PROJECT_ID:-YOUR_PROJECT_ID}"
-export REGION="${REGION:-asia-southeast1}"          # Jakarta
+export PROJECT_ID="${PROJECT_ID:-adidi-ai-cup-builder-2026}"
+export REGION="${REGION:-asia-southeast1}"          # Signapore
 export AR_REPO="${AR_REPO:-adidi}"                   # Artifact Registry repository name
 
 # Public URL of the deployed api service. Printed by scripts/deploy-service.sh api.
