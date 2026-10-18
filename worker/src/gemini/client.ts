@@ -57,6 +57,8 @@ export interface ToolStepRequest {
   tools: ToolDeclaration[];
   temperature?: number;
   thinking?: ThinkingLevel;
+  /** Aborts the request client-side (the agent loop's turn timeout). */
+  signal?: AbortSignal;
 }
 
 export interface ToolCall {
@@ -187,6 +189,7 @@ export function createGeminiModel(env: GeminiEnv = process.env): JsonModel & Too
             tools: [{ functionDeclarations: request.tools }],
             temperature: request.temperature ?? 0,
             ...thinkingConfig(request.thinking),
+            ...(request.signal ? { abortSignal: request.signal } : {}),
           },
         });
         if (response.promptFeedback?.blockReason) {

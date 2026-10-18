@@ -1,0 +1,4 @@
+{
+  "_comment": "Agent loop limits used by code (specs/06-agent.md, \"Turn timeout\"). turnTimeoutMs: how long one model turn of the propose -> verify loop may take before the loop stops with the actions verified so far; one turn on the first deployed run took 304 s and returned no calls, the others 3-5 s.",
+  "turnTimeoutMs": 60000
+}
