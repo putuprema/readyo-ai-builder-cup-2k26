@@ -27,5 +27,7 @@ export {
   METRIC_IDS,
   type MetricId,
   monthlySurplus,
+  months,
+  pct,
 } from "./snapshot/metrics.js";
 export type * from "./types.js";
