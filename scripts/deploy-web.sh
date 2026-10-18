@@ -19,4 +19,4 @@ echo "Building web with NEXT_PUBLIC_API_URL=$API_URL ..."
 (cd "$root" && NEXT_PUBLIC_API_URL="$API_URL" pnpm --filter @adidi/shared build && NEXT_PUBLIC_API_URL="$API_URL" pnpm --filter web build)
 
 echo "Deploying to Firebase Hosting ($PROJECT_ID)..."
-(cd "$root" && firebase deploy --only hosting --project "$PROJECT_ID")
+(cd "$root" && pnpm exec firebase deploy --only hosting --project "$PROJECT_ID")
