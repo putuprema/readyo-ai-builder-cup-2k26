@@ -132,12 +132,14 @@ export function SelectInput<T extends string | number>({
   value,
   options,
   onChange,
+  error,
   disabled,
 }: {
   id: string;
   value: T;
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
+  error?: string;
   disabled?: boolean;
 }) {
   return (
@@ -145,14 +147,16 @@ export function SelectInput<T extends string | number>({
       id={id}
       value={String(value)}
       disabled={disabled}
+      aria-invalid={error ? true : undefined}
+      aria-describedby={error ? `${id}-error` : undefined}
       onChange={(e) => {
         const next = options.find((o) => String(o.value) === e.target.value);
         if (next) onChange(next.value);
       }}
-      className={INPUT}
+      className={`${INPUT} ${error ? INPUT_ERROR : ""}`}
     >
       {options.map((o) => (
-        <option key={String(o.value)} value={String(o.value)}>
+        <option key={String(o.value)} value={String(o.value)} disabled={o.value === ""}>
           {o.label}
         </option>
       ))}

@@ -1,5 +1,6 @@
 "use client";
 
+import { HOUSE_CITIES } from "@/lib/cities";
 import type { FormErrors, HouseFormValues } from "@/lib/house-form";
 import { targetYears } from "@/lib/house-form";
 import { ChipGroup, Field, RupiahInput, SelectInput, TextInput } from "./fields";
@@ -46,11 +47,14 @@ export function HouseForm({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field id="area" label="City or area" error={errors.area}>
-          <TextInput
+          <SelectInput
             id="area"
             value={values.area}
+            options={[
+              { value: "", label: "Choose a city" },
+              ...HOUSE_CITIES.map((c) => ({ value: c.value, label: c.label })),
+            ]}
             onChange={(area) => onChange({ area })}
-            placeholder="e.g. Serpong, Tangerang Selatan"
             error={errors.area}
             disabled={locked}
           />

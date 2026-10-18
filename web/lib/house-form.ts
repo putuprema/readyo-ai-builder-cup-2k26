@@ -1,5 +1,6 @@
 import type { Estimate, HouseInputs, PayPreference } from "@adidi/shared";
 import { parseRupiahInput } from "@adidi/shared";
+import { cityForArea, isHouseCity } from "./cities";
 
 // The house form's state and the pure rules around it (specs/10-ui-goal-creation.md):
 // what the inputs on screen map to, whether the stored estimate is stale, and whether the
@@ -60,7 +61,7 @@ export function houseFormFromInputs(
   const budget = inputs.budgetRange;
   return {
     ...base,
-    area: inputs.area,
+    area: cityForArea(inputs.area),
     targetYear: inputs.targetYear,
     propertyType: inputs.propertyType,
     sizeMode: budget && !inputs.landM2 && !inputs.buildingM2 ? "budget" : "size",
@@ -92,7 +93,7 @@ export function toHouseInputs(
 ): { ok: true; inputs: HouseInputs } | { ok: false; errors: FormErrors } {
   const errors: FormErrors = {};
   const area = values.area.trim();
-  if (!area) errors.area = "Enter the city or area.";
+  if (!isHouseCity(area)) errors.area = "Choose a city.";
 
   const inputs: HouseInputs = {
     area,
