@@ -58,7 +58,7 @@ Full-screen dark hero. Big headline that changes per stage, a supporting sentenc
 ## 3 · Readiness result
 
 - Eyebrow with goal summary and target; headline in plain language ("You're 14 months from a KPR, if you clear the PayLater first"); data month; **Upload {next month}** (→ check-in) and **Export PDF**.
-- **Two path cards**: loan path (leading if preferred) with months with/without the plan, DP needed, installment at approval, and a red "Blocked by" strip; cash path with years with/without the plan and progress. Wedding has a single savings path.
+- **Two path cards**: loan path (leading if preferred) with months with/without the plan, DP needed, the installment today (month 0 of the no-change path, the same figure as the DTI check), and a red "Blocked by" strip; cash path with years with/without the plan and progress. Wedding has a single savings path.
 - **Readiness checks** table: the seven metrics with You · Rule · Status (Passes / Needs work / Blocks) · What it means.
 - **The plan**: up to three numbered action cards. Each: title, green impact line directly under the title, description, chips. Line under the section title updates with choices.
   - *Undecided*: **I'll do this** / **Not for me**.

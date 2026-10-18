@@ -1,4 +1,4 @@
-import { demoAnalysis, demoGoal } from "@adidi/shared";
+import { demoAnalysis, demoGoal, formatRupiah } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
 import {
   assumptionRows,
@@ -15,6 +15,15 @@ describe("result model over the demo analysis", () => {
     expect(eyebrow(demoGoal)).toBe("Buy a house · Tangerang Selatan · target Rp 1.52 bn in 2028");
   });
 
+  it("shows the same KPR installment on the path card as in the DTI sentence", () => {
+    const [loan] = pathCards(demoGoal, demoAnalysis);
+    const row = loan?.rows.find((r) => r.label === "Monthly installment today");
+    const dti = demoAnalysis.metrics.find((m) => m.id === "dti");
+    const installment = demoAnalysis.withoutPlan.loan?.timeline[0]?.installment ?? 0;
+    expect(row?.value.startsWith(formatRupiah(installment))).toBe(true);
+    expect(dti?.meaning).toContain(`installment of ${formatRupiah(installment)}`);
+  });
+
   it("leads with the loan path for a loan preference and reads every figure from the analysis", () => {
     expect(leadingPath(demoGoal)).toBe("loan");
     const [loan, cash] = pathCards(demoGoal, demoAnalysis);
@@ -27,7 +36,7 @@ describe("result model over the demo analysis", () => {
     expect(loan?.rows.map((r) => `${r.label}: ${r.value}`)).toEqual([
       "Without changes: 24 months",
       "Down payment needed (5%): Rp 67.5 m",
-      "Monthly installment at approval: Rp 9.3 m / mo · 20 yrs",
+      "Monthly installment today: Rp 9.6 m / mo · 20 yrs",
     ]);
     expect(loan?.blockedBy).toEqual([
       "DTI 37% vs 35% cap",

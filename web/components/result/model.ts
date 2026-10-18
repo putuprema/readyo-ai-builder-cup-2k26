@@ -160,11 +160,14 @@ export function pathCards(goal: Goal, analysis: Analysis): PathCard[] {
         value: formatRupiah(dpNeeded),
       });
     }
-    if (plan.loan.installmentAtApproval !== undefined) {
-      const tenor = plan.loan.tenorYears === undefined ? "" : ` · ${plan.loan.tenorYears} yrs`;
+    // Month 0 of the no-change path, the same figure the DTI check and the rules table use.
+    const installment = without.loan.timeline[0]?.installment;
+    if (installment !== undefined) {
+      const tenorYears = without.rulesChecked.find((r) => r.rule === "loan_end_age")?.you;
+      const tenor = typeof tenorYears === "number" && tenorYears > 0 ? ` · ${tenorYears} yrs` : "";
       rows.push({
-        label: "Monthly installment at approval",
-        value: `${perMonth(plan.loan.installmentAtApproval)}${tenor}`,
+        label: "Monthly installment today",
+        value: `${perMonth(installment)}${tenor}`,
       });
     }
     cards.push({
