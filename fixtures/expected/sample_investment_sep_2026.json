@@ -1,0 +1,50 @@
+{
+  "kind": "investment",
+  "month": "2026-09",
+  "transactions": [],
+  "loans": [],
+  "holdings": [
+    {
+      "instrument": "Sejahtera Likuid Pasar Uang",
+      "aliases": ["Sejahtera Likuid"],
+      "currentValue": 25000000,
+      "volatile": false,
+      "liquidityClass": "liquid"
+    },
+    {
+      "instrument": "Nusantara Ekuitas Saham",
+      "aliases": ["Nusantara Ekuitas"],
+      "currentValue": 8500000,
+      "volatile": true,
+      "liquidityClass": "liquid"
+    },
+    {
+      "instrument": "ORI027",
+      "aliases": ["ORI 027", "Obligasi Negara Ritel"],
+      "currentValue": 10000000,
+      "volatile": false,
+      "liquidityClass": "locked"
+    },
+    {
+      "instrument": "BBCA",
+      "aliases": ["Bank Central Asia"],
+      "currentValue": 2850000,
+      "volatile": true,
+      "liquidityClass": "liquid"
+    },
+    {
+      "instrument": "Bitcoin",
+      "aliases": ["BTC"],
+      "currentValue": 3650000,
+      "volatile": true,
+      "liquidityClass": "liquid"
+    },
+    {
+      "instrument": "Emas Digital",
+      "aliases": ["Emas"],
+      "currentValue": 3400000,
+      "volatile": true,
+      "liquidityClass": "liquid"
+    }
+  ]
+}

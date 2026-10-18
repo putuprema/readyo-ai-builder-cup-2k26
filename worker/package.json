@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "accuracy": "tsx --env-file-if-exists=.env scripts/accuracy.ts",
     "test:live": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run live",
-    "fixtures:paylater": "tsx scripts/make-sample-paylater.ts"
+    "fixtures:paylater": "tsx scripts/make-sample-paylater.ts",
+    "fixtures:samples": "tsx scripts/make-sample-statements.ts && tsx scripts/make-sample-paylater.ts"
   },
   "dependencies": {
     "@adidi/shared": "workspace:*",

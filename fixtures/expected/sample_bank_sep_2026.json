@@ -1,0 +1,186 @@
+{
+  "kind": "bank",
+  "month": "2026-09",
+  "transactions": [
+    {
+      "date": "2026-09-01",
+      "amount": 15000000,
+      "direction": "in",
+      "counterparty": "PT MAJU JAYA",
+      "cls": "income"
+    },
+    {
+      "date": "2026-09-01",
+      "amount": 3000000,
+      "direction": "out",
+      "counterparty": "RATNA DEWI",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-02",
+      "amount": 500000,
+      "direction": "out",
+      "counterparty": "SAKUPAY",
+      "cls": "own_transfer"
+    },
+    {
+      "date": "2026-09-02",
+      "amount": 2000000,
+      "direction": "out",
+      "counterparty": "TUMBUH INVEST",
+      "cls": "own_transfer"
+    },
+    {
+      "date": "2026-09-03",
+      "amount": 450000,
+      "direction": "out",
+      "counterparty": "PLN",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-04",
+      "amount": 2265500,
+      "direction": "out",
+      "counterparty": "SPAYLATER",
+      "cls": "debt_payment"
+    },
+    {
+      "date": "2026-09-05",
+      "amount": 350000,
+      "direction": "out",
+      "counterparty": "INDIHOME",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-06",
+      "amount": 1000000,
+      "direction": "out",
+      "cls": "cash"
+    },
+    {
+      "date": "2026-09-07",
+      "amount": 420000,
+      "direction": "out",
+      "counterparty": "SUPERINDO",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-08",
+      "amount": 186000,
+      "direction": "out",
+      "counterparty": "NETFLIX",
+      "cls": "discretionary"
+    },
+    {
+      "date": "2026-09-09",
+      "amount": 350000,
+      "direction": "out",
+      "counterparty": "TOKOPEDIA",
+      "cls": "discretionary"
+    },
+    {
+      "date": "2026-09-10",
+      "amount": 85000,
+      "direction": "out",
+      "counterparty": "GRAB",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-12",
+      "amount": 150000,
+      "direction": "out",
+      "counterparty": "BPJS KESEHATAN",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-14",
+      "amount": 275000,
+      "direction": "out",
+      "counterparty": "SHOPEE",
+      "cls": "discretionary"
+    },
+    {
+      "date": "2026-09-15",
+      "amount": 54990,
+      "direction": "out",
+      "counterparty": "SPOTIFY",
+      "cls": "discretionary"
+    },
+    {
+      "date": "2026-09-16",
+      "amount": 1000000,
+      "direction": "out",
+      "counterparty": "SUMIATI",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-18",
+      "amount": 46000,
+      "direction": "out",
+      "counterparty": "KOPI KENANGAN",
+      "cls": "discretionary"
+    },
+    {
+      "date": "2026-09-19",
+      "amount": 300000,
+      "direction": "out",
+      "counterparty": "SAKUPAY",
+      "cls": "own_transfer"
+    },
+    {
+      "date": "2026-09-20",
+      "amount": 300000,
+      "direction": "out",
+      "counterparty": "PERTAMINA",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-22",
+      "amount": 120000,
+      "direction": "out",
+      "counterparty": "GUARDIAN",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-25",
+      "amount": 1250000,
+      "direction": "out",
+      "counterparty": "TOKOPEDIA",
+      "cls": "discretionary"
+    },
+    {
+      "date": "2026-09-26",
+      "amount": 850000,
+      "direction": "out",
+      "counterparty": "TRAVELOKA",
+      "cls": "discretionary"
+    },
+    {
+      "date": "2026-09-28",
+      "amount": 2500000,
+      "direction": "in",
+      "counterparty": "CV KREATIF",
+      "cls": "income"
+    },
+    {
+      "date": "2026-09-30",
+      "amount": 8750,
+      "direction": "in",
+      "cls": "income"
+    },
+    {
+      "date": "2026-09-30",
+      "amount": 1750,
+      "direction": "out",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-30",
+      "amount": 15000,
+      "direction": "out",
+      "cls": "essential"
+    }
+  ],
+  "loans": [],
+  "holdings": []
+}
