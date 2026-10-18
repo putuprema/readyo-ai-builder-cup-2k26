@@ -11,6 +11,7 @@ import type {
   Snapshot,
   WeddingInputs,
 } from "../types.js";
+import { applyChanges } from "./changes.js";
 import { allowedTenorYears, checkLoanMonth, type LoanMonthCheck, planLoan } from "./loan.js";
 import { amortizeOneMonth, grow, monthsBetween } from "./money.js";
 
@@ -254,9 +255,6 @@ export function simulate(input: SimulateInput): SimulationResult {
     rejectedOptions: [],
   };
 }
-
-// Changes are applied in task 5; until then the loop carries the state they will touch.
-function applyChanges(_state: LoopState, _changes: Change[], _month: number): void {}
 
 /** Discretionary spending after the active category caps; uncategorised spending is uncapped. */
 export function discretionaryAfterCaps(snapshot: Snapshot, caps: Record<string, number>): number {
