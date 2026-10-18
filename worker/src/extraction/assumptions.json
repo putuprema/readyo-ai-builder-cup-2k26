@@ -1,0 +1,10 @@
+{
+  "_comment": "Extraction assumptions used by code when a document does not give the value (specs/04-extraction.md). Annual rates as fractions.",
+  "unknownFeeAnnualRate": {
+    "paylater": 0.36,
+    "pinjol": 0.48,
+    "kta": 0.18,
+    "other": 0.24
+  },
+  "unknownRemainingTenorMonths": 1
+}

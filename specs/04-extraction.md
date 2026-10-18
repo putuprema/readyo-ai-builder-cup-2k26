@@ -16,7 +16,10 @@ Turn uploaded statements (bank PDF, e-wallet screenshot, PayLater bill, investme
 - Structured output with a response schema per source kind (`bank`, `ewallet`, `paylater`, `investment`), matching the types in `shared/types`. No free-text parsing.
 - The prompt states: Indonesian formats (`Rp 1.250.000`, `12/10/2026`, `DB`/`CR` markers), return amounts as integers in rupiah, never invent rows, mark unreadable fields as null.
 - Account and card numbers are masked (keep last 4 digits) before anything is stored.
-- Files live in the default bucket at `users/{uid}/documents/{docId}` (same path as the Firestore record). After a file is extracted successfully, delete it from Cloud Storage and set the `documents` record status to `extracted`. On failure, status `failed` with a `reason`.
+- Files live in the default bucket at `users/{uid}/documents/{docId}` (same path as the Firestore record). After a file is extracted successfully, delete it from Cloud Storage and set the `documents` record status to `extracted`. On failure, status `failed` with a `reason`, and the file is deleted as well: a failed source needs a fresh upload, and nothing keeps a statement longer than one run.
+- Record ids are deterministic (hash of file id and row), so a retried task writes the same documents again instead of duplicating them; a document already `extracted` is not sent to the model again, its stored records are reused.
+- Model ids come from env (`GEMINI_PRO_MODEL`, `GEMINI_FLASH_MODEL`) and default to the `gemini-pro-latest` and `gemini-flash-latest` aliases.
+- When a bill gives no fee information at all, the rate comes from `worker/src/extraction/assumptions.json` (36% a year for PayLater, 48% for pinjol) and the loan carries a warning.
 - **Unreadable file** (blurry screenshot, password-protected PDF, model refusal): continue with the readable files and flag the failed source; the result page shows it as missing. The run itself fails, with the user sent back to the documents step, only when no file could be read, or when the bank statement failed on a `first` run (there is no income to analyse without it).
 - For loans, compute `effectiveAnnualRate` in code from the fee structure Gemini extracted (e.g. 2.95% per month → about 35% per year), not from the model.
 
