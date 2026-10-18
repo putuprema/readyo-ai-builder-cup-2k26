@@ -19,12 +19,12 @@ Everything is TypeScript in one pnpm workspace. One lockfile at the root.
 
 ## Prerequisites
 
-- Node 22 (`.nvmrc`) and pnpm 10 (`corepack enable` gives you the pinned version).
+- Node 26 (`.nvmrc`) and pnpm 10 (`corepack enable` gives you the pinned version).
 - For deploys only: `gcloud` and `firebase` CLIs (see "Deploy"). Docker is not needed; images are built by Cloud Build.
 
 ### With Nix
 
-If you use Nix, skip the installs above. `shell.nix` pins nixpkgs and provides Node 22, pnpm, firebase-tools and gcloud:
+If you use Nix, skip the installs above. `shell.nix` pins nixpkgs and provides Node 26, pnpm, firebase-tools and gcloud:
 
 ```bash
 nix-shell

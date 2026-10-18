@@ -1,5 +1,5 @@
 # Dev environment for nix users: run `nix-shell` in the repo root.
-# Provides Node 22, pnpm, firebase-tools and gcloud, so nothing is installed globally.
+# Provides Node 26, pnpm, firebase-tools and gcloud, so nothing is installed globally.
 # nixpkgs is pinned so every teammate gets the same tool versions.
 # To update: pick a rev, run `nix-prefetch-url --unpack <tarball url>` and paste the hash.
 {
@@ -10,7 +10,7 @@
 }:
 pkgs.mkShell {
   packages = [
-    pkgs.nodejs_22
+    pkgs.nodejs_26
     pkgs.pnpm
     pkgs.firebase-tools
     pkgs.google-cloud-sdk
