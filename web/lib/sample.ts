@@ -4,15 +4,18 @@ import type { CardId } from "./documents";
 // The sample scenario a new goal starts from, so someone trying the prototype only presses
 // Calculate estimate and Continue. It matches the household in the sample statements
 // (fixtures/statements, worker/scripts/sample-data.ts): a salaried employee in Serpong taking
-// home Rp 15.000.000 a month, renting, saving for a first home with a KPR. Every value stays
-// editable; a saved draft never gets these. Change the scenario here.
+// home Rp 15.000.000 a month, renting, saving for a first home with a KPR. The house is a new
+// 36/72 starter home in Bekasi (priced about Rp 470 m, range Rp 365–610 m, on 2026-10-18), which
+// that income can reach: the result shows the rules, a plan and a ready month. A 70/90 house in
+// Serpong (about Rp 1.4 bn) was out of reach for 30 years. Every value stays editable; a saved
+// draft never gets these. Change the scenario here.
 
 export const SAMPLE_HOUSE: { inputs: HouseInputs; payPreference: PayPreference } = {
   inputs: {
-    area: "Serpong, Tangerang Selatan",
+    area: "Bekasi",
     propertyType: "landed",
-    landM2: 90,
-    buildingM2: 70,
+    landM2: 72,
+    buildingM2: 36,
     market: "new",
     firstHome: true,
     targetYear: 2028,

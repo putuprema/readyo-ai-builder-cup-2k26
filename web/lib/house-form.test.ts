@@ -222,7 +222,7 @@ describe("text helpers", () => {
 describe("sample scenario", () => {
   it("fills a new goal with a valid house that maps back to the sample inputs", () => {
     const form = sampleHouseForm(NOW);
-    expect(form.area).toBe("Serpong, Tangerang Selatan");
+    expect(form.area).toBe("Bekasi");
     expect(form.payPreference).toBe("loan");
     expect(toHouseInputs(form)).toEqual({ ok: true, inputs: SAMPLE_HOUSE.inputs });
   });
