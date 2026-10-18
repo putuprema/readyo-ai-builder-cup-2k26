@@ -13,7 +13,8 @@
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "@adidi/shared": "workspace:*"
+    "@adidi/shared": "workspace:*",
+    "firebase": "^12.19.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

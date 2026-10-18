@@ -3,6 +3,16 @@
     "public": "web/out",
     "cleanUrls": true,
     "trailingSlash": true,
+    "rewrites": [
+      {
+        "regex": "^/goals/[^/]+/progress/?$",
+        "destination": "/goals/_/progress/index.html"
+      },
+      {
+        "regex": "^/goals/[^/]+/result/?$",
+        "destination": "/goals/_/result/index.html"
+      }
+    ],
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "headers": [
       {

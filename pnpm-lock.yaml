@@ -78,6 +78,9 @@ importers:
       '@adidi/shared':
         specifier: workspace:*
         version: link:../shared
+      firebase:
+        specifier: ^12.19.0
+        version: 12.19.0
       next:
         specifier: 16.4.2
         version: 16.4.2(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
