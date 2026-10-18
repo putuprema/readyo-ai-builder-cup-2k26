@@ -1,12 +1,14 @@
 "use client";
 
 import type { Goal, SourceKind } from "@adidi/shared";
+import { reusableMonth } from "@adidi/shared";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { StepChips } from "@/components/goal/StepChips";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import {
   CARDS,
@@ -24,14 +26,15 @@ import {
 import { goalSummary } from "@/lib/goal-summary";
 import { listenGoal } from "@/lib/goals";
 import { useRouteSegment } from "@/lib/route-id";
-import { mockUploader, type Uploader } from "@/lib/uploader";
+import { listSubmittedMonths, runErrorMessage, startRun } from "@/lib/runs";
+import { apiUploader, type Uploader } from "@/lib/uploader";
 import { UploadCard } from "./UploadCard";
 
 // 2 · Documents (docs/screens.md): three upload cards, file rows with progress and remove,
-// Submit once a bank or e-wallet statement is in. Nothing is read before Submit. The
-// uploader is a mock until task 8 wires the api and Cloud Storage.
+// Submit once a bank or e-wallet statement is in. Nothing is read before Submit: files go to
+// Cloud Storage through the api's signed URLs and Submit posts the run (spec 07).
 
-const uploader: Uploader = mockUploader;
+const uploader: Uploader = apiUploader;
 
 export function DocumentsPage() {
   return (
@@ -60,12 +63,28 @@ function DocumentsStep() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [reusable, setReusable] = useState<string | null>(null);
   const controllers = useRef(new Map<string, AbortController>());
 
   useEffect(() => {
     if (!uid || !goalId) return;
     return listenGoal(uid, goalId, setGoal, () => setGoal(null));
   }, [uid, goalId]);
+
+  // Spec 10, "Step 2 routing": a recent submitted month would send a second goal to the
+  // reuse step. That step is M2, so for now the page says so and still takes an upload.
+  useEffect(() => {
+    if (!uid) return;
+    let cancelled = false;
+    listSubmittedMonths(uid)
+      .then((months) => {
+        if (!cancelled) setReusable(reusableMonth(months, new Date()));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [uid]);
 
   // Files in flight are lost on navigation; ask before leaving.
   const pending = items.some((i) => i.status === "uploading");
@@ -158,9 +177,19 @@ function DocumentsStep() {
     if (!canSubmit(items) || !goalId) return;
     setSubmitting(true);
     setNotice(null);
-    // Task 8 posts the run; for now the page only moves on.
-    const documentIds = readyItems(items).map((i) => i.docId ?? "");
-    router.push(`/goals/${goalId}/progress/?run=mock_${documentIds.length}`);
+    const documentIds = readyItems(items).flatMap((i) => (i.docId ? [i.docId] : []));
+    try {
+      const { runId } = await startRun({ kind: "first", goalIds: [goalId], month, documentIds });
+      router.push(`/goals/${goalId}/progress/?run=${runId}`);
+    } catch (error) {
+      const fallback = "Could not start the analysis. Try again.";
+      setNotice(
+        error instanceof ApiError
+          ? runErrorMessage(error.code, error.message || fallback)
+          : fallback,
+      );
+      setSubmitting(false);
+    }
   }
 
   const submitEnabled = canSubmit(items) && !submitting && goal?.status === "draft";
@@ -202,6 +231,16 @@ function DocumentsStep() {
         >
           This goal is already {goal.status === "analysing" ? "being analysed" : "active"}; its
           statements were submitted.
+        </p>
+      )}
+
+      {reusable && (
+        <p
+          role="status"
+          className="m-0 rounded-[10px] bg-[#FEF6EC] px-3.5 py-3 text-[#6B3A08] text-[13px]"
+        >
+          Your {monthLabel(reusable)} statements are already in from another goal. Reusing them for
+          a new goal is coming soon; for now, add the statements again below.
         </p>
       )}
 

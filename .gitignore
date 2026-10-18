@@ -37,3 +37,6 @@ fixtures/statements/*
 
 # Next.js generated
 next-env.d.ts
+
+# Sample statements copied here for manual browser tests (scripts/e2e-web.md); never committed
+web/public/fixtures/
