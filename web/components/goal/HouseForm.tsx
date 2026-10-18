@@ -15,6 +15,7 @@ export function HouseForm({
   onCalculate,
   calculating,
   disabled,
+  sampleNote,
 }: {
   values: HouseFormValues;
   errors: FormErrors;
@@ -22,6 +23,8 @@ export function HouseForm({
   onCalculate: () => void;
   calculating: boolean;
   disabled?: boolean;
+  /** Shown under the heading while the form holds the sample scenario. */
+  sampleNote?: string;
 }) {
   const years = targetYears();
   const yearOptions = (years.includes(values.targetYear) ? years : [values.targetYear, ...years])
@@ -43,6 +46,7 @@ export function HouseForm({
         <p className="m-0 text-[13px] text-muted">
           Only the fields that change the price or the loan rules. Takes about 30 seconds.
         </p>
+        {sampleNote && <p className="m-0 text-[12px] text-muted italic">{sampleNote}</p>}
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

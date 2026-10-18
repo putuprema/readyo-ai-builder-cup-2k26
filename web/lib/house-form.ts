@@ -1,6 +1,7 @@
 import type { Estimate, HouseInputs, PayPreference } from "@adidi/shared";
 import { parseRupiahInput } from "@adidi/shared";
 import { cityForArea, isHouseCity } from "./cities";
+import { SAMPLE_HOUSE } from "./sample";
 
 // The house form's state and the pure rules around it (specs/10-ui-goal-creation.md):
 // what the inputs on screen map to, whether the stored estimate is stale, and whether the
@@ -49,6 +50,23 @@ export function defaultHouseForm(now: Date = new Date()): HouseFormValues {
     plannedDp: "",
     joint: "not_married",
   };
+}
+
+/**
+ * A new goal's form, filled with the sample scenario (./sample.ts). A sample target year that
+ * has passed or is no longer offered moves to the nearest offered year.
+ */
+export function sampleHouseForm(now: Date = new Date()): HouseFormValues {
+  const years = targetYears(now);
+  const wanted = SAMPLE_HOUSE.inputs.targetYear;
+  const first = years[0] ?? wanted;
+  const last = years[years.length - 1] ?? wanted;
+  const targetYear = Math.min(Math.max(wanted, first), last);
+  return houseFormFromInputs(
+    { ...SAMPLE_HOUSE.inputs, targetYear },
+    SAMPLE_HOUSE.payPreference,
+    now,
+  );
 }
 
 /** The form values for a stored draft, so a draft resumes with its own numbers. */

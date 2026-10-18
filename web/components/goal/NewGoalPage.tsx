@@ -12,14 +12,15 @@ import { useAuth } from "@/lib/auth";
 import { createDraft, estimateGoal, houseInputsPatch, loadGoal, patchGoal } from "@/lib/goals";
 import {
   canContinue,
-  defaultHouseForm,
   type FormErrors,
   type HouseFormValues,
   houseFormFromInputs,
   isEstimateStale,
+  sampleHouseForm,
   toHouseInputs,
 } from "@/lib/house-form";
 import { loadProfile, saveProfile } from "@/lib/profile";
+import { SAMPLE_NOTE, SAMPLE_PROFILE } from "@/lib/sample";
 import { EstimateCard, type EstimateState } from "./EstimateCard";
 import { GoalPicker } from "./GoalPicker";
 import { HouseForm } from "./HouseForm";
@@ -55,7 +56,9 @@ function NewGoalForm() {
 
   const [goalId, setGoalId] = useState<string | null>(null);
   const [resuming, setResuming] = useState(Boolean(resumeId));
-  const [values, setValues] = useState<HouseFormValues>(() => defaultHouseForm());
+  // A new goal starts from the sample scenario; a resumed draft replaces it with its own values.
+  const [values, setValues] = useState<HouseFormValues>(() => sampleHouseForm());
+  const [isSample, setIsSample] = useState(true);
   const [errors, setErrors] = useState<FormErrors>({});
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [phase, setPhase] = useState<Phase>("empty");
@@ -82,6 +85,7 @@ function NewGoalForm() {
         }
         setGoalId(goal.id);
         setValues(houseFormFromInputs(goal.inputs as HouseInputs, goal.payPreference));
+        setIsSample(false);
         if (goal.estimate) {
           setEstimate(goal.estimate);
           setPriceText(formatRupiahInput(goal.estimate.userOverride ?? goal.estimate.targetToday));
@@ -290,6 +294,7 @@ function NewGoalForm() {
             onCalculate={() => void calculate()}
             calculating={phase === "loading"}
             disabled={saving !== null}
+            sampleNote={isSample ? SAMPLE_NOTE : undefined}
           />
           <EstimateCard
             state={estimateState}
@@ -351,7 +356,8 @@ function NewGoalForm() {
 
       <ProfileModal
         open={profileOpen}
-        defaultCity={values.area.split(",").pop()?.trim()}
+        initial={SAMPLE_PROFILE}
+        sampleNote={SAMPLE_NOTE}
         busy={profileBusy}
         error={profileError}
         onSave={(profile) => void onProfileSave(profile)}

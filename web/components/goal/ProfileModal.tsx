@@ -1,7 +1,7 @@
 "use client";
 
 import type { Profile } from "@adidi/shared";
-import { parseRupiahInput } from "@adidi/shared";
+import { formatRupiahInput, parseRupiahInput } from "@adidi/shared";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ChipGroup, Field, RupiahInput, TextInput } from "./fields";
 
@@ -11,27 +11,37 @@ import { ChipGroup, Field, RupiahInput, TextInput } from "./fields";
 
 export function ProfileModal({
   open,
-  defaultCity,
+  initial,
+  sampleNote,
   busy,
   error,
   onSave,
   onCancel,
 }: {
   open: boolean;
-  defaultCity?: string;
+  /** The values the fields start with. */
+  initial?: Profile;
+  /** Says the starting values are a sample. */
+  sampleNote?: string;
   busy: boolean;
   error: string | null;
   onSave: (profile: Profile) => void;
   onCancel: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [age, setAge] = useState("");
-  const [employment, setEmployment] = useState<Profile["employment"]>("permanent");
-  const [income, setIncome] = useState("");
-  const [marital, setMarital] = useState<Profile["maritalStatus"]>("single");
-  const [dependents, setDependents] = useState("0");
-  const [spouseIncome, setSpouseIncome] = useState("");
-  const [city, setCity] = useState(defaultCity ?? "");
+  const [age, setAge] = useState(initial ? String(initial.age) : "");
+  const [employment, setEmployment] = useState<Profile["employment"]>(
+    initial?.employment ?? "permanent",
+  );
+  const [income, setIncome] = useState(initial ? formatRupiahInput(initial.netMonthlyIncome) : "");
+  const [marital, setMarital] = useState<Profile["maritalStatus"]>(
+    initial?.maritalStatus ?? "single",
+  );
+  const [dependents, setDependents] = useState(String(initial?.dependents ?? 0));
+  const [spouseIncome, setSpouseIncome] = useState(
+    initial?.spouseMonthlyIncome ? formatRupiahInput(initial.spouseMonthlyIncome) : "",
+  );
+  const [city, setCity] = useState(initial?.city ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   /** A field's inline error clears as soon as the user edits that field. */
@@ -98,6 +108,7 @@ export function ProfileModal({
             Asked once. The lending rules depend on your age, employment and income; your income is
             checked against your statements.
           </p>
+          {sampleNote && <p className="m-0 text-[12px] text-muted italic">{sampleNote}</p>}
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

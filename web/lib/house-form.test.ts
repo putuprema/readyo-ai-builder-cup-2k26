@@ -8,9 +8,11 @@ import {
   houseFormFromInputs,
   isEstimateStale,
   relativeTime,
+  sampleHouseForm,
   targetYears,
   toHouseInputs,
 } from "./house-form";
+import { SAMPLE_HOUSE, SAMPLE_PROFILE } from "./sample";
 
 const NOW = new Date("2026-10-18T10:00:00Z");
 
@@ -214,5 +216,24 @@ describe("text helpers", () => {
     expect(relativeTime("2026-10-18T09:58:00Z", NOW)).toBe("2 min ago");
     expect(relativeTime("2026-10-18T09:59:50Z", NOW)).toBe("just now");
     expect(relativeTime("2026-10-17T09:00:00Z", NOW)).toBe("yesterday");
+  });
+});
+
+describe("sample scenario", () => {
+  it("fills a new goal with a valid house that maps back to the sample inputs", () => {
+    const form = sampleHouseForm(NOW);
+    expect(form.area).toBe("Serpong, Tangerang Selatan");
+    expect(form.payPreference).toBe("loan");
+    expect(toHouseInputs(form)).toEqual({ ok: true, inputs: SAMPLE_HOUSE.inputs });
+  });
+
+  it("moves a passed target year to the first year offered", () => {
+    const later = new Date("2029-03-01T00:00:00Z");
+    expect(sampleHouseForm(later).targetYear).toBe(targetYears(later)[0]);
+  });
+
+  it("uses a city the dropdown offers and a profile that fits the sample statements", () => {
+    expect(HOUSE_CITIES.some((c) => c.value === SAMPLE_HOUSE.inputs.area)).toBe(true);
+    expect(SAMPLE_PROFILE.netMonthlyIncome).toBe(15_000_000);
   });
 });
