@@ -128,3 +128,93 @@ describe("buildSnapshot: freelancer income variability", () => {
     expect(coefficientOfVariation([5, 5, 5])).toBe(0);
   });
 });
+
+describe("buildSnapshot: carry-forward for missing sources", () => {
+  const september = build({
+    bankBalances: [10_000_000],
+    sources: ["bank", "ewallet", "paylater", "investment"],
+  });
+  const octoberBank = bankAndWalletMonth().map((t) => ({
+    ...t,
+    month: "2026-10",
+    date: t.date.replace("2026-09", "2026-10"),
+  }));
+  const october = (extra: Partial<Parameters<typeof buildSnapshot>[0]> = {}) =>
+    buildSnapshot({
+      month: "2026-10",
+      transactions: octoberBank,
+      loans: [],
+      holdings: [],
+      profile: employee,
+      bankBalances: [12_000_000],
+      sources: ["bank", "ewallet"],
+      carriedFrom: {
+        snapshot: september,
+        sources: ["bank", "ewallet", "paylater", "investment"],
+      },
+      ...extra,
+    });
+
+  it("a month without the PayLater source reuses last month's loan and lists it", () => {
+    const s = october({ sources: ["bank", "ewallet", "investment"] });
+    expect(s.estimatedSources).toEqual(["paylater"]);
+    expect(s.loans).toEqual([paylaterLoan]);
+    expect(s.debtPayments).toBe(2_100_000);
+    // This month's own records are still used.
+    expect(s.bankBalances).toBe(12_000_000);
+    expect(s.volatileAssets).toBe(0);
+  });
+
+  it("a missing investment source carries last month's holdings, not its bank balance", () => {
+    const s = october({ sources: ["bank", "ewallet", "paylater"] });
+    expect(s.estimatedSources).toEqual(["investment"]);
+    expect(s.volatileAssets).toBe(15_000_000);
+    expect(s.liquidAssets).toBe(12_000_000 + 4_000_000);
+    expect(s.loans).toEqual([]);
+  });
+
+  it("a missing bank statement carries income, spending and balances", () => {
+    const s = october({
+      transactions: [],
+      bankBalances: undefined,
+      sources: ["paylater", "investment"],
+      loans: [{ ...paylaterLoan, month: "2026-10", outstandingPrincipal: 10_500_000 }],
+    });
+    expect(s.estimatedSources).toEqual(["bank", "ewallet"]);
+    expect(s.computedNetIncome).toBe(18_500_000);
+    expect(s.essentialSpending).toBe(6_000_000);
+    expect(s.discretionaryByCategory).toEqual(september.discretionaryByCategory);
+    expect(s.bankBalances).toBe(10_000_000);
+    expect(s.loans[0]?.outstandingPrincipal).toBe(10_500_000);
+  });
+
+  it("lists every missing kind in display order and carries each bucket", () => {
+    const s = october({ transactions: [], bankBalances: undefined, sources: [] });
+    expect(s.estimatedSources).toEqual(["bank", "ewallet", "paylater", "investment"]);
+    expect(s).toMatchObject({
+      netIncome: september.netIncome,
+      essentialSpending: september.essentialSpending,
+      debtPayments: september.debtPayments,
+      liquidAssets: september.liquidAssets,
+      volatileAssets: september.volatileAssets,
+    });
+    expect(s.month).toBe("2026-10");
+  });
+
+  it("carries nothing when every source is back, or when there is no previous month", () => {
+    const all = october({ sources: ["bank", "ewallet", "paylater", "investment"] });
+    expect(all.estimatedSources).toEqual([]);
+    expect(all.loans).toEqual([]);
+    expect(all.volatileAssets).toBe(0);
+    expect(october({ carriedFrom: undefined, sources: [] }).estimatedSources).toEqual([]);
+  });
+
+  it("a kind last month never had is not estimated", () => {
+    const s = october({
+      sources: ["bank"],
+      carriedFrom: { snapshot: september, sources: ["bank", "pinjol"] },
+    });
+    expect(s.estimatedSources).toEqual(["pinjol"]);
+    expect(s.loans).toEqual([]); // last month had no pinjol loan to carry
+  });
+});

@@ -18,5 +18,7 @@ export {
   coefficientOfVariation,
   isActiveLoan,
   isLiquidHolding,
+  missingSources,
+  SOURCE_KINDS,
 } from "./snapshot/build.js";
 export type * from "./types.js";

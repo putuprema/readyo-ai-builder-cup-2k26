@@ -38,7 +38,7 @@ Both pure functions in `shared/` (`shared/src/snapshot/`), taking one options ob
 - `liquidAssets`: holdings with `liquidityClass` cash or liquid and `volatile = false`, plus the bank balances if extracted (the balances are also stored as `bankBalances`). Locked, non-volatile holdings (time deposits) count toward neither figure.
 - `volatileAssets`: holdings with `volatile = true`.
 - `incomeVariability` (freelancers only): population standard deviation over the mean of `incomeHistory` plus this month's computed income, set only when two or more months are available.
-- Missing source this month (monthly check-in): copy that source's values from `carriedFrom` and list it in `estimatedSources`.
+- Missing source this month (monthly check-in): the caller passes the source kinds read this month (`sources`) and last month's snapshot with its kinds (`carriedFrom`). Every kind of last month missing this month is listed in `estimatedSources` (display order: bank, ewallet, paylater, pinjol, investment) and its values are copied from `carriedFrom.snapshot`. A stored snapshot holds aggregates, so sources are carried in buckets: a missing `bank` or `ewallet` carries the flows wholesale (computed income, spending by class and category, cash withdrawals, bank balances), since e-wallet spending cannot be separated from last month's totals; a missing `paylater` or `pinjol` carries last month's active loans of that type as they are (their `month` shows they are last month's records); a missing `investment` carries the volatile assets and the liquid holdings (last month's `liquidAssets` minus its `bankBalances`). A kind last month did not have is never estimated.
 
 **Metrics** (ids, in display order)
 
