@@ -16,6 +16,7 @@ import {
   canSubmit,
   defaultMonth,
   footerLine,
+  initialKind,
   monthLabel,
   monthOptions,
   readyItems,
@@ -83,9 +84,7 @@ function DocumentsStep() {
   }, [uid]);
 
   function addFiles(card: CardId, files: File[]) {
-    const spec = CARDS.find((c) => c.id === card);
-    if (!spec) return;
-    add(files, { group: card, card, sourceKind: spec.kinds[0]?.value ?? "bank" });
+    add(files, { group: card, card, sourceKind: (name) => initialKind(card, name) });
   }
 
   async function submit() {

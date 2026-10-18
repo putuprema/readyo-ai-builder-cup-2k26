@@ -18,7 +18,7 @@ Follow `docs/screens.md` for layout and states. Points the mockups do not show:
 - **Chips** (radio options) show the selected style on the option actually chosen.
 - **Draft saving**: the draft is saved on Save draft and on Continue. Leaving the page with unsaved changes asks for confirmation.
 - **Estimate card**: empty / fresh / stale states as in the spec. Stale when current inputs differ from `estimate.inputsUsed`. Continue is disabled until an estimate exists or the user typed a price.
-- **Documents step**: uploads go straight to Cloud Storage through signed URLs, with a per-file progress bar and remove. Nothing is read before Submit. Accepted types: PDF, PNG, JPG; max 10 MB per file. Submit is enabled when at least one bank or e-wallet file is added.
+- **Documents step**: uploads go straight to Cloud Storage through signed URLs, with a per-file progress bar and remove. Nothing is read before Submit. Accepted types: PDF, PNG, JPG; max 10 MB per file. Submit is enabled when at least one bank or e-wallet file is added. A new file starts with its card's first kind unless the file name names another (an e-wallet such as GoPay, OVO, DANA or ShopeePay in the bank card starts as E-wallet; a known pinjol in the loans card starts as Pinjol); the per-file dropdown still changes it.
 - **Step 2 routing**: if a recent month exists (spec 07 reuse rule), Continue goes to the reuse step instead.
 - Submit calls `POST /runs` and navigates to the progress view with the `runId`.
 

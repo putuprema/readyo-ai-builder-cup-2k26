@@ -4,6 +4,7 @@ import {
   defaultMonth,
   describeFile,
   footerLine,
+  initialKind,
   monthLabel,
   monthOptions,
   normalizedType,
@@ -45,6 +46,23 @@ describe("rejectReason", () => {
   it("falls back to the extension when the browser gives no type", () => {
     expect(normalizedType({ name: "scan.JPG", type: "" })).toBe("image/jpeg");
     expect(normalizedType({ name: "x.heic", type: "" })).toBe(null);
+  });
+});
+
+describe("initialKind", () => {
+  it("starts an e-wallet history in the bank card as E-wallet", () => {
+    expect(initialKind("bank", "sample_ewallet_sep_2026.pdf")).toBe("ewallet");
+    expect(initialKind("bank", "OVO history.png")).toBe("ewallet");
+    expect(initialKind("bank", "sample_bank_sep_2026.pdf")).toBe("bank");
+    expect(initialKind("bank", "BCA e-statement.pdf")).toBe("bank");
+    expect(initialKind("bank", "DANA_sep.png")).toBe("ewallet");
+    expect(initialKind("bank", "pendanaan.pdf")).toBe("bank");
+  });
+
+  it("keeps a GoPayLater bill a PayLater, and spots a pinjol by name", () => {
+    expect(initialKind("loans", "GoPayLater Sep.png")).toBe("paylater");
+    expect(initialKind("loans", "Kredit Pintar bill.pdf")).toBe("pinjol");
+    expect(initialKind("investments", "Bibit.png")).toBe("investment");
   });
 });
 

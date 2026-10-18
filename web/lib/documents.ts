@@ -108,6 +108,23 @@ export function formatSize(bytes: number): string {
   return `${bytes} B`;
 }
 
+const EWALLET_NAME =
+  /e-?wallet|gopay|(?<![a-z])(ovo|dana)(?![a-z])|shopee ?pay|linkaja|sakuku|sakupay/i;
+const PINJOL_NAME = /pinjol|kredit ?pintar|easycash|adakami|rupiah ?cepat/i;
+
+/**
+ * The kind a new file in a card starts with: the card's first kind, unless the file name says
+ * otherwise ("OVO history.png" in the bank and e-wallet card starts as E-wallet). The user can
+ * still change it from the dropdown.
+ */
+export function initialKind(card: CardId, fileName: string): SourceKind {
+  // "GoPayLater" names a PayLater bill, not the GoPay wallet.
+  const name = fileName.replace(/paylater/gi, "");
+  if (card === "bank") return EWALLET_NAME.test(name) ? "ewallet" : "bank";
+  if (card === "loans") return PINJOL_NAME.test(fileName) ? "pinjol" : "paylater";
+  return "investment";
+}
+
 /** The card a source kind belongs to. */
 export function cardOf(kind: SourceKind): CardId {
   if (kind === "bank" || kind === "ewallet") return "bank";

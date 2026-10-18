@@ -14,7 +14,8 @@ export interface AddOptions {
   /** Where refused files are reported: the card or the check-in row. */
   group: string;
   card: CardId;
-  sourceKind: SourceKind;
+  /** The kind for each file: one kind for all, or a guess from the file name. */
+  sourceKind: SourceKind | ((fileName: string) => SourceKind);
   slot?: string;
 }
 
@@ -61,7 +62,10 @@ export function useUploads({
       const item: UploadItem = {
         localId,
         card: options.card,
-        sourceKind: options.sourceKind,
+        sourceKind:
+          typeof options.sourceKind === "function"
+            ? options.sourceKind(file.name)
+            : options.sourceKind,
         ...(options.slot ? { slot: options.slot } : {}),
         name: file.name,
         type,
