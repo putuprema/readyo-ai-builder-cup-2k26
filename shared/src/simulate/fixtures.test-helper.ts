@@ -25,7 +25,7 @@ export function loadProfile(name: FixtureName): ProfileFixture {
   return readJson<ProfileFixture>(`${name}.json`);
 }
 
-/** The spec's defaults plus clearly marked test-only placeholders for the [__] values. */
+/** The rule values the tests run with: a mirror of shared/rules/defaults.json. */
 export function loadTestRules(): Rules {
   return readJson<{ rules: Rules }>("rules-test.json").rules;
 }

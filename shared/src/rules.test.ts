@@ -42,10 +42,23 @@ describe("shared/rules/defaults.json", () => {
     expect(m.horizon_volatile_share_max).toBe(0.2);
   });
 
-  it("leaves the [__] values out until they are checked", () => {
+  it("has a checked value for every rule id (the former [__] values included)", () => {
     const m = mergeRules(defaults);
-    for (const id of ["min_dp_other_home", "min_dp_kkb", "kkb_rate"]) {
-      expect(m[id]).toBeUndefined();
+    for (const id of RULE_IDS) expect(typeof m[id]).toBe("number");
+    expect(m.min_dp_other_home).toBe(0.1);
+    expect(m.min_dp_kkb).toBe(0.1);
+    expect(m.kkb_max_tenor_years).toBe(5);
+    expect(m.kkb_rate).toBe(0.083);
+    expect(m.growth_car).toBe(0.07);
+    expect(m.growth_wedding).toBe(0.03);
+  });
+
+  it("names a source with a URL for every rule", () => {
+    for (const rule of defaults) {
+      expect(rule.source.title.length).toBeGreaterThan(0);
+      if (!rule.source.title.startsWith("[") && rule.source.title !== "Our rule") {
+        expect(rule.source.url).toMatch(/^https:\/\//);
+      }
     }
   });
 });

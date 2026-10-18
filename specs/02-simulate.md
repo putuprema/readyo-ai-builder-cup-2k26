@@ -16,22 +16,22 @@ Defaults live in `rules/` (Firestore) and in `shared/rules/defaults.json` for te
 |---|---|---|
 | `dti_cap` | Max (all debt payments incl. new installment) / net income | 0.35 |
 | `min_dp_first_home_new` | Minimum DP, first home, new build | 0.20 |
-| `min_dp_other_home` | Minimum DP, secondary or second home | [__] |
+| `min_dp_other_home` | Minimum DP, secondary or second home | 0.10 (BI PADG 30/2025: LTV 90% for a second facility, landed or apartment above 70 m2, at banks not meeting the NPL/NPF criteria) |
 | `loan_end_age` | Loan must end by this age | 55 |
 | `flpp_income_ceiling` | Max monthly income for subsidised KPR (FLPP), not married; `flpp_income_ceiling_married` is the combined-income ceiling for a married couple | 12,000,000 / 14,000,000 (Permen PKP No. 5/2025, zone 4: Jabodetabek) |
-| `min_dp_kkb` | Minimum DP, car loan | [__] |
-| `kkb_max_tenor_years` | Longest car loan | [__] |
+| `min_dp_kkb` | Minimum DP, car loan | 0.10 (BI PADG 30/2025: non-productive vehicle at banks not meeting the NPL/NPF criteria) |
+| `kkb_max_tenor_years` | Longest car loan | 5 (Bank Mandiri Livin' KKB 1 to 5 years; BCA KKB 1 to 4, 5 to 6 fix-and-cap) |
 | `emergency_months_required` | Emergency fund before applying (our rule) | 3, or 6 if freelance |
 | `kpr_rate_fixed` | KPR rate during the fixed period, used to qualify | 0.065 |
 | `kpr_rate_floating` | KPR rate after the fixed period | 0.11 |
 | `kpr_fixed_years` | Length of the fixed period | 3 |
-| `kkb_rate` | Car loan rate | [__] |
+| `kkb_rate` | Car loan rate, effective per year | 0.083 (BCA Finance 4.5% flat on 5 years, annuity-equivalent) |
 | `growth_property` | Property price growth per year | 0.06 |
-| `growth_car` | Car price growth per year | [__] |
-| `growth_wedding` | Wedding cost growth per year | [__] |
+| `growth_car` | Car price growth per year | 0.07 (Gaikindo, February 2025) |
+| `growth_wedding` | Wedding cost growth per year | 0.03 (proxy: 2025 CPI 2.92%, BI/BPS; no wedding index exists) |
 | `return_money_market` | Return on liquid savings per year | 0.045 |
 
-`[__]` values must be filled from a checked source before the demo. Until then, tests use the values in `fixtures/profiles/rules-test.json` (the defaults above with plausible placeholders, clearly marked as test-only). `shared/rules/defaults.json` leaves the `[__]` rules out: `simulate()` throws a clear error when a rule it needs is missing, so an unchecked value can never be guessed silently.
+Every rule has a checked default since 2026-10-18 (sources in `shared/rules/defaults.json`). The DP rules follow one principle: the tier BI prescribes for banks not meeting the NPL/NPF criteria under PADG 30/2025 (in force for 2026), the strictest regulatory floor; banks that meet the criteria may lend up to 100%. Exception: `min_dp_first_home_new` (0.20) is a bank-practice figure, stricter than BI's 5% tier, and still marked "to be checked". `fixtures/profiles/rules-test.json` mirrors the defaults for the tests (its `placeholders` list is empty now). `simulate()` still throws a clear error when a rule it needs is missing, so an unchecked value can never be guessed silently.
 
 `pnpm seed:rules` (`api/scripts/seed-rules.ts`) writes `defaults.json` to the `rules` collection, one document per rule; it never reads `rules-test.json`. The demo analysis in `shared/src/demo/` is simulated with `defaults.json` alone: every rule a first-home KPR reads has a checked default.
 

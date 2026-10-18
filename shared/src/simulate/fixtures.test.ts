@@ -61,12 +61,10 @@ describe("fixtures/profiles", () => {
 });
 
 describe("fixtures/profiles/rules-test.json", () => {
-  it("names its placeholders and marks itself test-only", () => {
+  it("mirrors the defaults with no placeholders left", () => {
     const file = loadTestRulesFile();
-    expect(file.note).toMatch(/TEST-ONLY/);
-    expect(file.placeholders).toEqual(
-      expect.arrayContaining(["min_dp_other_home", "min_dp_kkb", "kkb_rate"]),
-    );
+    expect(file.note).toMatch(/defaults\.json/);
+    expect(file.placeholders).toEqual([]);
     for (const id of file.placeholders) expect(RULE_IDS).toContain(id);
     expect(Object.keys(file.rules).sort()).toEqual([...RULE_IDS].sort());
   });

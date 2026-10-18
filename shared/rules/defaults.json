@@ -148,5 +148,77 @@
     "usedFor": ["readiness"],
     "source": { "title": "Our rule", "url": "" },
     "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "min_dp_other_home",
+    "label": "Minimum down payment, secondary or second home",
+    "value": 0.1,
+    "unit": "ratio",
+    "usedFor": ["kpr"],
+    "source": {
+      "title": "BI PADG No. 30/2025 (seventh amendment of PADG 21/25/PADG/2019), in force 1 January to 31 December 2026: the LTV/FTV and down-payment tiers for banks not meeting the NPL/NPF criteria (banks meeting them may lend up to 100%); second and later facility, landed house or apartment above 70 m2: LTV 90%",
+      "url": "https://www.bi.go.id/id/publikasi/peraturan/Pages/PADG_302025.aspx"
+    },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "min_dp_kkb",
+    "label": "Minimum down payment, car loan",
+    "value": 0.1,
+    "unit": "ratio",
+    "usedFor": ["kkb"],
+    "source": {
+      "title": "BI PADG No. 30/2025 (seventh amendment of PADG 21/25/PADG/2019), in force 1 January to 31 December 2026: the LTV/FTV and down-payment tiers for banks not meeting the NPL/NPF criteria (banks meeting them may lend up to 100%); non-productive vehicle with three or more wheels: 10% (BCA asks about 20% in practice)",
+      "url": "https://www.bi.go.id/id/publikasi/peraturan/Pages/PADG_302025.aspx"
+    },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "kkb_max_tenor_years",
+    "label": "Longest car loan",
+    "value": 5,
+    "unit": "years",
+    "usedFor": ["kkb"],
+    "source": {
+      "title": "Bank Mandiri Livin' KKB new-car offer, tenor 1 to 5 years (disbursement by 31 December 2026); BCA KKB runs 1 to 4 years, 5 to 6 with fix-and-cap",
+      "url": "https://www.bankmandiri.co.id/kkb-pancaran"
+    },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "kkb_rate",
+    "label": "Car loan rate (effective per year, used to qualify)",
+    "value": 0.083,
+    "unit": "rate",
+    "usedFor": ["kkb"],
+    "source": {
+      "title": "BCA Finance new-car rates: 4.5% flat per year on a 5-year tenor, which is 8.3% effective (annuity-equivalent); the 4% flat promo until 31 October 2026 is 7.4% effective",
+      "url": "https://bcafinance.co.id/suku-bunga-mobil-baru"
+    },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "growth_car",
+    "label": "Car price growth per year",
+    "value": 0.07,
+    "unit": "rate",
+    "usedFor": ["car"],
+    "source": {
+      "title": "Gaikindo (secretary general Kukuh Kumara, RRI interview 18 February 2025): new-car prices rise about 7% a year on average; repeated at GIIAS Semarang, September 2026",
+      "url": "https://www.gaikindo.or.id/gaikindo-akui-harga-mobil-di-indonesia-tinggi/"
+    },
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "growth_wedding",
+    "label": "Wedding cost growth per year",
+    "value": 0.03,
+    "unit": "rate",
+    "usedFor": ["wedding"],
+    "source": {
+      "title": "No wedding cost index exists; proxy is Indonesia's 2025 consumer price inflation of 2.92% (BI/BPS, Analisis Inflasi Desember 2025). The Bridestory Wedding Trend Survey 2025 reports budgets but no year-on-year change",
+      "url": "https://www.bi.go.id/id/publikasi/laporan/Pages/Analisis-Inflasi-TPIP-Desember-2025.aspx"
+    },
+    "checkedAt": "2026-10-18"
   }
 ]
