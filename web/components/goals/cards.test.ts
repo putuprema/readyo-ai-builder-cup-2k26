@@ -32,6 +32,13 @@ describe("draftModel", () => {
     });
   });
 
+  it("asks to review the target when the estimate step already has an estimate", () => {
+    expect(draftModel({ ...draftDocuments, draftStep: "estimate" })).toMatchObject({
+      step: 1,
+      next: "Next: review the target",
+    });
+  });
+
   it("resumes the documents step", () => {
     expect(draftModel(draftDocuments)).toMatchObject({
       step: 2,

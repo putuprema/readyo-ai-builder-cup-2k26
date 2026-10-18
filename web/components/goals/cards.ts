@@ -73,7 +73,7 @@ export function draftModel(goal: Goal): DraftModel {
   }
   return {
     step: 1,
-    next: "Next: calculate the target",
+    next: goal.estimate ? "Next: review the target" : "Next: calculate the target",
     segments: ["current", "todo", "todo"],
     continueHref: `/goals/new/?id=${goal.id}`,
   };

@@ -79,7 +79,8 @@ describe("timeAgo", () => {
     ["2026-10-17T09:00:00Z", "1 day ago"],
     ["2026-10-16T10:00:00Z", "2 days ago"],
     ["2026-10-03T08:40:00Z", "on 3 Oct"],
-    ["2026-10-18T10:00:05Z", "0 s ago"],
+    ["2026-10-18T10:00:05Z", "just now"],
+    ["2026-10-18T09:59:52Z", "just now"],
   ])("%s → %s", (iso, text) => {
     expect(timeAgo(iso, now)).toBe(text);
   });

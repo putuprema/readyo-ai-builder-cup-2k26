@@ -62,10 +62,11 @@ export const GOAL_TITLE: Record<GoalType, string> = {
   wedding: "Wedding",
 };
 
-/** "40 s ago", "5 min ago", "3 h ago", "2 days ago"; past a week, "on 3 Oct". */
+/** "just now", "40 s ago", "5 min ago", "3 h ago", "2 days ago"; past a week, "on 3 Oct". */
 export function timeAgo(iso: string, now: Date): string {
   const then = new Date(iso);
   const seconds = Math.max(0, Math.round((now.getTime() - then.getTime()) / 1000));
+  if (seconds < 10) return "just now";
   if (seconds < 60) return `${seconds} s ago`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes} min ago`;

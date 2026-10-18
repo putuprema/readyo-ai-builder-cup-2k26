@@ -13,7 +13,7 @@ The returning user's home: every goal with its status, the monthly banner, and t
 - Lists `users/{uid}/goals` live. Order: analysing, then drafts, then active (newest first within each group).
 - Filter tabs All / Active / Drafts with counts; the subtitle summarizes counts.
 - **Analysing card** reads its run document for stage and percent; Watch progress opens the progress view. No delete.
-- **Draft card**: next step from `draftStep` ("calculate the target" / "add documents"), 3-segment bar, delete without confirmation, Continue to the right step.
+- **Draft card**: next step from `draftStep` ("calculate the target", or "review the target" when an estimate exists / "add documents"); "Saved just now" under 10 s, 3-segment bar, delete without confirmation, Continue to the right step.
 - **Active card**: headline number and one-line status from the latest analysis; delete opens a confirmation dialog ("This removes the goal and its tracked history. Your statements stay for your other goals."); View opens the result page.
 - **Monthly banner** follows the rule in spec 07. Links to the monthly check-in. No date or deadline in the copy.
 - **No goals** (4a): replaces the list. Tiles open the goal form with the type preselected.
