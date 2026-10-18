@@ -1,4 +1,14 @@
 export * from "./demo/index.js";
+export {
+  type BuildEstimateInput,
+  buildEstimate,
+  growthRuleFor,
+  monthKeyOf,
+  type PricedGoal,
+  targetAtGoalDate,
+  weddingSavingsTarget,
+  yearsToGoal,
+} from "./estimate.js";
 export { formatRupiah, formatRupiahInput, parseRupiahInput } from "./format.js";
 export {
   hasLongDigitRun,

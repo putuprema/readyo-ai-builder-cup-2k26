@@ -64,6 +64,7 @@ export interface Estimate {
   growthRatePerYear: number;
   targetAtGoalDate: number;
   userOverride?: number; // the user typed their own price
+  savingsTarget?: number; // wedding only: targetToday − partner share − family contribution
   sources: { title: string; url: string; date: string }[];
   inputsUsed: Record<string, unknown>; // for stale detection
   calculatedAt: string; // ISO timestamp
