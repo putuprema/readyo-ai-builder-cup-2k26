@@ -2,21 +2,30 @@
 
 import type { Analysis, Goal } from "@adidi/shared";
 import { BottomCards } from "./BottomCards";
+import type { ChoicesState } from "./choices/useChoices";
 import { assumptionRows, checkIn, eyebrow, metricRow, pathCards, subline } from "./model";
 import { PathCards } from "./PathCards";
+import { PlanSection } from "./PlanSection";
 import { ReadinessTable } from "./ReadinessTable";
 
 // The readiness result (docs/screens.md "3"; design artboard Analysis). Presentation over a
-// goal and its analysis; the plan section and the rules panel are added in tasks 3 and 4.
+// goal and its analysis; the rules panel is added in task 4.
 
 export interface ResultPageProps {
   goal: Goal;
   analysis: Analysis;
+  choices: ChoicesState;
   documentsHref: string;
   assumptionsHref: string;
 }
 
-export function ResultPage({ goal, analysis, documentsHref, assumptionsHref }: ResultPageProps) {
+export function ResultPage({
+  goal,
+  analysis,
+  choices,
+  documentsHref,
+  assumptionsHref,
+}: ResultPageProps) {
   const next = checkIn(analysis);
   return (
     <main className="mx-auto box-border flex w-full max-w-[1120px] flex-col gap-7 px-4 py-8 sm:px-8 sm:py-10 print:max-w-none print:px-0">
@@ -75,6 +84,7 @@ export function ResultPage({ goal, analysis, documentsHref, assumptionsHref }: R
 
       <PathCards cards={pathCards(goal, analysis)} />
       <ReadinessTable rows={analysis.metrics.map(metricRow)} />
+      <PlanSection goal={goal} analysis={analysis} choices={choices} nextMonth={next.nextMonth} />
       <BottomCards
         assumptions={assumptionRows(analysis)}
         checkIn={next}
