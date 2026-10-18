@@ -61,7 +61,7 @@ export function SourcesTable({
                 Source
               </th>
               <th scope="col" className="border-line border-b px-3 pt-2 pb-2.5 font-semibold">
-                {previousMonthName}
+                {capitalized(previousMonthName)}
               </th>
               <th
                 scope="col"
@@ -92,7 +92,9 @@ export function SourcesTable({
                     <span className="inline-flex items-center gap-1.5">
                       <CheckIcon />
                       <span>
-                        <span className="sr-only md:hidden">{previousMonthName}: </span>
+                        <span className="sr-only md:hidden">
+                          {capitalized(previousMonthName)}:{" "}
+                        </span>
                         {row.contents}
                       </span>
                     </span>
@@ -127,4 +129,9 @@ function CheckIcon() {
       <path d="m5 12 5 5L20 7" />
     </svg>
   );
+}
+
+/** "last month" opens a column header or a label as "Last month"; month names are unchanged. */
+function capitalized(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

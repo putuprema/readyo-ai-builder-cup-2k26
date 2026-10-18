@@ -48,7 +48,7 @@ export function CheckInForm({
   const records = useMonthRecords(uid, previousMonth);
   const rows = record && records ? sourceRows(record, records) : [];
   const name = monthOnly(month);
-  const previousName = previousMonth ? monthOnly(previousMonth) : "Last month";
+  const previousName = previousMonth ? monthOnly(previousMonth) : "last month";
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { items, rejected, add, remove, changeKind } = useUploads({ month, onNotice: setNotice });
