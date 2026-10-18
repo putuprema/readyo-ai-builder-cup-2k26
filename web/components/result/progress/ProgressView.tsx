@@ -116,10 +116,14 @@ export function ProgressView({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <span className="max-w-[520px] text-[#B7C7BE] text-[13px]">
-            Usually a few minutes. No need to wait here: it keeps running, and your goals list shows
-            its progress.
-          </span>
+          {copy.running ? (
+            <span className="max-w-[520px] text-[#B7C7BE] text-[13px]">
+              Usually a few minutes. No need to wait here: it keeps running, and your goals list
+              shows its progress.
+            </span>
+          ) : (
+            <span />
+          )}
           <div className="flex flex-wrap items-center gap-3">
             <a
               href={goalsHref}
