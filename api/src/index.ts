@@ -7,9 +7,12 @@ import {
   firestoreGoals,
   firestoreGoalWrites,
   firestoreRuns,
+  firestoreUploads,
 } from "./infra/firestore.js";
+import { cloudStorageUploads } from "./infra/storage.js";
 import { taskQueueFromEnv } from "./infra/tasks.js";
 import { pricingTier } from "./pricing/price.js";
+import { uploadModeFromEnv } from "./uploads/uploads.js";
 
 const VERSION = process.env.GIT_SHA ?? "dev";
 const PORT = Number(process.env.PORT ?? 8080);
@@ -23,6 +26,12 @@ const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? "")
 
 // Goal pricing needs a Gemini key; without one the estimate endpoint answers 501 and says so.
 if (!hasGeminiKey()) console.warn("GEMINI_API_KEY is not set: POST /goals/:id/estimate is off");
+
+// Uploads need the default bucket; with the Storage emulator the api proxies the bytes itself.
+const uploadMode = uploadModeFromEnv();
+if (!process.env.STORAGE_BUCKET) console.warn("STORAGE_BUCKET is not set: /uploads is off");
+if (uploadMode === "proxy")
+  console.warn("Storage emulator detected: PUT /uploads/:docId/content is on");
 
 // Runs need the worker's URL and a task queue (Cloud Tasks, or TASKS_MODE=direct locally).
 const queue = taskQueueFromEnv();
@@ -38,6 +47,9 @@ const app = createApp({
   runs: queue ? { store: firestoreRuns(), queue } : undefined,
   choices: { store: firestoreAnalyses() },
   goals: { store: firestoreGoalWrites() },
+  uploads: process.env.STORAGE_BUCKET
+    ? { store: firestoreUploads(), storage: cloudStorageUploads(), mode: uploadMode }
+    : undefined,
 });
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {

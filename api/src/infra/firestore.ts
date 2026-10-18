@@ -14,6 +14,7 @@ import { firebaseApp } from "../firebase.js";
 import type { GoalWriteStore } from "../goals/ports.js";
 import type { GoalStore } from "../pricing/ports.js";
 import type { RunStore } from "../runs/ports.js";
+import type { UploadStore } from "../uploads/ports.js";
 
 // Cloud Run adapter for the goal store (specs/01-contracts.md, "Firestore layout"). Uses the
 // same firebase-admin app as token verification; FIRESTORE_EMULATOR_HOST points it at the
@@ -56,6 +57,23 @@ export function firestoreGoalWrites(db: Firestore = getFirestore(firebaseApp()))
     async deleteGoal(uid, goalId) {
       // Removes the analyses subcollection with the document.
       await db.recursiveDelete(db.doc(firestorePaths.goal(uid, goalId)));
+    },
+  };
+}
+
+// Upload records for POST /uploads and DELETE /uploads/:docId (spec 10).
+export function firestoreUploads(db: Firestore = getFirestore(firebaseApp())): UploadStore {
+  return {
+    async createDocument(uid, doc) {
+      await db.doc(firestorePaths.document(uid, doc.id)).create(doc);
+    },
+    async getDocument(uid, documentId) {
+      const snap = await db.doc(firestorePaths.document(uid, documentId)).get();
+      if (!snap.exists) return null;
+      return { id: snap.id, ...(snap.data() as object) } as DocumentRecord;
+    },
+    async updateDocument(uid, documentId, patch) {
+      await db.doc(firestorePaths.document(uid, documentId)).update({ ...patch });
     },
   };
 }

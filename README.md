@@ -147,6 +147,16 @@ Both services read `GEMINI_API_KEY` from the Secret Manager secret named in `GEM
 
 Locally, the api posts straight to the worker instead of Cloud Tasks: set `WORKER_URL=http://localhost:8081` and `TASKS_MODE=direct` in `api/.env`, and `TASKS_AUTH=off` in `worker/.env`.
 
+### Uploads (signed URLs)
+
+The documents step PUTs each statement straight to the default bucket through a V4 signed URL from `POST /uploads` (`specs/10-ui-goal-creation.md`). Two one-time steps after the first api deploy:
+
+```bash
+scripts/setup-storage.sh             # CORS on the bucket for browser PUTs, and roles/iam.serviceAccountTokenCreator so the api can sign
+```
+
+The api reads `STORAGE_BUCKET` (set by `scripts/deploy-service.sh`). On the emulators firebase-admin cannot sign, so with `FIREBASE_STORAGE_EMULATOR_HOST` set the api answers `POST /uploads` with a URL to its own `PUT /uploads/:docId/content`, which streams the bytes into the emulator bucket. That route exists in emulator mode only.
+
 ### End-to-end run on the emulators
 
 ```bash

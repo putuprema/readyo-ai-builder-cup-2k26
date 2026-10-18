@@ -7,8 +7,9 @@ import type { GoalDeps } from "./goals/goals.js";
 import { createGoalRoutes, type EstimateDeps } from "./routes/goals.js";
 import { overrides, recalculate } from "./routes/overrides.js";
 import { createRunRoutes } from "./routes/runs.js";
-import { uploads } from "./routes/uploads.js";
+import { createUploadRoutes } from "./routes/uploads.js";
 import type { CreateRunDeps } from "./runs/create-run.js";
+import type { UploadDeps } from "./uploads/uploads.js";
 import { ValidationError } from "./validate.js";
 
 export interface AppOptions {
@@ -24,6 +25,8 @@ export interface AppOptions {
   choices?: SetChoiceDeps;
   /** Store for POST /goals, PATCH /goals/:id and DELETE /goals/:id; without it they answer 501. */
   goals?: GoalDeps;
+  /** Store, bucket and mode for the upload endpoints; without them they answer 501. */
+  uploads?: UploadDeps;
   log?: boolean;
 }
 
@@ -61,7 +64,7 @@ export function createApp(options: AppOptions) {
   app.use("/recalculate", auth);
 
   app.route("/goals", createGoalRoutes(options.estimate, options.choices, options.goals));
-  app.route("/uploads", uploads);
+  app.route("/uploads", createUploadRoutes(options.uploads));
   app.route("/runs", createRunRoutes(options.runs));
   app.route("/overrides", overrides);
   app.route("/recalculate", recalculate);

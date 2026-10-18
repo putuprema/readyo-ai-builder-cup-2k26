@@ -14,6 +14,7 @@ export function firebaseApp(): App {
       getApps()[0] ??
       initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT,
+        storageBucket: process.env.STORAGE_BUCKET,
       });
   }
   return app;

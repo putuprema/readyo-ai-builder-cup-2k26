@@ -34,13 +34,15 @@ auth_flag="--no-allow-unauthenticated"
 # the worker checks the OIDC audience and may take minutes per run. Both read the Gemini key
 # from Secret Manager. WORKER_URL is empty on the very first deploy; redeploy the api once the
 # worker URL is known.
-env_vars="GIT_SHA=$sha"
+# Both services use the default bucket: the api signs upload URLs into it (spec 10), the
+# worker reads and deletes the files (spec 04).
+env_vars="GIT_SHA=$sha,STORAGE_BUCKET=${STORAGE_BUCKET:-$PROJECT_ID.firebasestorage.app}"
 extra_flags=()
 if [ "$svc" = api ]; then
   env_vars="$env_vars,TASKS_QUEUE=$TASKS_QUEUE,TASKS_LOCATION=$REGION,TASKS_SERVICE_ACCOUNT=$TASKS_SERVICE_ACCOUNT"
   [ -n "$WORKER_URL" ] && env_vars="$env_vars,WORKER_URL=$WORKER_URL"
 else
-  env_vars="$env_vars,TASKS_SERVICE_ACCOUNT=$TASKS_SERVICE_ACCOUNT,STORAGE_BUCKET=${STORAGE_BUCKET:-$PROJECT_ID.firebasestorage.app}"
+  env_vars="$env_vars,TASKS_SERVICE_ACCOUNT=$TASKS_SERVICE_ACCOUNT"
   [ -n "$WORKER_URL" ] && env_vars="$env_vars,TASKS_AUDIENCE=$WORKER_URL"
   extra_flags+=(--timeout 1800)
 fi
