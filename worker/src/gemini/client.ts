@@ -1,7 +1,16 @@
-import { createPartFromBase64, createUserContent, GoogleGenAI, type Part } from "@google/genai";
+import {
+  type Content,
+  createPartFromBase64,
+  createUserContent,
+  type FunctionCall,
+  GoogleGenAI,
+  type Part,
+} from "@google/genai";
 
-// The one place the worker talks to Gemini. Every call asks for structured JSON against a
-// response schema; callers validate the result with zod. Tests pass a fake `JsonModel`.
+// The one place the worker talks to Gemini. Extraction, classification and card writing ask
+// for structured JSON against a response schema (`JsonModel`); the recommendation agent runs
+// a function-calling conversation one step at a time (`ToolModel`). Callers validate every
+// answer with zod. Tests pass fakes for both.
 
 export type ModelTier = "pro" | "flash";
 
@@ -23,6 +32,60 @@ export interface JsonRequest {
 export interface JsonModel {
   /** Returns the parsed JSON the model produced; throws ModelError on failure. */
   generateJson(request: JsonRequest): Promise<unknown>;
+}
+
+// ---- function calling (specs/06-agent.md) ----
+
+export interface ToolDeclaration {
+  name: string;
+  description: string;
+  /** JSON Schema of the arguments object; omitted for a tool without arguments. */
+  parametersJsonSchema?: Record<string, unknown>;
+}
+
+export interface ToolStepRequest {
+  tier: ModelTier;
+  systemInstruction: string;
+  /** The conversation so far: the user prompt, model turns, function responses. */
+  history: Content[];
+  tools: ToolDeclaration[];
+  temperature?: number;
+}
+
+export interface ToolCall {
+  id?: string;
+  name: string;
+  args: Record<string, unknown>;
+}
+
+export interface ToolStepResponse {
+  /** The model's turn as returned, to append to the history verbatim (it may carry thought
+   *  signatures the next step needs). */
+  content: Content;
+  functionCalls: ToolCall[];
+  /** The model's text, when it answered in words instead of (or besides) calling a tool. */
+  text?: string;
+}
+
+export interface ToolModel {
+  /** One model turn of a function-calling conversation; throws ModelError on failure. */
+  step(request: ToolStepRequest): Promise<ToolStepResponse>;
+}
+
+/** Build the user turn that answers one or more function calls. */
+export function functionResponseContent(
+  responses: { call: ToolCall; response: Record<string, unknown> }[],
+): Content {
+  return {
+    role: "user",
+    parts: responses.map(({ call, response }) => ({
+      functionResponse: {
+        ...(call.id ? { id: call.id } : {}),
+        name: call.name,
+        response,
+      },
+    })),
+  };
 }
 
 export type ModelErrorCode = "empty_response" | "invalid_json" | "api_error" | "blocked";
@@ -59,7 +122,7 @@ export function modelIds(env: GeminiEnv = process.env): Record<ModelTier, string
   };
 }
 
-export function createGeminiModel(env: GeminiEnv = process.env): JsonModel {
+export function createGeminiModel(env: GeminiEnv = process.env): JsonModel & ToolModel {
   const apiKey = env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not set (worker/.env locally, Secret Manager on Cloud Run)");
@@ -105,6 +168,45 @@ export function createGeminiModel(env: GeminiEnv = process.env): JsonModel {
         throw new ModelError("invalid_json", "The model returned malformed JSON", error);
       }
     },
+
+    async step(request) {
+      try {
+        const response = await ai.models.generateContent({
+          model: ids[request.tier],
+          contents: request.history,
+          config: {
+            systemInstruction: request.systemInstruction,
+            tools: [{ functionDeclarations: request.tools }],
+            temperature: request.temperature ?? 0,
+          },
+        });
+        if (response.promptFeedback?.blockReason) {
+          throw new ModelError(
+            "blocked",
+            `Request blocked: ${response.promptFeedback.blockReason}`,
+          );
+        }
+        const content = response.candidates?.[0]?.content;
+        if (!content) throw new ModelError("empty_response", "The model returned no content");
+        const text = response.text;
+        return {
+          content,
+          functionCalls: (response.functionCalls ?? []).map(toToolCall),
+          ...(text ? { text } : {}),
+        };
+      } catch (error) {
+        if (error instanceof ModelError) throw error;
+        throw new ModelError("api_error", describeApiError(error), error);
+      }
+    },
+  };
+}
+
+function toToolCall(call: FunctionCall): ToolCall {
+  return {
+    ...(call.id ? { id: call.id } : {}),
+    name: call.name ?? "",
+    args: call.args ?? {},
   };
 }
 
