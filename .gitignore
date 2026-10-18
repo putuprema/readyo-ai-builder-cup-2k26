@@ -40,3 +40,7 @@ next-env.d.ts
 
 # Sample statements copied here for manual browser tests (README, "Walk the house flow in the browser"); never committed
 web/public/fixtures/
+
+# Local agent config: not part of the submission
+.claude/
+CLAUDE.md
