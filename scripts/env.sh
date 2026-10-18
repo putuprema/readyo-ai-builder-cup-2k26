@@ -8,4 +8,4 @@ export AR_REPO="${AR_REPO:-adidi}"                   # Artifact Registry reposit
 
 # Public URL of the deployed api service. Printed by scripts/deploy-service.sh api.
 # The web build bakes it in as NEXT_PUBLIC_API_URL.
-export API_URL="${API_URL:-https://api-XXXXXXXXXX-et.a.run.app}"
+export API_URL="${API_URL:-https://api-e24frmx3ka-as.a.run.app}"
