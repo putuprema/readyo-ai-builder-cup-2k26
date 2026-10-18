@@ -1,5 +1,6 @@
 import type { Estimate } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
+import { cityForArea, HOUSE_CITIES } from "./cities";
 import {
   canContinue,
   defaultHouseForm,
@@ -58,9 +59,18 @@ describe("toHouseInputs", () => {
     if (result.ok) expect(Object.values(result.inputs)).not.toContain(undefined);
   });
 
-  it("requires the area", () => {
-    const result = toHouseInputs({ ...filled, area: "  " });
-    expect(result).toMatchObject({ ok: false, errors: { area: expect.any(String) } });
+  it("requires a city from the list", () => {
+    for (const area of ["", "  ", "Surabaya", "serpong, tangerang selatan"]) {
+      const result = toHouseInputs({ ...filled, area });
+      expect(result).toMatchObject({ ok: false, errors: { area: "Choose a city." } });
+    }
+  });
+
+  it("accepts every offered city and stores its value as the area", () => {
+    for (const city of HOUSE_CITIES) {
+      const result = toHouseInputs({ ...filled, area: city.value });
+      expect(result).toMatchObject({ ok: true, inputs: { area: city.value } });
+    }
   });
 
   it("uses the budget range instead of sizes in budget mode", () => {
@@ -101,6 +111,12 @@ describe("isEstimateStale", () => {
     const current = toHouseInputs(filled);
     if (!current.ok) throw new Error("expected ok");
     expect(isEstimateStale(current.inputs, estimate)).toBe(false);
+  });
+
+  it("is stale after a different city is chosen", () => {
+    const depok = toHouseInputs({ ...filled, area: "Depok" });
+    if (!depok.ok) throw new Error("expected ok");
+    expect(isEstimateStale(depok.inputs, estimate)).toBe(true);
   });
 
   it("is stale after a field changes, including an optional one", () => {
@@ -147,6 +163,40 @@ describe("houseFormFromInputs", () => {
       sizeMode: "size",
     });
     expect(toHouseInputs(form)).toEqual(inputs);
+  });
+
+  it("maps an older free-text area to its city, or clears it so the user picks again", () => {
+    const base = {
+      propertyType: "landed",
+      market: "new",
+      firstHome: true,
+      targetYear: 2028,
+    } as const;
+    expect(houseFormFromInputs({ ...base, area: "Tangerang Selatan" }, "loan", NOW).area).toBe(
+      "Serpong, Tangerang Selatan",
+    );
+    expect(houseFormFromInputs({ ...base, area: " serpong " }, "loan", NOW).area).toBe(
+      "Serpong, Tangerang Selatan",
+    );
+    expect(houseFormFromInputs({ ...base, area: "Surabaya" }, "loan", NOW).area).toBe("");
+  });
+});
+
+describe("cities", () => {
+  it("offers the five Jabodetabek sample cities with unique values", () => {
+    expect(HOUSE_CITIES.map((c) => c.label)).toEqual([
+      "Jakarta Selatan",
+      "Tangerang Selatan (Serpong)",
+      "Depok",
+      "Bekasi",
+      "Bogor",
+    ]);
+    expect(new Set(HOUSE_CITIES.map((c) => c.value)).size).toBe(HOUSE_CITIES.length);
+  });
+  it("matches the demo seed's area to the Serpong option", () => {
+    expect(cityForArea("Tangerang Selatan")).toBe("Serpong, Tangerang Selatan");
+    expect(cityForArea("Bogor")).toBe("Bogor");
+    expect(cityForArea("")).toBe("");
   });
 });
 
