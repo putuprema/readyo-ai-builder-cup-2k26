@@ -1,0 +1,21 @@
+{
+  "name": "worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@adidi/shared": "workspace:*",
+    "@hono/node-server": "^1",
+    "hono": "^4"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4"
+  }
+}

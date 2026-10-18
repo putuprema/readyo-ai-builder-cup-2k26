@@ -1,0 +1,11 @@
+# Builds the worker image with the repo root as context and pushes it to Artifact Registry.
+# Run from the repo root: gcloud builds submit --config worker/cloudbuild.yaml --substitutions=_IMAGE=...
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "worker/Dockerfile", "-t", "${_IMAGE}", "."]
+images:
+  - "${_IMAGE}"
+substitutions:
+  _IMAGE: "REGION-docker.pkg.dev/PROJECT_ID/REPO/workeratest"
+options:
+  logging: CLOUD_LOGGING_ONLY

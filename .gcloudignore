@@ -1,0 +1,13 @@
+# Keep Cloud Build uploads small. Dockerfiles install dependencies themselves.
+.git
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/out
+.env
+**/.env
+design
+docs
+fixtures
+specs
