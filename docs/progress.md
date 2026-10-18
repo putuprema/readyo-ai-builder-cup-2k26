@@ -17,7 +17,7 @@ Update this file at the end of every coding session. Newest entries at the top o
 
 ## Done
 
-- 2026-10-18: `specs/01-contracts.md` tasks 1–4 (four commits on `main`): `shared/src/types.ts` with every contract plus the `simulate()` types, `firestorePaths`, type imports in web, api and worker; `firestore.rules` with 26 emulator tests; all ten api endpoints as stubs with Firebase ID token auth and zod validation (51 tests); the demo seed (`pnpm seed:demo`, `pnpm seed:demo:emulator`) verified on the emulators: Auth user created, 26 documents written, goal reads back `active`. Acceptance criteria hold locally. Not verified: the seed against the real project (no GCP project yet).
+- 2026-10-18: `specs/01-contracts.md` tasks 1–4 (four commits on `main`): `shared/src/types.ts` with every contract plus the `simulate()` types, `firestorePaths`, type imports in web, api and worker; `firestore.rules` with 26 emulator tests; all ten api endpoints as stubs with Firebase ID token auth and zod validation (51 tests); the demo seed (`pnpm seed:demo`, `pnpm seed:demo:emulator`) verified on the emulators: Auth user created, 26 documents written, goal reads back `active`. Acceptance criteria hold locally. The seed also ran against the real project after Firebase Authentication (Email/Password) was enabled in the console.
 - 2026-10-18: `specs/00-foundation.md` tasks 1–5 implemented locally (five commits on `main`): workspace layout, Biome, root README, `shared/` with Vitest and the rupiah formatting helpers (31 tests), `web/` placeholder page calling `GET /health`, `api/` and `worker/` with `/health`, Dockerfiles, Cloud Build configs, deploy scripts, `firebase.json`. Verified locally: lint, typecheck, build, tests, secrets check, and the page showing the live health JSON plus its error state.
 
 ## In progress
@@ -28,4 +28,3 @@ Update this file at the end of every coding session. Newest entries at the top o
 
 - `specs/02-simulate.md` (engine track) and `specs/04-extraction.md` (AI track) can start in parallel against the contracts.
 - When spec 02 lands, replace the hand-computed timelines in `shared/src/demo/timelines.ts` with real `simulate()` output, and seed `rules/` from `shared/rules/defaults.json`.
-- Run `pnpm seed:demo` against the real project once it exists.
