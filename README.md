@@ -2,6 +2,8 @@
 
 A financial readiness planner for Indonesians, built by team ADiDi for AI Builder Cup 2026 (BFSI theme). Pick a goal (house, car or wedding), upload one month of statements, and see how many months until a bank would approve you, what blocks you today, and a verified plan to get there sooner.
 
+**Live app: https://getreadyo.web.app** (the URL to share; the site ids `readyo` and `readyo-app` were taken). The project's default Hosting site, https://adidi-ai-cup-builder-2026.web.app, still serves the last build deployed before the rename and is no longer updated.
+
 How we work: `AGENTS.md`. Specs: `specs/`. Background: `docs/`.
 
 ## Repository layout
@@ -134,6 +136,15 @@ Secrets never live in the repo. Locally, put them in a `.env` file (ignored by g
    firebase apps:sdkconfig WEB <app id printed above>
    ```
    Copy `projectId`, `apiKey`, `authDomain` and `appId` into `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` and `NEXT_PUBLIC_FIREBASE_APP_ID`. These are public identifiers, but the key matches the `AIza…` pattern that `pnpm check:secrets` rejects, so they stay out of git.
+9. Create the Hosting site the web deploys to (`HOSTING_SITE` in `scripts/env.sh`, mapped to the `readyo` target in `.firebaserc`) and authorize its domains for Firebase Auth sign-in (console: Authentication > Settings > Authorized domains, or the Identity Toolkit API below, which replaces the whole list, so keep the existing entries):
+   ```bash
+   pnpm exec firebase hosting:sites:create getreadyo --project YOUR_PROJECT_ID
+   curl -X PATCH -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "x-goog-user-project: YOUR_PROJECT_ID" \
+     -H "Content-Type: application/json" \
+     "https://identitytoolkit.googleapis.com/admin/v2/projects/YOUR_PROJECT_ID/config?updateMask=authorizedDomains" \
+     -d '{"authorizedDomains":["localhost","YOUR_PROJECT_ID.firebaseapp.com","YOUR_PROJECT_ID.web.app","getreadyo.web.app","getreadyo.firebaseapp.com"]}'
+   ```
+   The api's CORS already allows every `*.web.app` and `*.firebaseapp.com` origin; `scripts/setup-storage.sh` adds the site's origins to the bucket's CORS.
 
 ### Deploy each part
 
@@ -143,10 +154,10 @@ Order matters the first time: the web build needs the api URL.
 scripts/deploy-service.sh api       # Cloud Build image, deploy to Cloud Run, prints the service URL
 scripts/deploy-service.sh worker    # same, not publicly reachable
 # paste the api URL into API_URL in scripts/env.sh, then:
-scripts/deploy-web.sh               # next build (static export) + firebase deploy --only hosting
+scripts/deploy-web.sh               # next build (static export) + firebase deploy --only hosting:readyo (https://getreadyo.web.app)
 ```
 
-Each service's `/health` returns `{ "ok": true, "service": "<name>", "version": "<git sha>" }`. The Hosting URL shows the placeholder page with the api's health response.
+Each service's `/health` returns `{ "ok": true, "service": "<name>", "version": "<git sha>" }`. The web is at https://getreadyo.web.app.
 
 ### Analysis runs (Cloud Tasks)
 

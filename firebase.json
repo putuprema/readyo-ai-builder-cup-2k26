@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "readyo",
     "public": "web/out",
     "cleanUrls": true,
     "trailingSlash": true,

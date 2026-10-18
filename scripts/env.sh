@@ -6,6 +6,12 @@ export PROJECT_ID="${PROJECT_ID:-adidi-ai-cup-builder-2026}"
 export REGION="${REGION:-asia-southeast1}"          # Singapore
 export AR_REPO="${AR_REPO:-adidi}"                   # Artifact Registry repository name
 
+# Firebase Hosting site the web deploys to: https://getreadyo.web.app, the Readyo URL to share.
+# .firebaserc maps the "readyo" hosting target to it. ("readyo" and "readyo-app" were taken.)
+# The project's default site, https://adidi-ai-cup-builder-2026.web.app, keeps the last build
+# deployed there before the rename and is no longer updated.
+export HOSTING_SITE="${HOSTING_SITE:-getreadyo}"
+
 # Public URL of the deployed api service. Printed by scripts/deploy-service.sh api.
 # The web build bakes it in as NEXT_PUBLIC_API_URL.
 export API_URL="${API_URL:-https://api-e24frmx3ka-as.a.run.app}"

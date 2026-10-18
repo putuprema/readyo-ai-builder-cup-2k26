@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build the web app as a static export and deploy it to Firebase Hosting.
+# Build the web app as a static export and deploy it to Firebase Hosting, to the "readyo"
+# target (.firebaserc maps it to the HOSTING_SITE site, https://getreadyo.web.app).
 # Usage, from the repo root:  scripts/deploy-web.sh
 set -euo pipefail
 
@@ -18,5 +19,5 @@ esac
 echo "Building web with NEXT_PUBLIC_API_URL=$API_URL ..."
 (cd "$root" && NEXT_PUBLIC_API_URL="$API_URL" pnpm --filter @adidi/shared build && NEXT_PUBLIC_API_URL="$API_URL" pnpm --filter web build)
 
-echo "Deploying to Firebase Hosting ($PROJECT_ID)..."
-(cd "$root" && pnpm exec firebase deploy --only hosting --project "$PROJECT_ID")
+echo "Deploying to Firebase Hosting (target readyo: https://${HOSTING_SITE}.web.app)..."
+(cd "$root" && pnpm exec firebase deploy --only hosting:readyo --project "$PROJECT_ID")

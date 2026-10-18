@@ -1,5 +1,12 @@
 {
   "projects": {
     "default": "adidi-ai-cup-builder-2026"
+  },
+  "targets": {
+    "adidi-ai-cup-builder-2026": {
+      "hosting": {
+        "readyo": ["getreadyo"]
+      }
+    }
   }
 }

@@ -24,7 +24,7 @@ cors_file="$(mktemp)"
 cat > "$cors_file" <<JSON
 [
   {
-    "origin": ["https://${PROJECT_ID}.web.app", "https://${PROJECT_ID}.firebaseapp.com", "http://localhost:3000"],
+    "origin": ["https://${HOSTING_SITE}.web.app", "https://${HOSTING_SITE}.firebaseapp.com", "https://${PROJECT_ID}.web.app", "https://${PROJECT_ID}.firebaseapp.com", "http://localhost:3000"],
     "method": ["PUT"],
     "responseHeader": ["Content-Type"],
     "maxAgeSeconds": 3600
