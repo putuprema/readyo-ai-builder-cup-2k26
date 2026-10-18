@@ -16,7 +16,7 @@ export function BottomCards({
       className="grid grid-cols-1 gap-5 lg:grid-cols-2"
     >
       <div className="flex flex-col gap-3.5 rounded-2xl border border-line bg-surface px-5 py-5 sm:px-6">
-        <h2 className="m-0 font-bold text-[15px]">Assumptions you can change</h2>
+        <h2 className="m-0 font-bold text-[15px]">Assumptions we used</h2>
         <dl className="m-0 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 text-[14px]">
           {assumptions.map((row) => (
             <div key={row.label} className="contents">
@@ -29,7 +29,7 @@ export function BottomCards({
           href={assumptionsHref}
           className="inline-flex min-h-11 items-center self-start font-semibold text-[14px] text-accent-strong no-underline"
         >
-          Edit assumptions and see sources
+          See every assumption and its source
         </a>
       </div>
       <div className="flex flex-col gap-3.5 rounded-2xl border border-line bg-surface px-5 py-5 sm:px-6">

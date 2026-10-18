@@ -67,7 +67,7 @@ Full-screen dark hero. Big headline that changes per stage, a supporting sentenc
 - **Also considered** card: one line listing options the simulator rejected, with **See the rules used**.
   - *Collapsed* (default): just the line and the button with a down chevron.
   - *Expanded*: button reads **Hide the rules**, chevron flips, table "Rules checked for this goal": Rule · Value used · You · Effect on your plan (blocking rows in red), and a link to Assumptions.
-- Bottom: "Assumptions you can change" (key values, link to Assumptions) and "Next check-in" ("Upload {month}'s statements any time from 1 {next month}…"). No reminder setting.
+- Bottom: "Assumptions we used" (key values, link "See every assumption and its source" to the read-only Assumptions page) and "Next check-in" ("Upload {month}'s statements any time from 1 {next month}…"). No reminder setting.
 
 ## 5 · Monthly check-in
 

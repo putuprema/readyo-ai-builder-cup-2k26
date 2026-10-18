@@ -105,7 +105,7 @@ export function EstimateCard({
           <Link href="/assumptions/" className="font-semibold text-accent-strong">
             Assumptions
           </Link>
-          . You can change any of them.
+          .
         </p>
       </div>
     </aside>

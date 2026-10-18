@@ -41,7 +41,7 @@ const TRUST = [
   },
   {
     title: "Every number has a rule behind it",
-    text: "DTI caps, DP floors, tenor limits are listed with sources, and you can change them.",
+    text: "DTI caps, DP floors and tenor limits are listed with their sources.",
     icon: (
       <>
         <path d="M9 11l3 3L22 4" />

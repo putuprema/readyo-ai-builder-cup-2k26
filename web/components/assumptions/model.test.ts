@@ -1,6 +1,6 @@
 import { demoRuleDefaults } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
-import { checkedDate, formatRuleValue, ruleGroups, usedForText } from "./model";
+import { checkedDate, formatRuleValue, ruleGroups, sourceTitle, usedForText } from "./model";
 
 describe("ruleGroups", () => {
   const groups = ruleGroups(demoRuleDefaults);
@@ -38,11 +38,20 @@ describe("ruleGroups", () => {
       label: "Debt-to-income cap",
       value: "35%",
       usedFor: "KPR and KKB",
-      source: { title: "[bank criteria, to be checked]", url: null },
+      source: { title: "Source to be confirmed", url: null },
       checked: "18 Oct 2026",
     });
     const dp = groups[0]?.rows.find((r) => r.id === "min_dp_first_home_new");
     expect(dp?.source.url).toMatch(/^https:\/\/www\.bi\.go\.id\//);
+  });
+
+  it("never shows a bracketed placeholder as a source", () => {
+    const titles = groups.flatMap((g) => g.rows.map((r) => r.source.title));
+    expect(titles.some((t) => t.startsWith("["))).toBe(false);
+    expect(sourceTitle("[money-market fund returns, to be checked]")).toBe(
+      "Source to be confirmed",
+    );
+    expect(sourceTitle("Our rule")).toBe("Our rule");
   });
 
   it("shows a stored override next to the default, and drops one equal to it", () => {

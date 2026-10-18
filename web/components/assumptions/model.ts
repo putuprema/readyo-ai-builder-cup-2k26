@@ -111,9 +111,18 @@ export function ruleRow(rule: RuleValue, override?: number): RuleRow {
       ? { override: formatRuleValue(rule.unit, override) }
       : {}),
     usedFor: usedForText(rule.usedFor),
-    source: { title: rule.source.title, url: rule.source.url ? rule.source.url : null },
+    source: {
+      title: sourceTitle(rule.source.title),
+      url: rule.source.url ? rule.source.url : null,
+    },
     checked: checkedDate(rule.checkedAt),
   };
+}
+
+/** A bracketed title ("[bank criteria, to be checked]") is a placeholder still to be filled in. */
+export function sourceTitle(title: string): string {
+  const t = title.trim();
+  return t === "" || /^\[.*\]$/.test(t) ? "Source to be confirmed" : t;
 }
 
 export function formatRuleValue(unit: RuleValue["unit"], value: number): string {
