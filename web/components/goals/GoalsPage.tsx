@@ -12,6 +12,7 @@ import { bannerModel } from "./banner";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import { DeleteButton } from "./DeleteButton";
 import { deleteErrorMessage, deleteLabel, deleteMode, goalName } from "./delete";
+import { GoalsEmpty } from "./EmptyStates";
 import { GoalCard } from "./GoalCard";
 import {
   countsSubtitle,
@@ -111,6 +112,16 @@ function GoalsList() {
         <p role="alert" className="m-0 text-blocked">
           Your goals could not be loaded. Reload the page to try again.
         </p>
+      </Main>
+    );
+  }
+
+  // 4a: no goals replaces the list; no banner, filters or New goal button.
+  if (ordered.length === 0) {
+    return (
+      <Main>
+        <h1 className={TITLE}>Your goals</h1>
+        <GoalsEmpty />
       </Main>
     );
   }
