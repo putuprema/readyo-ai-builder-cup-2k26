@@ -13,9 +13,12 @@ const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "development" ? {} : { output: "export" as const }),
   trailingSlash: true,
   images: { unoptimized: true },
+  // Only the global stylesheet goes through the Tailwind loader. A "*.css" key also caught
+  // *.module.css files and, with `as: "*.css"`, built them as global CSS: their classes
+  // came out unhashed and every `styles.x` was undefined (the progress view lost its motion).
   turbopack: {
     rules: {
-      "*.css": {
+      "globals.css": {
         loaders: ["@tailwindcss/turbopack"],
         as: "*.css",
       },
