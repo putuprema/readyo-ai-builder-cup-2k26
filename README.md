@@ -19,6 +19,56 @@ How we work: `AGENTS.md`. Specs: `specs/`. Background: `docs/`.
 
 Everything is TypeScript in one pnpm workspace. One lockfile at the root.
 
+## Architecture
+
+Everything runs on Google Cloud. The browser talks to Firebase directly for auth and live data, and to the `api` service for writes. One Cloud Task per analysis run hands the heavy work to the `worker` service. Gemini reads documents and writes explanations; all metrics, month counts and approve/block verdicts come from deterministic code over the rules table.
+
+```mermaid
+flowchart LR
+  subgraph Browser
+    web["web<br/>Next.js static export"]
+  end
+
+  subgraph Firebase
+    hosting["Firebase Hosting"]
+    auth["Firebase Auth"]
+    fs[("Firestore<br/>users/{uid}/…, rules/")]
+    gcs[("Cloud Storage<br/>raw statements, deleted after extraction")]
+  end
+
+  subgraph CloudRun["Cloud Run (asia-southeast1)"]
+    api["api<br/>goals, estimate, uploads, runs, choices"]
+    worker["worker<br/>analysis pipeline"]
+  end
+
+  tasks["Cloud Tasks<br/>queue: runs"]
+  secrets["Secret Manager<br/>GEMINI_API_KEY"]
+
+  subgraph Gemini["Gemini (Google Gen AI SDK)"]
+    pricing["Pricing<br/>search grounding"]
+    extract["Extraction and classification<br/>structured output"]
+    agent["Recommendation agent<br/>function calling on simulate()"]
+  end
+
+  hosting --> web
+  web -- "sign in" --> auth
+  web -- "live listeners: goals, analyses, run status" --> fs
+  web -- "ID token" --> api
+  web -- "PUT signed URL" --> gcs
+  api --> fs
+  api -- "POST /runs" --> tasks
+  tasks -- "OIDC" --> worker
+  worker --> fs
+  worker --> gcs
+  api --> pricing
+  worker --> extract
+  worker --> agent
+  secrets -.-> api
+  secrets -.-> worker
+```
+
+Inside the worker, one run goes through the stages in `docs/analysis.md`: extraction (Gemini), normalization (code plus a Flash-tier classification pass), the monthly snapshot and seven readiness metrics (code), `simulate()` for the cash and loan paths (code), the recommendation agent (Gemini proposes, `simulate()` verifies), and on later months the delta. The `shared/` package holds the types, `simulate()`, the metrics and the rules so `web`, `api` and `worker` compute with the same code.
+
 ## Prerequisites
 
 - Node 26 (`.nvmrc`) and pnpm 10.28 (`npm install -g pnpm@10.28.0`; Node 26 no longer ships corepack).
