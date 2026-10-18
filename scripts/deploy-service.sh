@@ -33,8 +33,9 @@ auth_flag="--no-allow-unauthenticated"
 # Environment per service (spec 07): the api needs the worker URL and the queue to enqueue runs;
 # the worker checks the OIDC audience and may take minutes per run. Both read the Gemini key
 # from Secret Manager. WORKER_URL is empty on the very first deploy; redeploy the api once the
-# worker URL is known.
-env_vars="GIT_SHA=$sha"
+# worker URL is known. Cloud Run does not set GOOGLE_CLOUD_PROJECT itself; both services read
+# it for Cloud Tasks and firebase-admin, so pass it explicitly.
+env_vars="GIT_SHA=$sha,GOOGLE_CLOUD_PROJECT=$PROJECT_ID"
 extra_flags=()
 if [ "$svc" = api ]; then
   env_vars="$env_vars,TASKS_QUEUE=$TASKS_QUEUE,TASKS_LOCATION=$REGION,TASKS_SERVICE_ACCOUNT=$TASKS_SERVICE_ACCOUNT"
