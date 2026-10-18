@@ -27,7 +27,7 @@ import { goalSummary } from "@/lib/goal-summary";
 import { listenGoal } from "@/lib/goals";
 import { useRouteSegment } from "@/lib/route-id";
 import { listSubmittedMonths, runErrorMessage, startRun } from "@/lib/runs";
-import { apiUploader, type Uploader } from "@/lib/uploader";
+import { apiUploader, setDocumentKind, type Uploader } from "@/lib/uploader";
 import { UploadCard } from "./UploadCard";
 
 // 2 · Documents (docs/screens.md): three upload cards, file rows with progress and remove,
@@ -65,6 +65,8 @@ function DocumentsStep() {
   const [notice, setNotice] = useState<string | null>(null);
   const [reusable, setReusable] = useState<string | null>(null);
   const controllers = useRef(new Map<string, AbortController>());
+  // The kind each file has now, so an upload that finishes after a change stores the new one.
+  const kinds = useRef(new Map<string, SourceKind>());
 
   useEffect(() => {
     if (!uid || !goalId) return;
@@ -123,6 +125,7 @@ function DocumentsStep() {
         status: "uploading",
         progress: 0,
       };
+      kinds.current.set(localId, item.sourceKind);
       setItems((list) => [...list, item]);
       void start(item, file);
     }
@@ -142,6 +145,8 @@ function DocumentsStep() {
         onProgress: (progress) => patch(item.localId, { progress }),
       });
       patch(item.localId, { status: "uploaded", progress: 100, docId });
+      const latestKind = kinds.current.get(item.localId);
+      if (latestKind && latestKind !== item.sourceKind) await setDocumentKind(docId, latestKind);
     } catch (error) {
       if (controller.signal.aborted) return;
       patch(item.localId, {
@@ -170,7 +175,13 @@ function DocumentsStep() {
   }
 
   function changeKind(item: UploadItem, sourceKind: SourceKind) {
+    kinds.current.set(item.localId, sourceKind);
     patch(item.localId, { sourceKind });
+    if (item.docId) {
+      setDocumentKind(item.docId, sourceKind).catch(() =>
+        setNotice(`Could not change the kind of ${item.name}. Try again.`),
+      );
+    }
   }
 
   async function submit() {

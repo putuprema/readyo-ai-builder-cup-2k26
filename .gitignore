@@ -38,5 +38,5 @@ fixtures/statements/*
 # Next.js generated
 next-env.d.ts
 
-# Sample statements copied here for manual browser tests (scripts/e2e-web.md); never committed
+# Sample statements copied here for manual browser tests (README, "Walk the house flow in the browser"); never committed
 web/public/fixtures/

@@ -57,6 +57,13 @@ export const apiUploader: Uploader = {
   },
 };
 
+/** The person changed a file's source kind after picking it: fix the record (owner write). */
+export async function setDocumentKind(docId: string, sourceKind: SourceKind): Promise<void> {
+  const user = firebaseAuth().currentUser;
+  if (!user) throw new ApiError(401, "unauthorized", "Sign in first");
+  await updateDoc(doc(firestore(), firestorePaths.document(user.uid, docId)), { sourceKind });
+}
+
 /** PUT with upload progress; XMLHttpRequest because fetch has no upload progress events. */
 async function putFile(
   target: CreateUploadResponse,

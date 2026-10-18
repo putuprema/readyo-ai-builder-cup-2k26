@@ -157,6 +157,10 @@ scripts/setup-storage.sh             # CORS on the bucket for browser PUTs, and 
 
 The api reads `STORAGE_BUCKET` (set by `scripts/deploy-service.sh`). On the emulators firebase-admin cannot sign, so with `FIREBASE_STORAGE_EMULATOR_HOST` set the api answers `POST /uploads` with a URL to its own `PUT /uploads/:docId/content`, which streams the bytes into the emulator bucket. That route exists in emulator mode only.
 
+### Walk the house flow in the browser
+
+With the emulators, the api (`WORKER_URL` pointing at the worker, `TASKS_MODE=direct`) and the worker running, and `web/.env` set to the emulators: open http://localhost:3000, sign in as the demo account, create a house goal, press Calculate Estimate (about 30 s), Continue, add the four sample statements from `fixtures/statements/` on the documents step, Submit, and watch the run reach `done` in the worker's log (about three minutes, mostly extraction). Copy the samples to `web/public/fixtures/` (git-ignored) if you want to pick them from a page instead of the file dialog. A fresh account (no profile yet) also goes through the profile modal before the documents step.
+
 ### End-to-end run on the emulators
 
 ```bash
