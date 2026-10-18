@@ -1,0 +1,42 @@
+/* Motion on the analysing card (design artboard Goals): the striped bar and the pulsing dot. */
+@keyframes bar {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 32px 0;
+  }
+}
+
+@keyframes dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.bar {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.28) 0 8px,
+    transparent 8px 16px
+  );
+  background-size: 32px 32px;
+  animation: bar 1s linear infinite;
+  transition: width 0.8s ease;
+}
+
+.dot {
+  animation: dot 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .dot {
+    animation: none;
+    transition: none;
+  }
+}

@@ -14,6 +14,7 @@ import {
   goalCounts,
   orderGoals,
 } from "./list";
+import { useNow } from "./live";
 import { useGoals } from "./useGoals";
 
 // 4 · Goals list (docs/screens.md): every goal, analysing first, then drafts, then active.
@@ -39,6 +40,8 @@ function GoalsList() {
   const user = useUser();
   const state = useGoals(user?.uid ?? null);
   const [filter, setFilter] = useState<GoalFilter>("all");
+  const now = useNow();
+  const uid = user?.uid ?? "";
 
   const ordered = useMemo(() => (state.status === "ready" ? orderGoals(state.goals) : []), [state]);
   const counts = goalCounts(ordered);
@@ -122,7 +125,7 @@ function GoalsList() {
       ) : (
         <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
           {shown.map((goal) => (
-            <GoalCard key={goal.id} goal={goal} />
+            <GoalCard key={goal.id} goal={goal} uid={uid} now={now} />
           ))}
         </ul>
       )}
