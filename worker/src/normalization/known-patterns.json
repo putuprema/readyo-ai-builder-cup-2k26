@@ -1,0 +1,35 @@
+{
+  "_comment": "Keyword lists for stage 3 (specs/04-extraction.md, normalization). Matched case-insensitively against counterparty and description after whitespace is collapsed. Data, not logic: extend here, never in code.",
+  "ewallets": [
+    "gopay",
+    "go-pay",
+    "ovo",
+    "shopeepay",
+    "shopee pay",
+    "dana",
+    "linkaja",
+    "link aja",
+    "flip",
+    "jenius pay"
+  ],
+  "investmentApps": [
+    "bibit",
+    "ajaib",
+    "stockbit",
+    "pluang",
+    "bareksa",
+    "tanamduit",
+    "indodax",
+    "pintu",
+    "tokocrypto",
+    "reksa dana",
+    "reksadana",
+    "mandiri sekuritas",
+    "bca sekuritas",
+    "mirae",
+    "ipot",
+    "indo premier"
+  ],
+  "topUpWords": ["topup", "top up", "top-up", "isi saldo", "isi ulang"],
+  "ownTransferWords": ["transfer ke rekening sendiri", "pindah buku", "own account"]
+}

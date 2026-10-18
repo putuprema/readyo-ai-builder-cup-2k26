@@ -25,7 +25,7 @@ Turn uploaded statements (bank PDF, e-wallet screenshot, PayLater bill, investme
 
 **Normalization (code + Flash tier)**
 
-1. **Dedup**: same date, amount and counterparty within one source → one transaction.
+1. **Dedup**: same date, amount and counterparty within one source → one transaction. A source is an account (`sourceAccount`); rows from the same file are never merged, since a statement does not repeat its own rows and two identical purchases on one day are real.
 2. **Own-account transfers**: an `out` in one source and an `in` of the same amount in another source within 2 days → both `own_transfer`. Also known patterns (top-up to GoPay/OVO/ShopeePay, transfer to Bibit/Ajaib). A transfer from a bank or e-wallet to a known investment app is `own_transfer`, not `investment`: the money is still the user's. `investment` is kept for buy orders seen inside an investment account's own history.
 3. **Classification** (Flash, batched 50 at a time, structured output): `income`, `essential`, `discretionary`, `debt_payment`, `investment`, plus a `category` (e.g. food_delivery, transport, groceries, rent, utilities, subscriptions, shopping, entertainment). Rules in code override the model where certain (salary credit → income, ATM withdrawal → cash, payment to a known PayLater → debt_payment).
 4. **Recurring detection** in code: same counterparty and similar amount in 2+ months, or known subscription merchants.
