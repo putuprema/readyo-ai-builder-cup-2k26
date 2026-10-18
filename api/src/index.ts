@@ -2,7 +2,12 @@ import { serve } from "@hono/node-server";
 import { createApp } from "./app.js";
 import { verifyFirebaseIdToken } from "./firebase.js";
 import { createGeminiModel, hasGeminiKey } from "./gemini/client.js";
-import { firestoreAnalyses, firestoreGoals, firestoreRuns } from "./infra/firestore.js";
+import {
+  firestoreAnalyses,
+  firestoreGoals,
+  firestoreGoalWrites,
+  firestoreRuns,
+} from "./infra/firestore.js";
 import { taskQueueFromEnv } from "./infra/tasks.js";
 import { pricingTier } from "./pricing/price.js";
 
@@ -32,6 +37,7 @@ const app = createApp({
     : undefined,
   runs: queue ? { store: firestoreRuns(), queue } : undefined,
   choices: { store: firestoreAnalyses() },
+  goals: { store: firestoreGoalWrites() },
 });
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {

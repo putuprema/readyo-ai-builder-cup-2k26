@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import type { AuthEnv } from "../auth.js";
 import { type SetChoiceDeps, setChoice } from "../choices/set-choice.js";
 import type { JsonModel } from "../gemini/client.js";
+import { createGoal, deleteGoal, type GoalDeps, updateGoal } from "../goals/goals.js";
 import type { GoalStore } from "../pricing/ports.js";
 import { type PriceOptions, priceGoal } from "../pricing/price.js";
 import { PromptNotImplementedError } from "../pricing/prompt.js";
@@ -17,8 +18,8 @@ import {
 import { notImplemented } from "../stub.js";
 import { parse, parseBody, ValidationError } from "../validate.js";
 
-// Goal endpoints from specs/01-contracts.md. Validation is real; the estimate endpoint is
-// wired (spec 05); the other handlers are stubs until spec 10 wires them to Firestore.
+// Goal endpoints from specs/01-contracts.md. Create, update and delete (spec 10) and the
+// estimate (spec 05) are wired; each group answers 501 when its dependencies are not given.
 
 /** What the estimate endpoint needs: the model, the goal store and a clock (fixed in tests). */
 export interface EstimateDeps {
@@ -28,26 +29,40 @@ export interface EstimateDeps {
   now?: () => Date;
 }
 
-export function createGoalRoutes(estimate?: EstimateDeps, choices?: SetChoiceDeps) {
+export function createGoalRoutes(
+  estimate?: EstimateDeps,
+  choices?: SetChoiceDeps,
+  writes?: GoalDeps,
+) {
   const goals = new Hono<AuthEnv>();
 
-  // Create a draft goal.
+  // Create a draft goal at the estimate step.
   goals.post("/", async (c) => {
     const body = await parseBody(c, createGoalBody);
-    return notImplemented(c, "create goal", { uid: c.get("user").uid, type: body.type });
+    if (!writes)
+      return notImplemented(c, "create goal", { uid: c.get("user").uid, type: body.type });
+    const outcome = await createGoal(c.get("user").uid, body, writes);
+    if (outcome.status === 204) return c.body(null, 204);
+    return c.json(outcome.body, outcome.status);
   });
 
-  // Update inputs, pay preference or the user's own price.
+  // Update inputs, pay preference, the user's own price or the draft step.
   goals.patch("/:id", async (c) => {
     const { id } = parse(c.req.param(), idParam);
     const body = await parseBody(c, updateGoalBody);
-    return notImplemented(c, "update goal", { id, fields: Object.keys(body) });
+    if (!writes) return notImplemented(c, "update goal", { id, fields: Object.keys(body) });
+    const outcome = await updateGoal(c.get("user").uid, id, body, writes);
+    if (outcome.status === 204) return c.body(null, 204);
+    return c.json(outcome.body, outcome.status);
   });
 
-  // Delete a goal. Must refuse with 409 while the goal is `analysing` (checked in Firestore).
-  goals.delete("/:id", (c) => {
+  // Delete a goal and its analyses; refused with 409 while the goal is `analysing`.
+  goals.delete("/:id", async (c) => {
     const { id } = parse(c.req.param(), idParam);
-    return notImplemented(c, "delete goal", { id });
+    if (!writes) return notImplemented(c, "delete goal", { id });
+    const outcome = await deleteGoal(c.get("user").uid, id, writes);
+    if (outcome.status === 204) return c.body(null, 204);
+    return c.json(outcome.body, outcome.status);
   });
 
   // Run pricing (stage 1) on the form values sent and store the estimate on the goal

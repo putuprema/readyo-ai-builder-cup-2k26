@@ -1,6 +1,7 @@
 import type {
   ActionChoice,
   CarInputs,
+  DraftStep,
   GoalType,
   HouseInputs,
   PayPreference,
@@ -28,6 +29,7 @@ export const goalType = z.enum(GOAL_TYPES) satisfies z.ZodType<GoalType>;
 export const payPreference = z.enum(PAY_PREFERENCES) satisfies z.ZodType<PayPreference>;
 export const runKind = z.enum(RUN_KINDS) satisfies z.ZodType<RunKind>;
 export const sourceKind = z.enum(SOURCE_KINDS) satisfies z.ZodType<SourceKind>;
+export const draftStep = z.enum(["estimate", "documents"]) satisfies z.ZodType<DraftStep>;
 export const actionChoice = z.enum([
   "undecided",
   "committed",
@@ -98,6 +100,7 @@ export type EstimateGoalBody = z.infer<typeof estimateGoalBody>;
 /**
  * PATCH /goals/:id. The goal's type is only known from Firestore, so partial inputs are
  * accepted for any goal type here and matched against the stored type by the handler.
+ * `draftStep` moves a draft between the estimate and the documents step (spec 10).
  */
 export const updateGoalBody = z
   .object({
@@ -106,6 +109,7 @@ export const updateGoalBody = z
       .optional(),
     payPreference: payPreference.optional(),
     userOverride: rupiah.positive().nullable().optional(), // null clears the user's own price
+    draftStep: draftStep.optional(),
   })
   .strict()
   .refine((b) => Object.keys(b).length > 0, "Nothing to update");

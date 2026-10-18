@@ -160,7 +160,7 @@ Security rules: a user reads and writes only under `users/{uid}`; `rules/` is re
 | Method | Path | Does |
 |---|---|---|
 | POST | `/goals` | Create a draft goal |
-| PATCH | `/goals/:id` | Update inputs, pay preference, user price override |
+| PATCH | `/goals/:id` | Update inputs, pay preference, user price override, draft step (`draftStep`) |
 | DELETE | `/goals/:id` | Delete (refuse while `analysing`) |
 | POST | `/goals/:id/estimate` | Run pricing (stage 1) on the form values sent (`{ type, inputs }`) and store the estimate on the goal |
 | POST | `/uploads` | Signed URL for one file; creates a `documents` record |
