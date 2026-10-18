@@ -110,7 +110,7 @@ interface RunStatus { id: string; stage: RunStage; percent: number; startedAt: s
 
 `Change` and `SimulationResult` are defined in `specs/02-simulate.md`. They are also written in `shared/types` because `Analysis` and `ActionCard` depend on them.
 
-Also in `shared/types`, for records the layout below names without a type: `DocumentRecord` (`name, type, size, sourceKind, month, status, createdAt`), `MonthRecord` (`snapshot`, `sources`, `submittedAt`) and `Override` (`ruleId`, `value`, `updatedAt`). `SourceKind` is `bank | ewallet | paylater | pinjol | investment`. `firestorePaths` in `@adidi/shared` builds every document path of the layout.
+Also in `shared/types`, for records the layout below names without a type: `DocumentRecord` (`name, type, size, sourceKind, month, status, createdAt`, optional `reason` when `status` is `failed`), `MonthRecord` (`snapshot`, `sources`, `submittedAt`) and `Override` (`ruleId`, `value`, `updatedAt`). `SourceKind` is `bank | ewallet | paylater | pinjol | investment`. `firestorePaths` in `@adidi/shared` builds every document path of the layout.
 
 ## Firestore layout
 
@@ -120,7 +120,8 @@ users/{uid}/months/{YYYY-MM}             Snapshot + list of submitted sources
 users/{uid}/transactions/{id}            Transaction
 users/{uid}/loans/{id}                   Loan
 users/{uid}/holdings/{id}                Holding
-users/{uid}/documents/{id}               file metadata only (name, type, size, source kind, month, status)
+users/{uid}/documents/{id}               file metadata only (name, type, size, source kind, month, status);
+                                         the file itself is at the same path in the default Cloud Storage bucket
 users/{uid}/goals/{goalId}               Goal
 users/{uid}/goals/{goalId}/analyses/{YYYY-MM}   Analysis
 users/{uid}/runs/{runId}                 RunStatus

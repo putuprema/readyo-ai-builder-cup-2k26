@@ -4,11 +4,11 @@ Update this file at the end of every coding session. Newest entries at the top o
 
 ## Decisions still open
 
-- Unreadable file after Submit: stop and send the user back, or continue and flag it on the result page.
 - Values marked `[__]` in the rules and assumptions (need BI / OJK / bank sources).
 
 ## Decisions taken
 
+- 2026-10-18: Unreadable file after Submit: continue with the readable files and flag the failed source (`documents` status `failed` + `reason`, shown as missing on the result page). The run fails only when nothing was readable or the bank statement failed on a first run. Transfers to a known investment app are `own_transfer`. Uploaded files live at `users/{uid}/documents/{docId}` in the default bucket.
 - 2026-10-18: API error contract: 401 `unauthorized` without a Firebase ID token, 400 `invalid_request` with `issues[]` from zod, 501 `not_implemented` for stubs. Validation schemas live in `api/src/schemas.ts` and are checked against the shared types with `satisfies`.
 - 2026-10-18: Firestore rules tests and the demo seed run on the Firebase emulators (`scripts/with-emulators.sh`, Java from the PATH or Homebrew OpenJDK, `firebase-tools` as a root dev dependency). They are part of `pnpm test`.
 - 2026-10-18: Demo data is a pure module in `shared/src/demo/` with consistency tests; `api/scripts/seed-demo.ts` only writes it. The demo account is `demo@adidi.app` (uid `demo-user`), password from `DEMO_PASSWORD` (fixed test value on the emulators).

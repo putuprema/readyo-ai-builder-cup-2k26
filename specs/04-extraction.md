@@ -16,13 +16,14 @@ Turn uploaded statements (bank PDF, e-wallet screenshot, PayLater bill, investme
 - Structured output with a response schema per source kind (`bank`, `ewallet`, `paylater`, `investment`), matching the types in `shared/types`. No free-text parsing.
 - The prompt states: Indonesian formats (`Rp 1.250.000`, `12/10/2026`, `DB`/`CR` markers), return amounts as integers in rupiah, never invent rows, mark unreadable fields as null.
 - Account and card numbers are masked (keep last 4 digits) before anything is stored.
-- After a file is extracted successfully, delete it from Cloud Storage and set the `documents` record status to `extracted`. On failure, status `unreadable` with a reason.
+- Files live in the default bucket at `users/{uid}/documents/{docId}` (same path as the Firestore record). After a file is extracted successfully, delete it from Cloud Storage and set the `documents` record status to `extracted`. On failure, status `failed` with a `reason`.
+- **Unreadable file** (blurry screenshot, password-protected PDF, model refusal): continue with the readable files and flag the failed source; the result page shows it as missing. The run itself fails, with the user sent back to the documents step, only when no file could be read, or when the bank statement failed on a `first` run (there is no income to analyse without it).
 - For loans, compute `effectiveAnnualRate` in code from the fee structure Gemini extracted (e.g. 2.95% per month → about 35% per year), not from the model.
 
 **Normalization (code + Flash tier)**
 
 1. **Dedup**: same date, amount and counterparty within one source → one transaction.
-2. **Own-account transfers**: an `out` in one source and an `in` of the same amount in another source within 2 days → both `own_transfer`. Also known patterns (top-up to GoPay/OVO/ShopeePay, transfer to Bibit/Ajaib).
+2. **Own-account transfers**: an `out` in one source and an `in` of the same amount in another source within 2 days → both `own_transfer`. Also known patterns (top-up to GoPay/OVO/ShopeePay, transfer to Bibit/Ajaib). A transfer from a bank or e-wallet to a known investment app is `own_transfer`, not `investment`: the money is still the user's. `investment` is kept for buy orders seen inside an investment account's own history.
 3. **Classification** (Flash, batched 50 at a time, structured output): `income`, `essential`, `discretionary`, `debt_payment`, `investment`, plus a `category` (e.g. food_delivery, transport, groceries, rent, utilities, subscriptions, shopping, entertainment). Rules in code override the model where certain (salary credit → income, ATM withdrawal → cash, payment to a known PayLater → debt_payment).
 4. **Recurring detection** in code: same counterparty and similar amount in 2+ months, or known subscription merchants.
 

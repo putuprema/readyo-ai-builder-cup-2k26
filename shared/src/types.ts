@@ -271,6 +271,7 @@ export interface DocumentRecord {
   sourceKind: SourceKind;
   month: string;
   status: DocumentStatus;
+  reason?: string; // why extraction failed, when status is "failed"
   createdAt: string;
 }
 

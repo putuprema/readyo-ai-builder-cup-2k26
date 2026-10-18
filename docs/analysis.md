@@ -177,6 +177,6 @@ Compare this month's snapshot with last month's: metrics that moved, committed a
 
 Documents table (`documents`) holds file metadata only; the file itself is gone after extraction.
 
-## Open question
+## Unreadable files (decided 2026-10-18)
 
-If a file can't be read (blurry screenshot, password-protected PDF), either stop and send the user back to the documents step, or continue with the readable files and flag the rest on the result page. Decide before building stage 2.
+If a file can't be read (blurry screenshot, password-protected PDF), the pipeline continues with the readable files and flags the failed source: its `documents` record gets status `failed` with a reason, and the result page shows the source as missing, the same way a skipped source is shown on a monthly check-in. The run fails and the user goes back to the documents step only when nothing could be read, or when the bank statement failed on a first run.
