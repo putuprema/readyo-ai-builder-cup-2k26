@@ -16,7 +16,8 @@
     "seed:demo": "pnpm --filter api seed:demo",
     "seed:demo:emulator": "bash scripts/with-emulators.sh firestore,auth pnpm --filter api seed:demo",
     "seed:rules": "pnpm --filter api seed:rules",
-    "seed:rules:emulator": "bash scripts/with-emulators.sh firestore pnpm --filter api seed:rules"
+    "seed:rules:emulator": "bash scripts/with-emulators.sh firestore pnpm --filter api seed:rules",
+    "emulators": "bash scripts/emulators.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

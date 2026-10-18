@@ -11,8 +11,10 @@ import {
 import { type Firestore, getFirestore } from "firebase-admin/firestore";
 import type { AnalysisStore } from "../choices/ports.js";
 import { firebaseApp } from "../firebase.js";
+import type { GoalWriteStore } from "../goals/ports.js";
 import type { GoalStore } from "../pricing/ports.js";
 import type { RunStore } from "../runs/ports.js";
+import type { UploadStore } from "../uploads/ports.js";
 
 // Cloud Run adapter for the goal store (specs/01-contracts.md, "Firestore layout"). Uses the
 // same firebase-admin app as token verification; FIRESTORE_EMULATOR_HOST points it at the
@@ -37,6 +39,41 @@ export function firestoreGoals(db: Firestore = getFirestore(firebaseApp())): Goa
     async listOverrides(uid) {
       const snap = await db.collection(`${firestorePaths.user(uid)}/overrides`).get();
       return snap.docs.map((d) => ({ ruleId: d.id, ...(d.data() as object) }) as Override);
+    },
+  };
+}
+
+// Goal writes for POST /goals, PATCH /goals/:id and DELETE /goals/:id (spec 10).
+export function firestoreGoalWrites(db: Firestore = getFirestore(firebaseApp())): GoalWriteStore {
+  const reads = firestoreGoals(db);
+  return {
+    ...reads,
+    async createGoal(uid, goal) {
+      await db.doc(firestorePaths.goal(uid, goal.id)).create(goal);
+    },
+    async replaceGoal(uid, goal) {
+      await db.doc(firestorePaths.goal(uid, goal.id)).set(goal);
+    },
+    async deleteGoal(uid, goalId) {
+      // Removes the analyses subcollection with the document.
+      await db.recursiveDelete(db.doc(firestorePaths.goal(uid, goalId)));
+    },
+  };
+}
+
+// Upload records for POST /uploads and DELETE /uploads/:docId (spec 10).
+export function firestoreUploads(db: Firestore = getFirestore(firebaseApp())): UploadStore {
+  return {
+    async createDocument(uid, doc) {
+      await db.doc(firestorePaths.document(uid, doc.id)).create(doc);
+    },
+    async getDocument(uid, documentId) {
+      const snap = await db.doc(firestorePaths.document(uid, documentId)).get();
+      if (!snap.exists) return null;
+      return { id: snap.id, ...(snap.data() as object) } as DocumentRecord;
+    },
+    async updateDocument(uid, documentId, patch) {
+      await db.doc(firestorePaths.document(uid, documentId)).update({ ...patch });
     },
   };
 }

@@ -61,9 +61,24 @@ pnpm build       # builds shared, web (static export to web/out), api and worker
 pnpm check:secrets   # fails if a credential is tracked by git
 ```
 
+### The whole app on the emulators
+
+```bash
+pnpm emulators                      # Auth 9099, Firestore 8085, Storage 9199 (project demo-adidi); data kept in .firebase/emulator-data
+```
+
+With the emulators running, seed them once from another terminal (the `*:emulator` scripts start their own emulator instance, so they are for one-off runs only):
+
+```bash
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 pnpm --filter api seed:rules
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 pnpm --filter api seed:demo   # demo@adidi.app, password demo-pass-2026 on the emulators
+```
+
+Then start the services against them. `web/.env`: `NEXT_PUBLIC_USE_EMULATORS=1`. `api/.env`: `FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099`, `FIRESTORE_EMULATOR_HOST=127.0.0.1:8085`, `FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199`, `FIREBASE_PROJECT_ID=demo-adidi`, `STORAGE_BUCKET=demo-adidi.appspot.com`, `WORKER_URL=http://localhost:8081`, `TASKS_MODE=direct`, plus `GEMINI_API_KEY` for estimates. `worker/.env`: the same emulator hosts, project and bucket, `TASKS_AUTH=off` and `GEMINI_API_KEY`. Against the real Firebase project instead, fill in the `NEXT_PUBLIC_FIREBASE_*` values from `web/.env.example`.
+
 ### Firestore rules tests
 
-`firestore.rules` is tested with `@firebase/rules-unit-testing` against the Firestore emulator (`firestore-tests/`). The emulator is a jar, so it needs a Java runtime: `scripts/with-emulators.sh` uses `java` from the PATH, or the Homebrew OpenJDK (`brew install openjdk`), or macOS's `java_home`. The firebase CLI comes from the root dev dependencies; the first run downloads the emulator into `~/.cache/firebase/emulators`.
+`firestore.rules` is tested with `@firebase/rules-unit-testing` against the Firestore emulator (`firestore-tests/`). The suite clears the whole emulator database between cases, so never point it at the emulator you develop against (`pnpm emulators`): `pnpm --filter firestore-tests test` starts a throwaway instance of its own. The emulator is a jar, so it needs a Java runtime: `scripts/with-emulators.sh` uses `java` from the PATH, or the Homebrew OpenJDK (`brew install openjdk`), or macOS's `java_home`. The firebase CLI comes from the root dev dependencies; the first run downloads the emulator into `~/.cache/firebase/emulators`.
 
 ### Demo data
 
@@ -131,6 +146,20 @@ scripts/deploy-service.sh api        # again, so the api knows WORKER_URL
 Both services read `GEMINI_API_KEY` from the Secret Manager secret named in `GEMINI_SECRET` (`GEMINI_API_KEY` by default), created and shared with Cloud Run in step 6 of the one-time setup. The worker is deployed with a 30-minute request timeout because a first run takes a few minutes.
 
 Locally, the api posts straight to the worker instead of Cloud Tasks: set `WORKER_URL=http://localhost:8081` and `TASKS_MODE=direct` in `api/.env`, and `TASKS_AUTH=off` in `worker/.env`.
+
+### Uploads (signed URLs)
+
+The documents step PUTs each statement straight to the default bucket through a V4 signed URL from `POST /uploads` (`specs/10-ui-goal-creation.md`). Two one-time steps after the first api deploy:
+
+```bash
+scripts/setup-storage.sh             # CORS on the bucket for browser PUTs, and roles/iam.serviceAccountTokenCreator so the api can sign
+```
+
+The api reads `STORAGE_BUCKET` (set by `scripts/deploy-service.sh`). On the emulators firebase-admin cannot sign, so with `FIREBASE_STORAGE_EMULATOR_HOST` set the api answers `POST /uploads` with a URL to its own `PUT /uploads/:docId/content`, which streams the bytes into the emulator bucket. That route exists in emulator mode only.
+
+### Walk the house flow in the browser
+
+With the emulators, the api (`WORKER_URL` pointing at the worker, `TASKS_MODE=direct`) and the worker running, and `web/.env` set to the emulators: open http://localhost:3000, sign in as the demo account, create a house goal, press Calculate Estimate (about 30 s), Continue, add the four sample statements from `fixtures/statements/` on the documents step, Submit, and watch the run reach `done` in the worker's log (about three minutes, mostly extraction). Copy the samples to `web/public/fixtures/` (git-ignored) if you want to pick them from a page instead of the file dialog. A fresh account (no profile yet) also goes through the profile modal before the documents step.
 
 ### End-to-end run on the emulators
 

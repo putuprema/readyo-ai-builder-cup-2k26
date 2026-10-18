@@ -1,6 +1,7 @@
 import type {
   ActionChoice,
   CarInputs,
+  DraftStep,
   GoalType,
   HouseInputs,
   PayPreference,
@@ -28,6 +29,7 @@ export const goalType = z.enum(GOAL_TYPES) satisfies z.ZodType<GoalType>;
 export const payPreference = z.enum(PAY_PREFERENCES) satisfies z.ZodType<PayPreference>;
 export const runKind = z.enum(RUN_KINDS) satisfies z.ZodType<RunKind>;
 export const sourceKind = z.enum(SOURCE_KINDS) satisfies z.ZodType<SourceKind>;
+export const draftStep = z.enum(["estimate", "documents"]) satisfies z.ZodType<DraftStep>;
 export const actionChoice = z.enum([
   "undecided",
   "committed",
@@ -96,16 +98,32 @@ export const estimateGoalBody = z.discriminatedUnion("type", [
 export type EstimateGoalBody = z.infer<typeof estimateGoalBody>;
 
 /**
+ * A partial version of an inputs schema for PATCH: every field optional, and the fields that
+ * are optional on the goal may be `null`, which removes them (a house priced by budget range
+ * drops its sizes). The handler merges the patch into the stored inputs and validates the
+ * result against the goal's own type.
+ */
+function patchOf<T extends z.ZodRawShape>(schema: z.ZodObject<T>) {
+  const shape = Object.fromEntries(
+    Object.entries(schema.shape).map(([key, field]) => [
+      key,
+      field instanceof z.ZodOptional ? field.nullable() : (field as z.ZodType).optional(),
+    ]),
+  );
+  return z.object(shape).strict();
+}
+
+/**
  * PATCH /goals/:id. The goal's type is only known from Firestore, so partial inputs are
  * accepted for any goal type here and matched against the stored type by the handler.
+ * `draftStep` moves a draft between the estimate and the documents step (spec 10).
  */
 export const updateGoalBody = z
   .object({
-    inputs: z
-      .union([houseInputs.partial(), carInputs.partial(), weddingInputs.partial()])
-      .optional(),
+    inputs: z.union([patchOf(houseInputs), patchOf(carInputs), patchOf(weddingInputs)]).optional(),
     payPreference: payPreference.optional(),
     userOverride: rupiah.positive().nullable().optional(), // null clears the user's own price
+    draftStep: draftStep.optional(),
   })
   .strict()
   .refine((b) => Object.keys(b).length > 0, "Nothing to update");
