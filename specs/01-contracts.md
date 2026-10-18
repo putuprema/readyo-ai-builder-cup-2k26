@@ -108,7 +108,9 @@ type RunStage = "reading" | "cleaning" | "checking" | "planning" | "done" | "fai
 interface RunStatus { id: string; stage: RunStage; percent: number; startedAt: string; goalIds: string[]; month: string; kind: "first" | "monthly" | "reuse" | "recalculate"; error?: string; }
 ```
 
-`Change` and `SimulationResult` are defined in `specs/02-simulate.md`.
+`Change` and `SimulationResult` are defined in `specs/02-simulate.md`. They are also written in `shared/types` because `Analysis` and `ActionCard` depend on them.
+
+Also in `shared/types`, for records the layout below names without a type: `DocumentRecord` (`name, type, size, sourceKind, month, status, createdAt`), `MonthRecord` (`snapshot`, `sources`, `submittedAt`) and `Override` (`ruleId`, `value`, `updatedAt`). `SourceKind` is `bank | ewallet | paylater | pinjol | investment`. `firestorePaths` in `@adidi/shared` builds every document path of the layout.
 
 ## Firestore layout
 
@@ -144,6 +146,8 @@ Security rules: a user reads and writes only under `users/{uid}`; `rules/` is re
 | POST | `/recalculate` | Re-run stages 5–6 for all active goals after override changes |
 
 Read-only data (goals, analyses, run status) is read by the web app directly from Firestore with listeners.
+
+Conventions (implemented in `api/src`): every endpoint needs `Authorization: Bearer <Firebase ID token>` and answers `401 { error: "unauthorized" }` without one; invalid params or body answer `400 { error: "invalid_request", issues: [{ path, message }] }`; an endpoint whose logic is a later spec answers `501 { error: "not_implemented" }` after validation. Uploads accept PDF, PNG and JPG up to 10 MB (spec 10). A `first` run needs at least one `documentIds` entry.
 
 ## Acceptance criteria
 
