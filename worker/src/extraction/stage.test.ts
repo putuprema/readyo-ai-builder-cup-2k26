@@ -1,10 +1,10 @@
 import { type DocumentRecord, hasLongDigitRun } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
-import { ModelError } from "../gemini/client.js";
+import { type JsonModel, ModelError } from "../gemini/client.js";
 import { FakeModel, FakeRecords, FakeStorage } from "./fakes.js";
 import { storagePathFor } from "./ports.js";
 import { sampleStatement } from "./samples.js";
-import { ExtractionStageError, runExtractionStage } from "./stage.js";
+import { ExtractionStageError, READING_CONCURRENCY, runExtractionStage } from "./stage.js";
 
 // specs/04-extraction.md task 2: storage, document status and file deletion around the
 // extraction call, plus the unreadable-file decision.
@@ -44,6 +44,27 @@ function setup(documents: DocumentRecord[], answers: unknown) {
     logs,
     deps: { storage, records, model, log: (m: string) => logs.push(m) },
   };
+}
+
+/** Answers after a delay per call and records how many calls were in flight at once. */
+class SlowModel implements JsonModel {
+  inFlight = 0;
+  max = 0;
+  private calls = 0;
+
+  constructor(
+    private readonly answer: unknown,
+    private readonly delays: number[],
+  ) {}
+
+  async generateJson(): Promise<unknown> {
+    const delay = this.delays[this.calls++] ?? 0;
+    this.inFlight++;
+    this.max = Math.max(this.max, this.inFlight);
+    await new Promise((r) => setTimeout(r, delay));
+    this.inFlight--;
+    return structuredClone(this.answer);
+  }
 }
 
 describe("runExtractionStage", () => {
@@ -181,6 +202,49 @@ describe("runExtractionStage", () => {
       first.transactions.map((t) => t.id).sort(),
     );
     expect(records.transactions.size).toBe(3);
+  });
+
+  it("reads documents concurrently, at most `concurrency` at a time, in the submitted order", async () => {
+    const docs = ["bank", "a", "b", "c", "d"].map((id, i) =>
+      document({ id: `doc_${id}`, sourceKind: i === 0 ? "bank" : "ewallet" }),
+    );
+    // Later documents answer sooner, so finishing order is the reverse of the submitted one.
+    const capped = setup(docs, sampleStatement);
+    const slow = new SlowModel(sampleStatement, [50, 40, 30, 20, 10]);
+    const result = await runExtractionStage(
+      { uid, runKind: "first", documentIds: docs.map((d) => d.id) },
+      { ...capped.deps, model: slow, concurrency: 3 },
+    );
+    expect(slow.max).toBe(3);
+    expect(result.extracted.map((s) => s.documentId)).toEqual(docs.map((d) => d.id));
+
+    const byDefault = setup(docs, sampleStatement);
+    const fast = new SlowModel(sampleStatement, [10, 10, 10, 10, 10]);
+    await runExtractionStage(
+      { uid, runKind: "first", documentIds: docs.map((d) => d.id) },
+      { ...byDefault.deps, model: fast },
+    );
+    expect(fast.max).toBe(READING_CONCURRENCY);
+  });
+
+  it("finishes the other documents before failing on an unexpected error", async () => {
+    const bank = document();
+    const wallet = document({ id: "doc_wallet_1", name: "gopay.png", sourceKind: "ewallet" });
+    const { deps, records } = setup([bank, wallet], sampleStatement);
+    const write = records.writeRecords.bind(records);
+    records.writeRecords = async (u, extracted) => {
+      if (extracted.transactions[0]?.sourceFileId === bank.id) throw new Error("firestore down");
+      await new Promise((r) => setTimeout(r, 20));
+      return write(u, extracted);
+    };
+    const run = runExtractionStage(
+      { uid, runKind: "first", documentIds: [bank.id, wallet.id] },
+      deps,
+    );
+    await expect(run).rejects.toThrow("firestore down");
+    // The retry will find the wallet extracted and the bank untouched.
+    expect(records.documents.get(wallet.id)?.status).toBe("extracted");
+    expect(records.documents.get(bank.id)?.status).toBe("uploaded");
   });
 
   it("does not fail the run when deleting the file fails", async () => {

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CARDS, initialKind, rejectReason } from "./documents";
-import { SAMPLE_MONTH, SAMPLE_STATEMENTS } from "./sample";
+import { SAMPLE_MONTH, SAMPLE_STATEMENTS, sampleUrl } from "./sample";
 
 // The "Use sample statements" button (docs/screens.md, "2 · Documents"): the copies the browser
 // fetches stay identical to the committed fixtures, and each file lands in the right card.
@@ -25,6 +25,14 @@ describe("sample statements", () => {
       expect(initialKind(s.card, s.file)).toBe(s.sourceKind);
     }
     expect(new Set(SAMPLE_STATEMENTS.map((s) => s.card)).size).toBe(3);
+  });
+
+  it("is fetched and previewed from its copy in web/public", () => {
+    for (const { file } of SAMPLE_STATEMENTS) {
+      const url = sampleUrl(file);
+      expect(url).toBe(`/samples/${file}`);
+      expect(readFileSync(repo(`web/public${url}`)).length).toBeGreaterThan(0);
+    }
   });
 
   it("passes the manual upload checks", () => {

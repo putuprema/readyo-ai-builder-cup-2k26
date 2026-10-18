@@ -13,7 +13,12 @@ import { type RecordsPort, type StoragePort, storagePathFor } from "./ports.js";
 // The "reading" stage of a run: extract every submitted document, store the records, delete the
 // files, and report which sources could not be read. Decision recorded in specs/04-extraction.md:
 // continue with the readable files and flag the rest; fail only when nothing was readable, or when
-// the bank statement failed on a first run.
+// the bank statement failed on a first run. Documents are read concurrently (at most
+// READING_CONCURRENCY model calls at a time), so the stage takes about as long as its slowest
+// document; results keep the submitted order.
+
+/** Documents read at the same time. A first run has four or five; this keeps well under quota. */
+export const READING_CONCURRENCY = 4;
 
 export interface ExtractionStageInput {
   uid: string;
@@ -27,6 +32,8 @@ export interface ExtractionStageDeps {
   model: JsonModel;
   /** Receives one short line per event. Never given file or model content. */
   log?: (message: string) => void;
+  /** Documents read at the same time; READING_CONCURRENCY when omitted. */
+  concurrency?: number;
 }
 
 export interface ExtractedSource {
@@ -80,19 +87,21 @@ export async function runExtractionStage(
     holdings: [],
   };
 
-  for (const documentId of input.documentIds) {
-    const document = await deps.records.getDocument(input.uid, documentId);
-    if (!document) {
-      log(`document ${documentId}: no record, skipped`);
-      result.failed.push({
-        documentId,
-        kind: "bank",
-        name: documentId,
-        reason: "The upload record was not found",
-      });
-      continue;
-    }
-    const outcome = await extractOne(input.uid, document, deps, log);
+  const started = Date.now();
+  const outcomes = await settleAll(
+    input.documentIds,
+    deps.concurrency ?? READING_CONCURRENCY,
+    (documentId) => readOne(input.uid, documentId, deps, log),
+  );
+  // An unexpected error (storage, Firestore) fails the task for a retry, but only once every
+  // other document has finished, so the retry finds each one either extracted or untouched.
+  const error = outcomes.find((o) => o.status === "rejected");
+  if (error) throw error.reason;
+  log(`read ${input.documentIds.length} documents in ${Date.now() - started} ms`);
+
+  for (const settled of outcomes) {
+    if (settled.status !== "fulfilled") continue;
+    const outcome = settled.value;
     if ("reason" in outcome) {
       result.failed.push(outcome);
     } else {
@@ -106,6 +115,48 @@ export async function runExtractionStage(
   const stop = stopReason(input.runKind, result);
   if (stop) throw new ExtractionStageError(stop, result.failed);
   return result;
+}
+
+/** Runs `fn` over `items` with at most `limit` in flight; results in input order. */
+async function settleAll<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<PromiseSettledResult<R>[]> {
+  const results: PromiseSettledResult<R>[] = new Array(items.length);
+  let next = 0;
+  async function lane() {
+    while (next < items.length) {
+      const index = next++;
+      try {
+        results[index] = { status: "fulfilled", value: await fn(items[index] as T) };
+      } catch (reason) {
+        results[index] = { status: "rejected", reason };
+      }
+    }
+  }
+  const lanes = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(Array.from({ length: lanes }, lane));
+  return results;
+}
+
+async function readOne(
+  uid: string,
+  documentId: string,
+  deps: ExtractionStageDeps,
+  log: (message: string) => void,
+): Promise<OneOutcome> {
+  const document = await deps.records.getDocument(uid, documentId);
+  if (!document) {
+    log(`document ${documentId}: no record, skipped`);
+    return {
+      documentId,
+      kind: "bank",
+      name: documentId,
+      reason: "The upload record was not found",
+    };
+  }
+  return extractOne(uid, document, deps, log);
 }
 
 type OneOutcome =

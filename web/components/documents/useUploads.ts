@@ -3,12 +3,14 @@
 import type { SourceKind } from "@adidi/shared";
 import { useEffect, useRef, useState } from "react";
 import { type CardId, normalizedType, rejectReason, type UploadItem } from "@/lib/documents";
+import { isObjectUrl } from "@/lib/preview";
 import { apiUploader, setDocumentKind, type Uploader } from "@/lib/uploader";
 
 // The upload state shared by the documents step and the monthly check-in: files picked into
 // a group (a card, or a check-in row) upload at once with progress, can be removed (the record
 // and the stored file are deleted) or change kind, and the page warns before leaving while a
-// file is still in flight. Nothing is read before Submit.
+// file is still in flight. Nothing is read before Submit. With `previews`, each file keeps a
+// URL the page can show it from (an object URL of the File, released on remove and on leaving).
 
 export interface AddOptions {
   /** Where refused files are reported: the card or the check-in row. */
@@ -19,22 +21,43 @@ export interface AddOptions {
   slot?: string;
   /** The month for these files when it differs from the hook's (set in the same event). */
   month?: string;
+  /** A hosted copy to preview from instead of an object URL (the sample statements). */
+  previewUrl?: string;
 }
 
 export function useUploads({
   month,
   uploader = apiUploader,
   onNotice,
+  previews = false,
 }: {
   month: string;
   uploader?: Uploader;
   onNotice: (message: string) => void;
+  /** Give each file a `previewUrl` (the documents step). */
+  previews?: boolean;
 }) {
   const [items, setItems] = useState<UploadItem[]>([]);
   const [rejected, setRejected] = useState<Record<string, { name: string; reason: string }[]>>({});
   const controllers = useRef(new Map<string, AbortController>());
   // The kind each file has now, so an upload that finishes after a change stores the new one.
   const kinds = useRef(new Map<string, SourceKind>());
+  // Object URLs by file, released when the file is removed or the page goes away.
+  const objectUrls = useRef(new Map<string, string>());
+
+  useEffect(() => {
+    const urls = objectUrls.current;
+    return () => {
+      for (const url of urls.values()) URL.revokeObjectURL(url);
+      urls.clear();
+    };
+  }, []);
+
+  function releasePreview(localId: string) {
+    const url = objectUrls.current.get(localId);
+    if (url) URL.revokeObjectURL(url);
+    objectUrls.current.delete(localId);
+  }
 
   // Files in flight are lost on navigation; ask before leaving.
   const pending = items.some((i) => i.status === "uploading");
@@ -61,6 +84,14 @@ export function useUploads({
         continue;
       }
       const localId = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      let previewUrl: string | undefined;
+      if (previews) {
+        // An untyped file would download instead of showing; give its blob the accepted type.
+        previewUrl =
+          options.previewUrl ??
+          URL.createObjectURL(file.type === type ? file : new Blob([file], { type }));
+        if (isObjectUrl(previewUrl)) objectUrls.current.set(localId, previewUrl);
+      }
       const item: UploadItem = {
         localId,
         card: options.card,
@@ -74,6 +105,7 @@ export function useUploads({
         size: file.size,
         status: "uploading",
         progress: 0,
+        ...(previewUrl ? { previewUrl } : {}),
       };
       kinds.current.set(localId, item.sourceKind);
       setItems((list) => [...list, item]);
@@ -112,12 +144,14 @@ export function useUploads({
     controllers.current.get(item.localId)?.abort();
     if (!item.docId) {
       setItems((list) => list.filter((i) => i.localId !== item.localId));
+      releasePreview(item.localId);
       return;
     }
     patch(item.localId, { status: "removing" });
     try {
       await uploader.remove(item.docId);
       setItems((list) => list.filter((i) => i.localId !== item.localId));
+      releasePreview(item.localId);
     } catch {
       patch(item.localId, { status: "uploaded", error: undefined });
       onNotice(`Could not remove ${item.name}. Try again.`);

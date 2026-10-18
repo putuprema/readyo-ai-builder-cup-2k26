@@ -12,7 +12,7 @@ Turn uploaded statements (bank PDF, e-wallet screenshot, PayLater bill, investme
 
 **Extraction (Gemini, Pro tier)**
 
-- One call per file, file sent as an image or PDF part.
+- One call per file, file sent as an image or PDF part. The files of a run are read concurrently, at most four at a time (`READING_CONCURRENCY` in `worker/src/extraction/stage.ts`), so the reading stage takes about as long as its slowest file instead of the sum; results keep the submitted order. An unexpected error (storage, Firestore) fails the task only after the other files finished, so the retry finds each one either `extracted` or untouched.
 - Structured output with a response schema per source kind (`bank`, `ewallet`, `paylater`, `investment`), matching the types in `shared/types`. No free-text parsing.
 - The prompt states: Indonesian formats (`Rp 1.250.000`, `12/10/2026`, `DB`/`CR` markers), return amounts as integers in rupiah, never invent rows, mark unreadable fields as null.
 - Account and card numbers are masked (keep last 4 digits) before anything is stored.

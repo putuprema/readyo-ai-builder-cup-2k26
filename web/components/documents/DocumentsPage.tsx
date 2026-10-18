@@ -27,6 +27,7 @@ import { useRouteSegment } from "@/lib/route-id";
 import { listSubmittedMonths, runErrorMessage, startRun } from "@/lib/runs";
 import { loadSampleStatements, SAMPLE_MONTH } from "@/lib/sample";
 import { apiUploader, type Uploader } from "@/lib/uploader";
+import { PreviewDialog } from "./PreviewDialog";
 import { UploadCard } from "./UploadCard";
 import { useUploads } from "./useUploads";
 
@@ -59,10 +60,12 @@ function DocumentsStep() {
   const [notice, setNotice] = useState<string | null>(null);
   const [reusable, setReusable] = useState<string | null>(null);
   const [loadingSamples, setLoadingSamples] = useState(false);
+  const [previewing, setPreviewing] = useState<string | null>(null);
   const { items, rejected, add, remove, changeKind } = useUploads({
     month,
     uploader,
     onNotice: setNotice,
+    previews: true,
   });
 
   useEffect(() => {
@@ -100,8 +103,8 @@ function DocumentsStep() {
       const samples = await loadSampleStatements();
       const sampleMonth = monthOptions().includes(SAMPLE_MONTH) ? SAMPLE_MONTH : month;
       setMonth(sampleMonth);
-      for (const { file, card, sourceKind } of samples) {
-        add([file], { group: card, card, sourceKind, month: sampleMonth });
+      for (const { file, card, sourceKind, url } of samples) {
+        add([file], { group: card, card, sourceKind, month: sampleMonth, previewUrl: url });
       }
     } catch {
       setNotice("Could not load the sample statements. Try again, or add your own files.");
@@ -231,10 +234,16 @@ function DocumentsStep() {
             onFiles={(files) => addFiles(spec.id, files)}
             onRemove={(item) => void remove(item)}
             onKindChange={changeKind}
+            onPreview={(item) => setPreviewing(item.localId)}
             disabled={submitting || goal?.status !== "draft"}
           />
         ))}
       </div>
+
+      <PreviewDialog
+        item={items.find((i) => i.localId === previewing) ?? null}
+        onClose={() => setPreviewing(null)}
+      />
 
       {notice && (
         <p

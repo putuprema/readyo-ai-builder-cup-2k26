@@ -5,7 +5,7 @@ import { type DragEvent, useId, useState } from "react";
 import { ACCEPT_ATTRIBUTE, type CardSpec, describeFile, type UploadItem } from "@/lib/documents";
 
 // One upload card of the documents step: title, file rows (name, type, size, progress,
-// remove), and a drop zone that is a real <label> around the file input.
+// preview, remove), and a drop zone that is a real <label> around the file input.
 
 export function UploadCard({
   spec,
@@ -14,6 +14,7 @@ export function UploadCard({
   onFiles,
   onRemove,
   onKindChange,
+  onPreview,
   disabled,
 }: {
   spec: CardSpec;
@@ -23,6 +24,7 @@ export function UploadCard({
   onFiles: (files: File[]) => void;
   onRemove: (item: UploadItem) => void;
   onKindChange: (item: UploadItem, kind: SourceKind) => void;
+  onPreview?: (item: UploadItem) => void;
   disabled?: boolean;
 }) {
   const inputId = useId();
@@ -66,6 +68,7 @@ export function UploadCard({
                 kinds={spec.kinds}
                 onRemove={onRemove}
                 onKindChange={onKindChange}
+                onPreview={onPreview}
                 disabled={disabled}
               />
             </li>
@@ -116,29 +119,42 @@ export function UploadCard({
   );
 }
 
-/** One file: icon, name, kind select (when there is a choice), type and size, remove, progress. */
+/**
+ * One file: icon, name, kind select (when there is a choice), type and size, preview (with
+ * `onPreview` and a file to show), remove, progress. With a preview, a row narrower than 32rem
+ * (a phone, or a half-width card) wraps: the name on its own line, the controls under it.
+ */
 export function FileRow({
   item,
   kinds,
   onRemove,
   onKindChange,
+  onPreview,
   disabled,
 }: {
   item: UploadItem;
   kinds: { value: SourceKind; label: string }[];
   onRemove: (item: UploadItem) => void;
   onKindChange: (item: UploadItem, kind: SourceKind) => void;
+  onPreview?: (item: UploadItem) => void;
   disabled?: boolean;
 }) {
+  const preview = onPreview && item.previewUrl ? onPreview : null;
   return (
     <div
       className={`flex flex-col gap-2 rounded-[10px] border bg-surface px-3 py-2.5 text-[13px] ${
         item.status === "failed" ? "border-blocked" : "border-line"
-      } ${item.status === "removing" ? "opacity-50" : ""}`}
+      } ${item.status === "removing" ? "opacity-50" : ""} ${preview ? "@container" : ""}`}
     >
-      <div className="flex items-center gap-3">
+      <div
+        className={`flex items-center gap-3 ${preview ? "flex-wrap gap-y-1 @lg:flex-nowrap" : ""}`}
+      >
         <FileIcon type={item.type} />
-        <span className="min-w-0 flex-1 truncate">{item.name}</span>
+        <span
+          className={`min-w-0 flex-1 truncate ${preview ? "basis-[calc(100%-30px)] @lg:basis-0" : ""}`}
+        >
+          {item.name}
+        </span>
         {kinds.length > 1 ? (
           <label className="flex items-center gap-1.5 text-[12px] text-muted">
             <span className="sr-only">Source kind for {item.name}</span>
@@ -156,9 +172,37 @@ export function FileRow({
             </select>
           </label>
         ) : null}
-        <span className="hidden whitespace-nowrap font-medium text-muted tabular-nums sm:inline">
+        <span
+          className={`hidden whitespace-nowrap font-medium text-muted tabular-nums ${
+            preview ? "@sm:inline" : "sm:inline"
+          }`}
+        >
           {describeFile(item)}
         </span>
+        {preview && (
+          <button
+            type="button"
+            disabled={item.status === "removing"}
+            onClick={() => preview(item)}
+            className="ml-auto inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-line px-3 font-semibold text-[13px] text-accent-strong hover:bg-accent-tint disabled:opacity-50 @lg:ml-0"
+          >
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            Preview<span className="sr-only"> {item.name}</span>
+          </button>
+        )}
         <button
           type="button"
           aria-label={`Remove ${item.name}`}
