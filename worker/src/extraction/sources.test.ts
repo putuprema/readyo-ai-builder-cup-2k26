@@ -44,6 +44,35 @@ describe("e-wallet screenshot", () => {
   });
 });
 
+describe("own-account transfers seen by the model", () => {
+  it("classifies a row whose counterparty is the account holder as own_transfer, storing no name", () => {
+    const bank = document({
+      id: "doc_jago",
+      name: "jago.pdf",
+      type: "application/pdf",
+      sourceKind: "bank",
+    });
+    const first = sampleStatement.transactions[0];
+    if (!first) throw new Error("sample needs a row");
+    const result = mapExtraction(bank, {
+      ...sampleStatement,
+      transactions: [
+        {
+          ...first,
+          counterparty: "BCA",
+          description: "Incoming Transfer",
+          counterpartyIsAccountHolder: true,
+        },
+      ],
+    });
+    expect(result.transactions[0]).toMatchObject({
+      cls: "own_transfer",
+      category: "own_transfer",
+      counterparty: "BCA",
+    });
+  });
+});
+
 describe("PayLater bill", () => {
   const paylater = document({ id: "doc_pl", name: "spaylater.png", sourceKind: "paylater" });
 
@@ -171,6 +200,83 @@ describe("investment portfolio", () => {
     expect(classifyHolding("bond", "2028-03-15", "2026-09").liquidityClass).toBe("locked");
     expect(classifyHolding("bond", "2026-09-15", "2026-09").liquidityClass).toBe("liquid");
     expect(classifyHolding("deposit", "2026-08-01", "2026-09").liquidityClass).toBe("locked");
+  });
+
+  it("converts foreign-currency holdings with the FX assumption and keeps the printed value", () => {
+    const result = mapExtraction(investment, {
+      ...samplePortfolio,
+      provider: "GoTrade",
+      currency: "USD",
+      totalValue: 4383.4,
+      holdings: [
+        {
+          instrument: "Cash USD",
+          instrumentType: "cash",
+          currency: "USD",
+          currentValue: 4.64,
+          units: null,
+          unrealizedGainLoss: null,
+          lockedUntil: null,
+        },
+        {
+          instrument: "NVDA",
+          instrumentType: "stock",
+          currency: "USD",
+          currentValue: 4378.76,
+          units: 21.812,
+          unrealizedGainLoss: -201.76,
+          lockedUntil: null,
+        },
+      ],
+    });
+    expect(result.holdings).toEqual([
+      expect.objectContaining({
+        instrument: "Cash USD",
+        currency: "USD",
+        nativeValue: 4.64,
+        currentValue: 76_560,
+        liquidityClass: "cash",
+        volatile: false,
+      }),
+      expect.objectContaining({
+        instrument: "NVDA",
+        currency: "USD",
+        nativeValue: 4378.76,
+        currentValue: 72_249_540,
+        volatile: true,
+      }),
+    ]);
+    expect(result.meta.totalValue).toBe(72_326_100);
+    expect(result.warnings).toEqual([
+      "Values in USD were converted with the assumed exchange rate",
+    ]);
+  });
+
+  it("records a holding in a currency without a rate as Rp 0 with a warning", () => {
+    const holding: ExtractedHolding = {
+      ...(samplePortfolio.holdings[0] as ExtractedHolding),
+      currency: "JPY",
+      currentValue: 150_000,
+    };
+    const result = mapExtraction(investment, {
+      ...samplePortfolio,
+      holdings: [holding],
+      totalValue: null,
+    });
+    expect(result.holdings[0]).toMatchObject({
+      currentValue: 0,
+      currency: "JPY",
+      nativeValue: 150_000,
+    });
+    expect(result.warnings).toContain(
+      "No exchange rate for JPY; holdings in it were recorded as Rp 0",
+    );
+  });
+
+  it("leaves rupiah holdings without currency fields", () => {
+    const result = mapExtraction(investment, samplePortfolio);
+    expect(result.holdings[0]).not.toHaveProperty("currency");
+    expect(result.holdings[0]).not.toHaveProperty("nativeValue");
   });
 
   it("masks digits in provider and instrument names", () => {

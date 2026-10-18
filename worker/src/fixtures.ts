@@ -32,12 +32,22 @@ export const expectedLoanSchema = z.object({
   remainingTenorMonths: z.number().int().optional(),
 });
 
-export const expectedHoldingSchema = z.object({
-  instrument: z.string(),
-  currentValue: z.number().int(),
-  volatile: z.boolean(),
-  liquidityClass: z.enum(["cash", "liquid", "locked"]).optional(),
-});
+export const expectedHoldingSchema = z
+  .object({
+    instrument: z.string(),
+    /** Rupiah, for statements printed in rupiah. */
+    currentValue: z.number().int().optional(),
+    /** For statements in another currency: the printed value and its ISO code. */
+    currency: z.string().optional(),
+    nativeValue: z.number().optional(),
+    volatile: z.boolean(),
+    liquidityClass: z.enum(["cash", "liquid", "locked"]).optional(),
+  })
+  .refine(
+    (h) =>
+      h.currentValue !== undefined || (h.currency !== undefined && h.nativeValue !== undefined),
+    { message: "give currentValue (rupiah) or currency + nativeValue" },
+  );
 
 export const expectedFileSchema = z.object({
   kind: z.enum(sourceKinds),

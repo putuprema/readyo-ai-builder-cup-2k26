@@ -1,0 +1,22 @@
+{
+  "kind": "investment",
+  "month": "2026-07",
+  "transactions": [],
+  "loans": [],
+  "holdings": [
+    {
+      "instrument": "Cash USD",
+      "currency": "USD",
+      "nativeValue": 4.64,
+      "volatile": false,
+      "liquidityClass": "cash"
+    },
+    {
+      "instrument": "NVDA",
+      "currency": "USD",
+      "nativeValue": 4378.76,
+      "volatile": true,
+      "liquidityClass": "liquid"
+    }
+  ]
+}

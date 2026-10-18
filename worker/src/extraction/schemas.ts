@@ -33,6 +33,11 @@ export const extractedTransactionSchema = z.object({
     .describe("Merchant, person or institution on the other side, as printed; empty if none"),
   description: z.string().describe("The row's description text exactly as printed"),
   balanceAfter: nullableRupiah.describe("Running balance after this row, null if not shown"),
+  counterpartyIsAccountHolder: z
+    .boolean()
+    .describe(
+      "true when the counterparty printed on this row is the account holder named in the statement header (a transfer between the holder's own accounts)",
+    ),
 });
 
 export const extractedStatementSchema = z.object({
@@ -121,7 +126,14 @@ export type InstrumentType = (typeof instrumentTypes)[number];
 export const extractedHoldingSchema = z.object({
   instrument: z.string().describe("Fund, ticker, coin or product name as printed"),
   instrumentType: z.enum(instrumentTypes),
-  currentValue: rupiah.describe("Current market value in rupiah"),
+  currency: z
+    .string()
+    .describe("ISO 4217 code of the printed value: IDR for rupiah, USD for dollars, and so on"),
+  currentValue: z
+    .number()
+    .describe(
+      "Current market value as printed, in the given currency: an integer when IDR, decimals allowed otherwise",
+    ),
   units: z.number().nullable().describe("Units, shares or coins held, if shown"),
   unrealizedGainLoss: nullableRupiah.describe("Unrealised gain (positive) or loss (negative)"),
   lockedUntil: isoDate.nullable().describe("Maturity or lock-up end date, if the product has one"),
@@ -134,7 +146,8 @@ export const extractedPortfolioSchema = z.object({
     .nullable()
     .describe("Account or client id as printed; null if not shown"),
   asOfDate: isoDate.nullable().describe("Date the values are shown for"),
-  totalValue: nullableRupiah.describe("Total portfolio value as printed"),
+  currency: z.string().describe("ISO 4217 code the totals are printed in"),
+  totalValue: z.number().nullable().describe("Total portfolio value as printed, in that currency"),
   holdings: z.array(extractedHoldingSchema),
   warnings,
 });

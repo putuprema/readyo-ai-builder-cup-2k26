@@ -210,6 +210,53 @@ describe("scoreFixture for loans and holdings", () => {
   });
 });
 
+describe("scoreFixture for foreign-currency holdings", () => {
+  const usdExpected: ExpectedFile = {
+    kind: "investment",
+    month: "2026-07",
+    transactions: [],
+    loans: [],
+    holdings: [{ instrument: "NVDA", currency: "USD", nativeValue: 4378.76, volatile: true }],
+  };
+  const nvda = (overrides: Partial<Holding>): Holding => ({
+    id: "h",
+    month: "2026-07",
+    instrument: "NVDA",
+    provider: "GoTrade",
+    currentValue: 72_249_540,
+    currency: "USD",
+    nativeValue: 4378.76,
+    liquidityClass: "liquid",
+    volatile: true,
+    sourceFileId: "f",
+    ...overrides,
+  });
+
+  it("compares the printed value and currency, not the converted rupiah", () => {
+    expect(
+      scoreFixture("usd", usdExpected, {
+        transactions: [],
+        loans: [],
+        holdings: [nvda({ currentValue: 1 })],
+      }).pass,
+    ).toBe(true);
+    expect(
+      scoreFixture("usd", usdExpected, {
+        transactions: [],
+        loans: [],
+        holdings: [nvda({ nativeValue: 4378.7 })],
+      }).failures,
+    ).toEqual(["holding value differs"]);
+    expect(
+      scoreFixture("usd", usdExpected, {
+        transactions: [],
+        loans: [],
+        holdings: [nvda({ currency: undefined, nativeValue: undefined })],
+      }).failures,
+    ).toEqual(["holding value differs"]);
+  });
+});
+
 describe("formatTable and overallRowAccuracy", () => {
   it("prints one line per fixture and weights the overall figure by rows", () => {
     const a = scoreFixture("a", bankExpected, {

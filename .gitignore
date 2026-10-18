@@ -30,5 +30,10 @@ ui-debug.log
 # Test and coverage output
 coverage/
 
+# Real statements stay local until they are anonymised (fixtures/README.md); the expected
+# JSON next to them holds only dates, amounts and merchant names and is committed.
+fixtures/statements/*
+!fixtures/statements/.gitkeep
+
 # Next.js generated
 next-env.d.ts

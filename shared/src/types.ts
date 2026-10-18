@@ -125,7 +125,9 @@ export interface Holding {
   month: string;
   instrument: string;
   provider: string;
-  currentValue: number;
+  currentValue: number; // rupiah; converted with the FX assumption when the statement is in another currency
+  currency?: string; // ISO 4217 code when the statement is not in rupiah (e.g. "USD")
+  nativeValue?: number; // value in that currency, as printed
   liquidityClass: LiquidityClass;
   volatile: boolean;
   sourceFileId: string;

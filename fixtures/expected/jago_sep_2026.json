@@ -1,0 +1,43 @@
+{
+  "kind": "bank",
+  "month": "2026-09",
+  "transactions": [
+    {
+      "date": "2026-09-26",
+      "amount": 50000,
+      "direction": "in",
+      "counterparty": "BCA",
+      "cls": "own_transfer"
+    },
+    {
+      "date": "2026-09-26",
+      "amount": 19197,
+      "direction": "out",
+      "counterparty": "MICROSOFT",
+      "cls": "discretionary"
+    },
+    {
+      "date": "2026-09-28",
+      "amount": 4,
+      "direction": "in",
+      "counterparty": "Interest",
+      "cls": "income"
+    },
+    {
+      "date": "2026-09-28",
+      "amount": 1,
+      "direction": "out",
+      "counterparty": "Tax on Interest",
+      "cls": "essential"
+    },
+    {
+      "date": "2026-09-30",
+      "amount": 5000,
+      "direction": "out",
+      "counterparty": "Insufficient Funds Fee",
+      "cls": "essential"
+    }
+  ],
+  "loans": [],
+  "holdings": []
+}

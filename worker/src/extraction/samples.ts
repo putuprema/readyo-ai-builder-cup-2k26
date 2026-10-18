@@ -19,6 +19,7 @@ export const sampleStatement: ExtractedStatement = {
       counterparty: "PT MAJU JAYA",
       description: "TRSF E-BANKING CR 0109/FTSCY/WS95051 GAJI SEPT PT MAJU JAYA",
       balanceAfter: 27_500_000,
+      counterpartyIsAccountHolder: false,
     },
     {
       date: "2026-09-02",
@@ -27,6 +28,7 @@ export const sampleStatement: ExtractedStatement = {
       counterparty: "GOPAY",
       description: "TRSF E-BANKING DB TOPUP GOPAY 081234567890",
       balanceAfter: 27_000_000,
+      counterpartyIsAccountHolder: false,
     },
     {
       date: null,
@@ -35,6 +37,7 @@ export const sampleStatement: ExtractedStatement = {
       counterparty: "",
       description: "BIAYA ADM",
       balanceAfter: null,
+      counterpartyIsAccountHolder: false,
     },
   ],
   warnings: ["Last row has no readable date"],
@@ -60,11 +63,13 @@ export const samplePortfolio: ExtractedPortfolio = {
   provider: "Bibit",
   accountNumber: null,
   asOfDate: "2026-09-30",
+  currency: "IDR",
   totalValue: 38_000_000,
   holdings: [
     {
       instrument: "Sucorinvest Money Market Fund",
       instrumentType: "money_market_fund",
+      currency: "IDR",
       currentValue: 20_000_000,
       units: 12_345.678,
       unrealizedGainLoss: 350_000,
@@ -73,6 +78,7 @@ export const samplePortfolio: ExtractedPortfolio = {
     {
       instrument: "BBCA",
       instrumentType: "stock",
+      currency: "IDR",
       currentValue: 10_000_000,
       units: 1_000,
       unrealizedGainLoss: -200_000,
@@ -81,6 +87,7 @@ export const samplePortfolio: ExtractedPortfolio = {
     {
       instrument: "BTC",
       instrumentType: "crypto",
+      currency: "IDR",
       currentValue: 8_000_000,
       units: 0.0042,
       unrealizedGainLoss: 1_200_000,

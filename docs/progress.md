@@ -4,7 +4,7 @@ Update this file at the end of every coding session. Newest entries at the top o
 
 ## Decisions still open
 
-- Values marked `[__]` in the rules and assumptions (need BI / OJK / bank sources).
+- Values marked `[__]` in the rules and assumptions (need BI / OJK / bank sources), including the `fxRates` placeholders (USD, SGD) in `worker/src/extraction/assumptions.json`.
 
 ## Decisions taken
 
@@ -24,7 +24,7 @@ Update this file at the end of every coding session. Newest entries at the top o
 
 ## In progress
 
-- `specs/04-extraction.md`, blocked on inputs: `fixtures/statements/` and `fixtures/expected/` are still empty, so the ≥ 95% field accuracy, the per-fixture criteria on real documents, and the live tests have not run. Format for the expected JSON is in `fixtures/README.md`. Also needs a `GEMINI_API_KEY` in `worker/.env` (none on this machine). Not yet verified against real Gemini: that the API accepts the generated `responseJsonSchema` (anyOf-null form) and the alias model ids. The Cloud Storage deletion criterion is covered by a unit test over the fake storage; the integration test against a real bucket waits for the project setup (spec 00). The firebase-admin adapters in `worker/src/infra/firebase.ts` have no emulator test yet.
+- `specs/04-extraction.md`, blocked on inputs: two real statements (a Jago bank statement for September 2026 and a GoTrade US-stock statement for July 2026) exist locally with hand-written expected JSON committed in `fixtures/expected/`, but the PDFs are not anonymised (name, address, account numbers) so `fixtures/statements/` is git-ignored until they are. Still missing: an e-wallet screenshot, a PayLater bill, and a `GEMINI_API_KEY` in `worker/.env`, so the ≥ 95% field accuracy, the per-fixture criteria on real documents and the live tests have not run. Format for the expected JSON is in `fixtures/README.md`. Not yet verified against real Gemini: that the API accepts the generated `responseJsonSchema` (anyOf-null form) and the alias model ids. The Cloud Storage deletion criterion is covered by a unit test over the fake storage; the integration test against a real bucket waits for the project setup (spec 00). The firebase-admin adapters in `worker/src/infra/firebase.ts` have no emulator test yet.
 - `specs/00-foundation.md` deploy acceptance criteria (Hosting URL and both Cloud Run URLs) are pending the manual GCP setup: install `gcloud` and `firebase`, create the project, enable APIs, create the Artifact Registry repo, fill in `scripts/env.sh` and `.firebaserc`, then run the three deploy scripts in README order.
 
 ## Next

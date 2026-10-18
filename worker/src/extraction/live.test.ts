@@ -47,7 +47,12 @@ describe.skipIf(!enabled)("live extraction over fixtures", () => {
           (h) => h.instrument.toLowerCase() === expectedHolding.instrument.toLowerCase(),
         );
         expect(found, expectedHolding.instrument).toBeDefined();
-        expect(found?.currentValue).toBe(expectedHolding.currentValue);
+        if (expectedHolding.currency !== undefined) {
+          expect(found?.currency).toBe(expectedHolding.currency);
+          expect(found?.nativeValue).toBeCloseTo(expectedHolding.nativeValue ?? 0, 2);
+        } else {
+          expect(found?.currentValue).toBe(expectedHolding.currentValue);
+        }
         expect(found?.volatile).toBe(expectedHolding.volatile);
       }
     },

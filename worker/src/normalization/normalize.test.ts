@@ -40,6 +40,7 @@ const walletHistory = {
       counterparty: "BCA",
       description: "Top Up via BCA",
       balanceAfter: null,
+      counterpartyIsAccountHolder: false,
     },
     {
       date: "2026-09-03",
@@ -48,6 +49,7 @@ const walletHistory = {
       counterparty: "GoFood",
       description: "GoFood - Kopi Kenangan",
       balanceAfter: null,
+      counterpartyIsAccountHolder: false,
     },
   ],
   warnings: [],

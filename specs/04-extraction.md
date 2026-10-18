@@ -22,6 +22,8 @@ Turn uploaded statements (bank PDF, e-wallet screenshot, PayLater bill, investme
 - When a bill gives no fee information at all, the rate comes from `worker/src/extraction/assumptions.json` (36% a year for PayLater, 48% for pinjol) and the loan carries a warning.
 - **Unreadable file** (blurry screenshot, password-protected PDF, model refusal): continue with the readable files and flag the failed source; the result page shows it as missing. The run itself fails, with the user sent back to the documents step, only when no file could be read, or when the bank statement failed on a `first` run (there is no income to analyse without it).
 - For loans, compute `effectiveAnnualRate` in code from the fee structure Gemini extracted (e.g. 2.95% per month → about 35% per year), not from the model.
+- Holdings printed in another currency (US stock brokers such as GoTrade) are returned in that currency with an ISO code; code converts to rupiah with the `fxRates` assumption in `worker/src/extraction/assumptions.json` (placeholder values until sourced), keeps `currency` and `nativeValue` on the `Holding`, and adds a warning. A currency without a rate is recorded as Rp 0 with a warning.
+- Transfers between the holder's own accounts: the model reports a boolean per row, "the counterparty is the account holder named in the header"; code marks the row `own_transfer`. The holder's name is never stored.
 
 **Normalization (code + Flash tier)**
 

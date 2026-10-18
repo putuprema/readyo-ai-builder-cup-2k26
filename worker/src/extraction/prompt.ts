@@ -21,6 +21,7 @@ const STATEMENT_PROMPT = `Extract every transaction from this statement.
 - "amount" is the absolute value of the row; the direction field says whether it went in or out.
 - "counterparty" is the merchant, person or institution on the other side when the row names one (e.g. "GOPAY", "PT MAJU JAYA", "TOKOPEDIA"); otherwise an empty string.
 - "balanceAfter" is the running balance printed on that row, if the statement shows one.
+- "counterpartyIsAccountHolder" is true only when the counterparty printed on the row is the same person as the account holder named in the statement header (money moved between their own accounts); false for any other person, merchant or institution, and false for interest, fees and tax rows.
 - "accountNumber" is the account or wallet number printed in the header, digits only.
 - Use the running balance to check your work: opening balance plus credits minus debits must equal the closing balance. If they do not match, add a warning saying so.`;
 
@@ -45,7 +46,8 @@ const PORTFOLIO_PROMPT = `Extract every holding shown in this investment portfol
 - Classify each holding: money market fund ("pasar uang"), fixed income fund ("pendapatan tetap", "obligasi"), mixed fund ("campuran"), equity fund ("saham" fund), stock (individual ticker such as BBCA), bond (ORI, SBR, SR, FR series), deposit ("deposito"), gold ("emas"), crypto (BTC, ETH and other coins) or other.
 - "lockedUntil" is the maturity or lock-up end date when the product has one (bonds, deposits); otherwise null.
 - "totalValue" is the total portfolio value printed on the screen, if shown.
-- If values are shown in another currency, convert only if the screen also shows the rupiah value; otherwise set the value to null and add a warning.`;
+- "currency" is the ISO code the values are printed in (IDR, USD, SGD). Do not convert: return the printed value in its own currency, with decimals when the currency has them. When a screen shows both a foreign value and a rupiah value, return the rupiah value with currency IDR.
+- A cash balance held at the broker (e.g. "Cash USD") is a holding of type cash.`;
 
 export function extractionPrompt(kind: SourceKind): string {
   switch (kind) {

@@ -1,10 +1,22 @@
 {
-  "_comment": "Extraction assumptions used by code when a document does not give the value (specs/04-extraction.md). Annual rates as fractions.",
+  "_comment": "Extraction assumptions used by code when a document does not give the value (specs/04-extraction.md). Annual rates as fractions. fxRates: rupiah per unit, placeholder values to confirm against BI JISDOR before the demo.",
   "unknownFeeAnnualRate": {
     "paylater": 0.36,
     "pinjol": 0.48,
     "kta": 0.18,
     "other": 0.24
   },
-  "unknownRemainingTenorMonths": 1
+  "unknownRemainingTenorMonths": 1,
+  "fxRates": {
+    "USD": {
+      "idrPerUnit": 16500,
+      "checkedAt": "2026-10-18",
+      "source": "placeholder [__]"
+    },
+    "SGD": {
+      "idrPerUnit": 12500,
+      "checkedAt": "2026-10-18",
+      "source": "placeholder [__]"
+    }
+  }
 }

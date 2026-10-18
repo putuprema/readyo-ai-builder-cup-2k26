@@ -167,7 +167,7 @@ function mapStatement(document: DocumentRecord, data: ExtractedStatement): Extra
     }
     const rawDescription = maskDigitRuns(row.description.trim());
     const counterparty = maskDigitRuns(row.counterparty.trim());
-    return {
+    const transaction: Transaction = {
       id: recordId("txn", document.id, index, date, row.amount, row.direction, rawDescription),
       month: document.month,
       date,
@@ -178,6 +178,13 @@ function mapStatement(document: DocumentRecord, data: ExtractedStatement): Extra
       sourceAccount,
       sourceFileId: document.id,
     };
+    // The model only says whether the printed counterparty is the holder; the name itself is
+    // never stored. Code turns that fact into the class.
+    if (row.counterpartyIsAccountHolder) {
+      transaction.cls = "own_transfer";
+      transaction.category = "own_transfer";
+    }
+    return transaction;
   });
 
   if (undated > 0) {
@@ -308,21 +315,36 @@ export function classifyHolding(
 function mapPortfolio(document: DocumentRecord, data: ExtractedPortfolio): ExtractionResult {
   const warnings = [...data.warnings];
   const provider = maskDigitRuns(data.provider.trim());
+  const missingRates = new Set<string>();
   const holdings: Holding[] = data.holdings.map((row, index) => {
     const instrument = maskDigitRuns(row.instrument.trim());
-    return {
+    const converted = toRupiah(row.currentValue, row.currency);
+    if (converted === null) missingRates.add(row.currency);
+    const holding: Holding = {
       id: recordId("hold", document.id, index, instrument),
       month: document.month,
       instrument,
       provider,
-      currentValue: Math.max(0, Math.round(row.currentValue)),
+      currentValue: Math.max(0, converted ?? 0),
       ...classifyHolding(row.instrumentType, row.lockedUntil, document.month),
       sourceFileId: document.id,
     };
+    if (!isRupiah(row.currency)) {
+      holding.currency = row.currency.toUpperCase();
+      holding.nativeValue = row.currentValue;
+    }
+    return holding;
   });
+  for (const currency of missingRates) {
+    warnings.push(`No exchange rate for ${currency}; holdings in it were recorded as Rp 0`);
+  }
+  if (holdings.some((h) => h.currency)) {
+    const used = [...new Set(holdings.map((h) => h.currency).filter(Boolean))].join(", ");
+    warnings.push(`Values in ${used} were converted with the assumed exchange rate`);
+  }
 
-  const sum = holdings.reduce((acc, h) => acc + h.currentValue, 0);
-  if (data.totalValue !== null && Math.abs(sum - data.totalValue) > Math.max(1000, sum * 0.01)) {
+  const sum = data.holdings.reduce((acc, h) => acc + h.currentValue, 0);
+  if (data.totalValue !== null && Math.abs(sum - data.totalValue) > Math.max(1, sum * 0.01)) {
     warnings.push("Holdings do not add up to the printed total value");
   }
 
@@ -338,7 +360,22 @@ function mapPortfolio(document: DocumentRecord, data: ExtractedPortfolio): Extra
       institution: data.provider,
       sourceAccount: accountLabel(data.provider, data.accountNumber),
       asOfDate: data.asOfDate,
-      totalValue: data.totalValue,
+      totalValue: toRupiah(data.totalValue, data.currency),
     },
   };
+}
+
+function isRupiah(currency: string): boolean {
+  const code = currency.trim().toUpperCase();
+  return code === "" || code === "IDR" || code === "RP";
+}
+
+/** Integer rupiah for a printed value, via the FX assumption; null when no rate is known. */
+export function toRupiah(value: number | null, currency: string): number | null {
+  if (value === null) return null;
+  if (isRupiah(currency)) return Math.round(value);
+  const rate = (assumptions.fxRates as Record<string, { idrPerUnit: number } | undefined>)[
+    currency.trim().toUpperCase()
+  ];
+  return rate ? Math.round(value * rate.idrPerUnit) : null;
 }

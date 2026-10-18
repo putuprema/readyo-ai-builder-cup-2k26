@@ -199,7 +199,7 @@ export function scoreHoldings(expected: ExpectedFile, holdings: Holding[]): Hold
     if (!got) continue;
     used.add(got.id);
     found += 1;
-    if (got.currentValue === exp.currentValue) valueCorrect += 1;
+    if (holdingValueMatches(exp, got)) valueCorrect += 1;
     if (got.volatile === exp.volatile) volatileCorrect += 1;
   }
   return {
@@ -209,6 +209,18 @@ export function scoreHoldings(expected: ExpectedFile, holdings: Holding[]): Hold
     valueCorrect,
     volatileCorrect,
   };
+}
+
+/** Rupiah compared exactly; a foreign-currency expectation compares the printed value. */
+function holdingValueMatches(exp: ExpectedFile["holdings"][number], got: Holding): boolean {
+  if (exp.currency !== undefined && exp.nativeValue !== undefined) {
+    return (
+      got.currency === exp.currency.toUpperCase() &&
+      got.nativeValue !== undefined &&
+      Math.abs(got.nativeValue - exp.nativeValue) < 0.005
+    );
+  }
+  return got.currentValue === exp.currentValue;
 }
 
 export function scoreClasses(expected: ExpectedFile, transactions: Transaction[]): ClassScore {
