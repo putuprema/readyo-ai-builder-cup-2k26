@@ -119,6 +119,19 @@ Secrets never live in the repo. Locally, put them in a `.env` file (ignored by g
      --role roles/secretmanager.secretAccessor
    ```
    Without the binding, `gcloud run deploy` fails with "Permission denied on secret ... for Revision service account".
+7. Create the default Cloud Storage bucket (`YOUR_PROJECT_ID.firebasestorage.app`), which the uploads use. In the Firebase console: Storage > Get started, location `asia-southeast1`. Or from the CLI:
+   ```bash
+   gcloud services enable firebasestorage.googleapis.com
+   curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "x-goog-user-project: YOUR_PROJECT_ID" \
+     -H "Content-Type: application/json" -d '{"location":"asia-southeast1","storageClass":"STANDARD"}' \
+     "https://firebasestorage.googleapis.com/v1alpha/projects/YOUR_PROJECT_ID/defaultBucket"
+   ```
+8. Register a Firebase web app and put its config in `web/.env.production.local` (git-ignored), which `next build` reads:
+   ```bash
+   firebase apps:create WEB adidi-web
+   firebase apps:sdkconfig WEB <app id printed above>
+   ```
+   Copy `projectId`, `apiKey`, `authDomain` and `appId` into `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` and `NEXT_PUBLIC_FIREBASE_APP_ID`. These are public identifiers, but the key matches the `AIza…` pattern that `pnpm check:secrets` rejects, so they stay out of git.
 
 ### Deploy each part
 
