@@ -45,6 +45,8 @@ interface Estimate {
   calculatedAt: string;                // ISO timestamp
 }
 
+type EstimateResponse = Estimate | { targetToday: null; message: string }; // POST /goals/:id/estimate
+
 interface Goal {
   id: string;
   type: GoalType;
@@ -141,7 +143,7 @@ Security rules: a user reads and writes only under `users/{uid}`; `rules/` is re
 | POST | `/goals` | Create a draft goal |
 | PATCH | `/goals/:id` | Update inputs, pay preference, user price override |
 | DELETE | `/goals/:id` | Delete (refuse while `analysing`) |
-| POST | `/goals/:id/estimate` | Run pricing (stage 1) and store the estimate |
+| POST | `/goals/:id/estimate` | Run pricing (stage 1) on the form values sent (`{ type, inputs }`) and store the estimate on the goal |
 | POST | `/uploads` | Signed URL for one file; creates a `documents` record |
 | DELETE | `/uploads/:docId` | Remove a file before submit |
 | POST | `/runs` | Submit: `{ kind, goalIds, month, documentIds? }`; enqueues a Cloud Task, returns `runId` |

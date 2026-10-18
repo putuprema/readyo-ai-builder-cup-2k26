@@ -44,7 +44,7 @@ const endpoints: { method: string; path: string; body?: unknown }[] = [
   },
   { method: "PATCH", path: "/goals/g1", body: { payPreference: "cash" } },
   { method: "DELETE", path: "/goals/g1" },
-  { method: "POST", path: "/goals/g1/estimate" },
+  { method: "POST", path: "/goals/g1/estimate", body: { type: "house", inputs: houseInputs } },
   {
     method: "POST",
     path: "/uploads",

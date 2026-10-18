@@ -85,6 +85,17 @@ export const createGoalBody = z.discriminatedUnion("type", [
 export type CreateGoalBody = z.infer<typeof createGoalBody>;
 
 /**
+ * POST /goals/:id/estimate: the exact form values on screen (specs/05-pricing.md stores them
+ * as `inputsUsed`), which may be newer than the saved draft. The type must match the goal's.
+ */
+export const estimateGoalBody = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("house"), inputs: houseInputs }).strict(),
+  z.object({ type: z.literal("car"), inputs: carInputs }).strict(),
+  z.object({ type: z.literal("wedding"), inputs: weddingInputs }).strict(),
+]);
+export type EstimateGoalBody = z.infer<typeof estimateGoalBody>;
+
+/**
  * PATCH /goals/:id. The goal's type is only known from Firestore, so partial inputs are
  * accepted for any goal type here and matched against the stored type by the handler.
  */

@@ -70,6 +70,12 @@ export interface Estimate {
   calculatedAt: string; // ISO timestamp
 }
 
+/**
+ * POST /goals/:id/estimate: the stored Estimate, or `targetToday: null` with a user-facing
+ * message when search found no usable price (the price field stays editable).
+ */
+export type EstimateResponse = Estimate | { targetToday: null; message: string };
+
 export interface Goal {
   id: string;
   type: GoalType;
