@@ -4,7 +4,8 @@
 set -euo pipefail
 
 patterns=(
-  'AIza[0-9A-Za-z_-]{30,}'            # Google API key
+  'AIza[0-9A-Za-z_-]{30,}'            # Google API key (classic)
+  'AQ\.[0-9A-Za-z_-]{40,}'            # Google API key (new format)
   'BEGIN (RSA |EC )?PRIVATE KEY'      # PEM private key
   '"type": *"service_account"'        # service account JSON
   'ya29\.[0-9A-Za-z_-]+'              # OAuth access token

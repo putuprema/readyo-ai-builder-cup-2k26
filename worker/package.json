@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p scripts/tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "accuracy": "tsx --env-file-if-exists=.env scripts/accuracy.ts"
+    "accuracy": "tsx --env-file-if-exists=.env scripts/accuracy.ts",
+    "test:live": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run live"
   },
   "dependencies": {
     "@adidi/shared": "workspace:*",
