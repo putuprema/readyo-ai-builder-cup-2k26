@@ -20,7 +20,7 @@ import {
   toHouseInputs,
 } from "@/lib/house-form";
 import { loadProfile, saveProfile } from "@/lib/profile";
-import { SAMPLE_NOTE, SAMPLE_PROFILE } from "@/lib/sample";
+import { SAMPLE_NOTE, SAMPLE_PROFILE, SAMPLE_PROFILE_NOTE } from "@/lib/sample";
 import { EstimateCard, type EstimateState } from "./EstimateCard";
 import { GoalPicker } from "./GoalPicker";
 import { HouseForm } from "./HouseForm";
@@ -357,7 +357,7 @@ function NewGoalForm() {
       <ProfileModal
         open={profileOpen}
         initial={SAMPLE_PROFILE}
-        sampleNote={SAMPLE_NOTE}
+        sampleNote={SAMPLE_PROFILE_NOTE}
         busy={profileBusy}
         error={profileError}
         onSave={(profile) => void onProfileSave(profile)}

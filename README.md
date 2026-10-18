@@ -174,7 +174,7 @@ The api reads `STORAGE_BUCKET` (set by `scripts/deploy-service.sh`). On the emul
 
 ### Walk the house flow in the browser
 
-With the emulators, the api (`WORKER_URL` pointing at the worker, `TASKS_MODE=direct`) and the worker running, and `web/.env` set to the emulators: open http://localhost:3000, sign in as the demo account, create a house goal, press Calculate Estimate (about 30 s), Continue, add the four sample statements from `fixtures/statements/` on the documents step, Submit, and watch the run reach `done` in the worker's log (about three minutes, mostly extraction). Copy the samples to `web/public/fixtures/` (git-ignored) if you want to pick them from a page instead of the file dialog. A fresh account (no profile yet) also goes through the profile modal before the documents step.
+With the emulators, the api (`WORKER_URL` pointing at the worker, `TASKS_MODE=direct`) and the worker running, and `web/.env` set to the emulators: open http://localhost:3000, sign in as the demo account, create a house goal (the form starts with a sample scenario), press Calculate Estimate (about 30 s), Continue, press **Use sample statements** on the documents step (it uploads the four PDFs in `web/public/samples/`, copies of `fixtures/statements/sample_*.pdf`), Submit, and watch the run reach `done` in the worker's log (about three minutes, mostly extraction). A fresh account (no profile yet) also goes through the profile modal, pre-filled with a sample profile, before the documents step. **Delete all my data** at the foot of the goals list starts again from an empty account. The worker needs `TASKS_AUTH=off` in `worker/.env` locally, or it exits at start.
 
 ### End-to-end run on the emulators
 

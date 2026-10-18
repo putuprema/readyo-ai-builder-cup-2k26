@@ -30,6 +30,8 @@ export const SAMPLE_PROFILE: Profile = {
 };
 
 export const SAMPLE_NOTE = "Filled in with a sample scenario. Change anything to match your own.";
+export const SAMPLE_PROFILE_NOTE =
+  "Filled in with a sample profile that fits the sample statements. Change anything to match your own.";
 
 /** The month the sample statements cover. */
 export const SAMPLE_MONTH = "2026-09";
