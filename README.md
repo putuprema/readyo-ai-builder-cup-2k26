@@ -71,7 +71,7 @@ With the emulators running, seed them once from another terminal (the `*:emulato
 
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 pnpm --filter api seed:rules
-FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 pnpm --filter api seed:demo   # demo@adidi.app, password demo-pass-2026 on the emulators
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 pnpm --filter api seed:demo   # demo@adidi.app, password demo-pass-2026 on the emulators unless DEMO_PASSWORD is set (the script reads api/.env, so a DEMO_PASSWORD there wins)
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 pnpm --filter api seed:demo --goals-list --empty-user   # adds one analysing, two draft and a second active goal, and empty@adidi.app with no goals (spec 12)
 ```
 
