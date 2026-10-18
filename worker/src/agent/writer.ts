@@ -5,6 +5,7 @@ import { type JsonModel, ModelError, type ModelTier } from "../gemini/client.js"
 import { type ActionFacts, allowedTexts, categoryLabel, productName } from "./cards.js";
 import type { AgentContext } from "./context.js";
 import { checkNumbers } from "./numbers.js";
+import { allowedSummaryTexts, type SummaryFacts } from "./summary.js";
 
 // Card text (specs/06-agent.md, "Cards"): Gemini writes title, impactLine and description from
 // the facts code built; the number check rejects any text with a number that is not in those
@@ -19,6 +20,7 @@ Rules:
 - title: one line naming the action and its size, no final period, at most 90 characters.
 - impactLine: the impact fact, lightly phrased, at most 60 characters.
 - description: one to three sentences on why it works for this person, in the second person. No emoji, no exclamation marks, no lists.
+- summary: when asked, one headline sentence for the result page in the second person that states the months with the plan (or "this month") and the months if nothing changes, using the facts given, for example "You're 14 months from a KPR, if you clear the PayLater first; 26 months if nothing changes."
 - Return one card per id, with the id copied exactly.`;
 
 const writtenCardSchema = z.object({
@@ -30,11 +32,17 @@ const writtenCardSchema = z.object({
 
 export const writtenCardsSchema = z.object({
   cards: z.array(writtenCardSchema),
+  summary: z
+    .string()
+    .optional()
+    .describe("The headline sentence, when the prompt asks for one; otherwise omitted"),
 });
 
 export type WrittenCard = z.infer<typeof writtenCardSchema>;
 
 export interface WriterOptions {
+  /** When given, the same call writes the headline sentence from these facts. */
+  summary?: SummaryFacts;
   tier?: ModelTier;
   /** Model attempts before the template fallback (default 2: one try, one retry). */
   maxAttempts?: number;
@@ -43,6 +51,9 @@ export interface WriterOptions {
 
 export interface WriterResult {
   cards: ActionCard[];
+  /** The headline sentence: the model's when it passed the check, else the template. */
+  summary: string;
+  summaryFromFallback: boolean;
   /** Ids whose text came from the template fallback. */
   fallbackIds: string[];
   attempts: number;
@@ -59,19 +70,26 @@ export async function writeCards(
   const maxAttempts = options.maxAttempts ?? 2;
   const warnings: string[] = [];
   const accepted = new Map<string, WrittenCard>();
+  const summaryFacts = options.summary;
+  let summary: string | undefined;
   let attempts = 0;
   let feedback: string | undefined;
 
-  if (facts.length > 0) {
-    while (attempts < maxAttempts && accepted.size < facts.length) {
+  // Nothing kept: the template sentence says so; no prose to write.
+  const wantsModel = facts.length > 0;
+  if (wantsModel) {
+    const incomplete = () =>
+      accepted.size < facts.length || (summaryFacts !== undefined && summary === undefined);
+    while (attempts < maxAttempts && incomplete()) {
       attempts += 1;
       const pending = facts.filter((f) => !accepted.has(f.id));
+      const askSummary = summaryFacts !== undefined && summary === undefined;
       let raw: unknown;
       try {
         raw = await model.generateJson({
           tier: options.tier ?? "pro",
           systemInstruction: WRITER_SYSTEM_INSTRUCTION,
-          prompt: writerPrompt(ctx, pending, feedback),
+          prompt: writerPrompt(ctx, pending, feedback, askSummary ? summaryFacts : undefined),
           responseJsonSchema: geminiJsonSchema(writtenCardsSchema),
           temperature: 0.2,
         });
@@ -103,12 +121,19 @@ export async function writeCards(
           problems.push(`${f.id}: missing`);
         }
       }
+      if (askSummary && summaryFacts) {
+        const text = (parsed.data.summary ?? "").trim();
+        const check = checkNumbers(text, allowedSummaryTexts(summaryFacts));
+        if (text.length === 0) problems.push("summary: missing");
+        else if (!check.ok) problems.push(`summary: ${check.offending.join(", ")}`);
+        else summary = text;
+      }
       if (problems.length > 0) {
         warnings.push(
           `Card writer attempt ${attempts}: numbers not in the facts (${problems.join("; ")})`,
         );
         log(`agent: card writer attempt ${attempts} rejected ${problems.length} card(s)`);
-        feedback = `Your previous answer used numbers that are not in the facts, or missed a card: ${problems.join("; ")}. Rewrite those cards using only the numbers given, exactly as given.`;
+        feedback = `Your previous answer used numbers that are not in the facts, or missed an item: ${problems.join("; ")}. Rewrite those using only the numbers given, exactly as given.`;
       }
     }
   }
@@ -128,14 +153,28 @@ export async function writeCards(
     } satisfies ActionCard;
   });
   if (fallbackIds.length > 0) log(`agent: template text for ${fallbackIds.join(", ")}`);
-  return { cards, fallbackIds, attempts, warnings };
+  const summaryFromFallback = summary === undefined;
+  if (summaryFromFallback && summaryFacts && wantsModel) log("agent: template summary");
+  return {
+    cards,
+    summary: summary ?? summaryFacts?.fallback ?? "",
+    summaryFromFallback,
+    fallbackIds,
+    attempts,
+    warnings,
+  };
 }
 
 export function cardText(card: Pick<WrittenCard, "title" | "impactLine" | "description">): string {
   return `${card.title}\n${card.impactLine}\n${card.description}`;
 }
 
-export function writerPrompt(ctx: AgentContext, facts: ActionFacts[], feedback?: string): string {
+export function writerPrompt(
+  ctx: AgentContext,
+  facts: ActionFacts[],
+  feedback?: string,
+  summary?: SummaryFacts,
+): string {
   const lines: string[] = [];
   lines.push(
     `Goal: ${describeGoal(ctx)}. Leading path: ${ctx.leadingPath === "loan" ? `${productName(ctx)} approval` : "cash"}.`,
@@ -148,8 +187,13 @@ export function writerPrompt(ctx: AgentContext, facts: ActionFacts[], feedback?:
     for (const [key, value] of Object.entries(f.facts)) lines.push(`- ${key}: ${value}`);
     lines.push("");
   }
+  if (summary) {
+    lines.push("Summary facts (for the headline sentence):");
+    for (const [key, value] of Object.entries(summary.facts)) lines.push(`- ${key}: ${value}`);
+    lines.push("");
+  }
   if (feedback) lines.push(feedback);
-  else lines.push("Write the cards.");
+  else lines.push(summary ? "Write the cards and the summary." : "Write the cards.");
   return lines.join("\n");
 }
 
