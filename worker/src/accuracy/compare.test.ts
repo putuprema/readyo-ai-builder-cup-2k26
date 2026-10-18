@@ -1,7 +1,13 @@
 import type { Holding, Loan, Transaction } from "@adidi/shared";
 import { describe, expect, it } from "vitest";
 import type { ExpectedFile } from "../fixtures.js";
-import { formatTable, instrumentMatches, overallRowAccuracy, scoreFixture } from "./compare.js";
+import {
+  formatTable,
+  holdingNameMatches,
+  instrumentMatches,
+  overallRowAccuracy,
+  scoreFixture,
+} from "./compare.js";
 
 // specs/04-extraction.md task 6: the scoring behind the accuracy table, checked on hand-made
 // data so the thresholds mean what the spec says.
@@ -221,6 +227,16 @@ describe("instrumentMatches", () => {
     ["", "Cash", false],
   ])("%s vs %s -> %s", (expected, extracted, result) => {
     expect(instrumentMatches(expected, extracted)).toBe(result);
+  });
+});
+
+describe("holdingNameMatches", () => {
+  it("accepts the expected name or any alias", () => {
+    const exp = { instrument: "NVDA", aliases: ["NVIDIA"] };
+    expect(holdingNameMatches(exp, "NVIDIA CORPORATION COM")).toBe(true);
+    expect(holdingNameMatches(exp, "NVDA")).toBe(true);
+    expect(holdingNameMatches(exp, "AAPL Apple Inc")).toBe(false);
+    expect(holdingNameMatches({ instrument: "Cash USD" }, "USD")).toBe(true);
   });
 });
 

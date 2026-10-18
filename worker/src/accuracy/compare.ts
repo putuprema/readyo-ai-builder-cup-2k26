@@ -190,9 +190,7 @@ export function scoreHoldings(expected: ExpectedFile, holdings: Holding[]): Hold
   let volatileCorrect = 0;
   const used = new Set<string>();
   for (const exp of expected.holdings) {
-    const got = holdings.find(
-      (h) => !used.has(h.id) && instrumentMatches(exp.instrument, h.instrument),
-    );
+    const got = holdings.find((h) => !used.has(h.id) && holdingNameMatches(exp, h.instrument));
     if (!got) continue;
     used.add(got.id);
     found += 1;
@@ -218,6 +216,16 @@ export function instrumentMatches(expected: string, extracted: string): boolean 
   const b = normalizeText(extracted).replace(/[^a-z0-9]/g, "");
   if (a.length === 0 || b.length === 0) return false;
   return a === b || a.includes(b) || b.includes(a);
+}
+
+/** The expected name or any of its aliases. */
+export function holdingNameMatches(
+  exp: { instrument: string; aliases?: string[] },
+  extracted: string,
+): boolean {
+  return [exp.instrument, ...(exp.aliases ?? [])].some((name) =>
+    instrumentMatches(name, extracted),
+  );
 }
 
 /** Rupiah compared exactly; a foreign-currency expectation compares the printed value. */

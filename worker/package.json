@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "accuracy": "tsx --env-file-if-exists=.env scripts/accuracy.ts",
-    "test:live": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run live"
+    "test:live": "node --env-file-if-exists=.env ./node_modules/vitest/vitest.mjs run live",
+    "fixtures:paylater": "tsx scripts/make-sample-paylater.ts"
   },
   "dependencies": {
     "@adidi/shared": "workspace:*",
@@ -23,6 +24,8 @@
   },
   "devDependencies": {
     "@types/node": "^26",
+    "@types/pdfkit": "^0.17.6",
+    "pdfkit": "^0.20.2",
     "tsx": "^4",
     "vitest": "^5.0.5"
   }

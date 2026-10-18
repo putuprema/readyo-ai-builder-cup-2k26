@@ -1,0 +1,15 @@
+{
+  "kind": "paylater",
+  "month": "2026-09",
+  "transactions": [],
+  "loans": [
+    {
+      "lender": "ShopeePay Later",
+      "outstandingPrincipal": 7000000,
+      "monthlyInstallment": 2265500,
+      "effectiveAnnualRate": 0.354,
+      "remainingTenorMonths": 4
+    }
+  ],
+  "holdings": []
+}

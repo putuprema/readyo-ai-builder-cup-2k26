@@ -9,14 +9,16 @@
       "currency": "USD",
       "nativeValue": 4.64,
       "volatile": false,
-      "liquidityClass": "cash"
+      "liquidityClass": "cash",
+      "aliases": ["Cash", "USD"]
     },
     {
       "instrument": "NVDA",
       "currency": "USD",
       "nativeValue": 4378.76,
       "volatile": true,
-      "liquidityClass": "liquid"
+      "liquidityClass": "liquid",
+      "aliases": ["NVIDIA"]
     }
   ]
 }

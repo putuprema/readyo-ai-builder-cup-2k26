@@ -37,12 +37,14 @@ const LOAN_BILL_PROMPT = `Extract this PayLater or online loan (pinjol) bill as 
 - "outstandingPrincipal" is the principal still owed across all active instalments, excluding future fees and interest. If the bill lists several purchases on instalment, sum their remaining principal.
 - "totalOutstanding" is the total still owed including fees and interest, if printed.
 - Report the fee structure in "fee": the monthly interest or service rate if printed as a percentage per month (e.g. "2,95% per bulan" -> kind "monthly_rate", value 0.0295), a flat rupiah fee per month, a total fee over the tenor, "none" when the bill shows zero fees, or "unknown" when no fee information is visible.
-- "remainingTenorMonths" counts this instalment and the ones after it.
+- "remainingTenorMonths" counts this instalment and the ones after it. When the bill lists several items on instalment ("cicilan 3 dari 6", "4 cicilan tersisa"), use the largest number of instalments left among them; derive it from "ke-N dari M" (M - N + 1) when it is not printed directly.
+- "totalTenorMonths" is the longest original tenor among the items, if printed.
 - Late fees go in "lateFee", not in the instalment.`;
 
 const PORTFOLIO_PROMPT = `Extract every holding shown in this investment portfolio screen.
 
-- One entry per fund, stock, coin or product shown, with its current value in rupiah.
+- One entry per fund, stock, coin or product shown, with its current value as printed.
+- "instrument": when both a ticker symbol and a name are printed, return "SYMBOL NAME" (e.g. "NVDA NVIDIA CORPORATION COM", "BBCA Bank Central Asia"); otherwise the name or symbol as printed.
 - Classify each holding: money market fund ("pasar uang"), fixed income fund ("pendapatan tetap", "obligasi"), mixed fund ("campuran"), equity fund ("saham" fund), stock (individual ticker such as BBCA), bond (ORI, SBR, SR, FR series), deposit ("deposito"), gold ("emas"), crypto (BTC, ETH and other coins) or other.
 - "lockedUntil" is the maturity or lock-up end date when the product has one (bonds, deposits); otherwise null.
 - "totalValue" is the total portfolio value printed on the screen, if shown.

@@ -35,6 +35,8 @@ export const expectedLoanSchema = z.object({
 export const expectedHoldingSchema = z
   .object({
     instrument: z.string(),
+    /** Other names the model may print for the same row (ticker only, company name only). */
+    aliases: z.array(z.string()).optional(),
     /** Rupiah, for statements printed in rupiah. */
     currentValue: z.number().int().optional(),
     /** For statements in another currency: the printed value and its ISO code. */

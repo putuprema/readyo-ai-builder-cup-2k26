@@ -1,0 +1,15 @@
+{
+  "kind": "ewallet",
+  "month": "2026-09",
+  "transactions": [
+    {
+      "date": "2026-09-02",
+      "amount": 114600,
+      "direction": "out",
+      "counterparty": "Pizza Hut Delivery - PHD",
+      "cls": "discretionary"
+    }
+  ],
+  "loans": [],
+  "holdings": []
+}
