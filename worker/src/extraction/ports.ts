@@ -26,12 +26,16 @@ export interface RecordsPort {
   updateDocument(
     uid: string,
     documentId: string,
-    patch: Partial<Pick<DocumentRecord, "status" | "reason">>,
+    patch: Partial<Pick<DocumentRecord, "status" | "reason" | "closingBalance">>,
   ): Promise<void>;
   /** Idempotent: records are written by id, so writing the same batch twice changes nothing. */
   writeRecords(uid: string, records: ExtractedRecords): Promise<void>;
   /** Everything previously written for one file (a retry reuses it instead of calling the model). */
   readRecordsForFile(uid: string, documentId: string): Promise<ExtractedRecords>;
+  /** Stored transactions of the months before `month` (recurring detection, spec 07). */
+  listTransactionsBefore(uid: string, month: string): Promise<Transaction[]>;
+  /** Removes the duplicates normalization dropped, so the stored rows match the snapshot. */
+  deleteTransactions(uid: string, ids: string[]): Promise<void>;
 }
 
 /** Cloud Storage object path for an upload: the same path as its Firestore record (spec 01). */

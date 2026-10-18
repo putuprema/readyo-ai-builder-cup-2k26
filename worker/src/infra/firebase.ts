@@ -95,6 +95,21 @@ export function firestoreRecords(db: Firestore = getFirestore(firebaseApp())): R
       ]);
       return { transactions, loans, holdings };
     },
+    async listTransactionsBefore(uid, month) {
+      const snap = await db
+        .collection(`${firestorePaths.user(uid)}/transactions`)
+        .where("month", "<", month)
+        .get();
+      return snap.docs.map((d) => d.data() as Transaction);
+    },
+    async deleteTransactions(uid, ids) {
+      for (let i = 0; i < ids.length; i += BATCH_LIMIT) {
+        const batch = db.batch();
+        for (const id of ids.slice(i, i + BATCH_LIMIT))
+          batch.delete(db.doc(firestorePaths.transaction(uid, id)));
+        await batch.commit();
+      }
+    },
   };
 }
 
@@ -149,29 +164,6 @@ export function firestoreRunStore(db: Firestore = getFirestore(firebaseApp())): 
     },
     async setAnalysis(uid, goalId, month, analysis) {
       await db.doc(firestorePaths.analysis(uid, goalId, month)).set(analysis);
-    },
-    async listTransactionsBefore(uid, month) {
-      const snap = await db
-        .collection(`${userPath(uid)}/transactions`)
-        .where("month", "<", month)
-        .get();
-      return snap.docs.map((d) => d.data() as Transaction);
-    },
-    async writeTransactions(uid, transactions) {
-      for (let i = 0; i < transactions.length; i += BATCH_LIMIT) {
-        const batch = db.batch();
-        for (const t of transactions.slice(i, i + BATCH_LIMIT))
-          batch.set(db.doc(firestorePaths.transaction(uid, t.id)), t);
-        await batch.commit();
-      }
-    },
-    async deleteTransactions(uid, ids) {
-      for (let i = 0; i < ids.length; i += BATCH_LIMIT) {
-        const batch = db.batch();
-        for (const id of ids.slice(i, i + BATCH_LIMIT))
-          batch.delete(db.doc(firestorePaths.transaction(uid, id)));
-        await batch.commit();
-      }
     },
   };
 }

@@ -37,6 +37,8 @@ export interface ExtractedSource {
   warnings: string[];
   /** True when a retry found the records already stored and skipped the model call. */
   reused: boolean;
+  /** Bank and e-wallet statements: the closing balance, for the snapshot's bankBalances. */
+  closingBalance: number | null;
 }
 
 export interface FailedSource {
@@ -134,6 +136,7 @@ async function extractOne(
         counts: counts(records),
         warnings: [],
         reused: true,
+        closingBalance: document.closingBalance ?? null,
       },
       records,
     };
@@ -160,7 +163,10 @@ async function extractOne(
   }
 
   await deps.records.writeRecords(uid, extraction);
-  await deps.records.updateDocument(uid, document.id, { status: "extracted" });
+  await deps.records.updateDocument(uid, document.id, {
+    status: "extracted",
+    closingBalance: extraction.meta.closingBalance,
+  });
   log(`${tag}: extracted ${describeCounts(extraction)} in ${Date.now() - started} ms`);
   await deleteQuietly(deps.storage, path, tag, log);
 
@@ -172,6 +178,7 @@ async function extractOne(
       counts: counts(extraction),
       warnings: extraction.warnings,
       reused: false,
+      closingBalance: extraction.meta.closingBalance,
     },
     records: extraction,
   };

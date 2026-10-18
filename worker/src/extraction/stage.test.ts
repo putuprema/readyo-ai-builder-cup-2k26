@@ -62,6 +62,7 @@ describe("runExtractionStage", () => {
         counts: { transactions: 3, loans: 0, holdings: 0 },
         warnings: expect.arrayContaining(["Last row has no readable date"]),
         reused: false,
+        closingBalance: 9_830_000,
       },
     ]);
     expect(result.transactions).toHaveLength(3);

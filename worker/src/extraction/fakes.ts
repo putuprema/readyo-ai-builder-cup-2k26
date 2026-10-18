@@ -40,7 +40,7 @@ export class FakeRecords implements RecordsPort {
   async updateDocument(
     _uid: string,
     documentId: string,
-    patch: Partial<Pick<DocumentRecord, "status" | "reason">>,
+    patch: Partial<Pick<DocumentRecord, "status" | "reason" | "closingBalance">>,
   ): Promise<void> {
     const current = this.documents.get(documentId);
     if (!current) throw new Error(`no document ${documentId}`);
@@ -62,6 +62,14 @@ export class FakeRecords implements RecordsPort {
       loans: byFile(this.loans.values()),
       holdings: byFile(this.holdings.values()),
     };
+  }
+
+  async listTransactionsBefore(_uid: string, month: string): Promise<Transaction[]> {
+    return [...this.transactions.values()].filter((t) => t.month < month);
+  }
+
+  async deleteTransactions(_uid: string, ids: string[]): Promise<void> {
+    for (const id of ids) this.transactions.delete(id);
   }
 
   /** Everything stored, as plain JSON, for the "no unmasked numbers" scan. */
