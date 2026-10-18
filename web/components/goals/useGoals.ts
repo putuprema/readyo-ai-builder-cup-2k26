@@ -17,8 +17,8 @@ export function useGoals(uid: string | null): GoalsState {
   const [state, setState] = useState<GoalsState>({ status: "loading" });
 
   useEffect(() => {
-    if (!uid) return;
     setState({ status: "loading" });
+    if (!uid) return;
     return onSnapshot(
       collection(firestore(), `${firestorePaths.user(uid)}/goals`),
       (snap) =>

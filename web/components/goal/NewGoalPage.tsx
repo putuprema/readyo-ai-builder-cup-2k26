@@ -208,7 +208,7 @@ function NewGoalForm() {
     setSaving("draft");
     const goal = await save();
     setSaving(null);
-    if (goal) router.push("/");
+    if (goal) router.push("/goals/");
   }
 
   async function continueToDocuments() {
@@ -315,7 +315,7 @@ function NewGoalForm() {
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-line border-t pt-6">
         <Link
-          href="/"
+          href="/goals/"
           onClick={(e) => {
             e.preventDefault();
             void saveDraft();

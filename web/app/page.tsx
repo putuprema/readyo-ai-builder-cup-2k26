@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useGoals } from "@/components/goals/useGoals";
 import { SignInCard } from "@/components/SignInCard";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SampleResultCard } from "@/components/welcome/SampleResultCard";
@@ -8,7 +11,7 @@ import { useAuth } from "@/lib/auth";
 
 // 0 · Welcome (docs/screens.md). Signed out, the greeting and the sample card give way to
 // sign-in; signed in, "Create your first goal" leads to the goal form. The returning-user
-// redirect to the goals list is spec 12.
+// redirect to the goals list is spec 12: a signed-in user with at least one goal lands there.
 
 const STEPS = [
   {
@@ -61,6 +64,12 @@ const TRUST = [
 export default function Welcome() {
   const { state } = useAuth();
   const signedIn = state.status === "signed_in";
+  const goals = useGoals(signedIn ? state.user.uid : null);
+  const router = useRouter();
+  const returning = goals.status === "ready" && goals.goals.length > 0;
+  useEffect(() => {
+    if (returning) router.replace("/goals/");
+  }, [returning, router]);
   const firstName = signedIn
     ? (state.user.displayName?.split(" ")[0] ?? state.user.email ?? "there")
     : null;
