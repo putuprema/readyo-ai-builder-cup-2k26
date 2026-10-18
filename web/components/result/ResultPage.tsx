@@ -7,9 +7,10 @@ import { assumptionRows, checkIn, eyebrow, metricRow, pathCards, subline } from 
 import { PathCards } from "./PathCards";
 import { PlanSection } from "./PlanSection";
 import { ReadinessTable } from "./ReadinessTable";
+import { RulesPanel } from "./RulesPanel";
 
 // The readiness result (docs/screens.md "3"; design artboard Analysis). Presentation over a
-// goal and its analysis; the rules panel is added in task 4.
+// goal and its analysis.
 
 export interface ResultPageProps {
   goal: Goal;
@@ -84,7 +85,9 @@ export function ResultPage({
 
       <PathCards cards={pathCards(goal, analysis)} />
       <ReadinessTable rows={analysis.metrics.map(metricRow)} />
-      <PlanSection goal={goal} analysis={analysis} choices={choices} nextMonth={next.nextMonth} />
+      <PlanSection goal={goal} analysis={analysis} choices={choices} nextMonth={next.nextMonth}>
+        <RulesPanel analysis={analysis} assumptionsHref={assumptionsHref} />
+      </PlanSection>
       <BottomCards
         assumptions={assumptionRows(analysis)}
         checkIn={next}
